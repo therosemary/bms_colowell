@@ -1,0 +1,10 @@
+.git/*
+.idea/*
+*.pyc
+*/__pycache__/
+*/migrations/*
+bms_colowell/settings.py
+media/
+static/
+collected_statics/
+db.sqlite3
