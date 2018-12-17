@@ -1,6 +1,28 @@
 # 锐翌医学管理系统
 
-正式开发时间：2018/12/17
+正式开发时间：2018/12/17   
 
-fork之前请务必认真阅读[开发规范](https://github.com/gmdzy2010/bms_colowell/blob/master/specification_of_dev.md)，不符合此规范的任何pull request将被直接拒绝
+fork之前请务必认真阅读[开发规范](https://github.com/gmdzy2010/bms_colowell/blob/master/specification_of_dev.md)，不符合此规范的任何pull request将被直接拒绝    
 
+### 版本号
+---------------
+#### 功能框架
+0.1.0 用户    
+
+0.2.0 技术支持
+0.3.0 实验    
+0.4.0 售后    
+
+0.5.0 商务    
+0.6.0 销售    
+0.7.0 财务    
+0.8.0 代理商   
+
+#### 业务框架
+0.9.0 产品分库    
+0.10.0 用户分库
+0.11.0 OAuth2.0认证服务    
+0.12.0 Redis高并发    
+
+#### 正式发布
+1.0.0 整个系统发布    
