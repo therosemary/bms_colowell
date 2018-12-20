@@ -21,5 +21,13 @@ class TestAccounts(TestCase):
         dingtalk_info = DingtalkInfo.objects.create(
             userid="fewfd1223123", bms_user=user
         )
+        print(dingtalk_info)
         self.assertTrue(dingtalk_info)
-    
+
+    def test_can_create_wechat_info(self):
+        user = BmsUser.objects.get(username="TDD_TEST_USER")
+        wechat_info = WechatInfo.objects.create(
+            openid="fewfd1223123", bms_user=user
+        )
+        print(wechat_info)
+        self.assertTrue(wechat_info)
