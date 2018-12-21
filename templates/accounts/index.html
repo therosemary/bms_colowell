@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load staticfiles %}
+
+{% block main %}
+    <div class="common_header">
+        <img src="{% static "images/index.png" %}" alt="" style="width: 100%;display: block;">
+    </div>
+    <div class="index_btn">
+        <a href="{% url "accounts:register" %}">开始自测</a>
+    </div>
+    <p class="index_bottom">上海锐翌生物科技有限公司</p>
+{% endblock %}
