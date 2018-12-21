@@ -38,21 +38,6 @@ class BmsUserAdmin(UserAdmin):
     filter_horizontal = ('groups', 'user_permissions', )
 
 
-class PartnerAdmin(admin.ModelAdmin):
-    autocomplete_fields = ("partner", )
-    fields = (
-        "partner", "store_code", "store_name", "store_note",
-    )
-    list_per_page = 30
-    list_display = (
-        "partner", "store_code", "store_name", "created_at", "altered_at",
-        "store_note",
-    )
-    list_display_links = ('partner', )
-    save_as_continue = False
-    search_fields = ("partner__username", )
-
-
 class WechatInfoAdmin(admin.ModelAdmin):
     autocomplete_fields = ("bms_user", )
     fields = (

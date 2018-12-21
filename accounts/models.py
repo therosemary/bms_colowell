@@ -89,31 +89,3 @@ class DingtalkInfo(models.Model):
 
     def __str__(self):
         return "【{}】-【{}】".format(self.name, self.userid)
-
-
-class Partners(models.Model):
-    partner = models.OneToOneField(
-        BmsUser, verbose_name="合作方", on_delete=models.CASCADE
-    )
-    store_code = models.CharField(
-        verbose_name="编号", max_length=32, primary_key=True,
-    )
-    store_name = models.CharField(
-        verbose_name="名称", max_length=32, null=True, blank=True,
-    )
-    created_at = models.DateField(
-        verbose_name="创建于", auto_now=True, editable=False,
-    )
-    altered_at = models.DateField(
-        verbose_name="更改于", auto_now=True, null=True, blank=True,
-    )
-    store_note = models.TextField(
-        verbose_name="备注", null=True, blank=True,
-    )
-    
-    class Meta:
-        app_label = "accounts"
-        verbose_name = verbose_name_plural = "合作方"
-    
-    def __str__(self):
-        return "%s" % self.store_name
