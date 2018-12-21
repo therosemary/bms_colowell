@@ -40,7 +40,8 @@ class BMSAdminSite(AdminSite):
     @never_cache
     def login(self, request, extra_context=None):
         extra_context = extra_context or {}
-        url = "http://{}/dingtalk_auth/".format(request.META["HTTP_HOST"])
+        # url = "http://{}/dingtalk_auth/".format(request.META["HTTP_HOST"])
+        url = "http://127.0.0.1:8000/dingtalk_auth/"
         redirect_uri = parse.quote(url)
         params = {
             "appid": DINGTALK_APPID,
