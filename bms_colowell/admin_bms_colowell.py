@@ -6,13 +6,12 @@ from django.views.decorators.cache import never_cache
 from urllib import parse
 from bms_colowell.settings import DINGTALK_APPID
 
-from accounts.admin import (
-    BmsUserAdmin, PartnerAdmin, WechatInfoAdmin, DingtalkInfoAdmin
-)
-from accounts.models import BmsUser, Partners, WechatInfo, DingtalkInfo
+from accounts.admin import BmsUserAdmin, WechatInfoAdmin, DingtalkInfoAdmin
+from accounts.models import BmsUser, WechatInfo, DingtalkInfo
+from partners.admin import PartnersAdmin, PropagandaAdmin
+from partners.models import Partners, Propaganda
 from products.admin import ProductsAdmin
 from products.models import Products
-
 
 
 class BMSAdminSite(AdminSite):
@@ -63,8 +62,8 @@ BMS_admin_site = BMSAdminSite()
 BMS_admin_site.register(Group, GroupAdmin)
 
 BMS_admin_site.register(BmsUser, BmsUserAdmin)
-BMS_admin_site.register(Partners, PartnerAdmin)
 BMS_admin_site.register(WechatInfo, WechatInfoAdmin)
 BMS_admin_site.register(DingtalkInfo, DingtalkInfoAdmin)
-
+BMS_admin_site.register(Partners, PartnersAdmin)
+BMS_admin_site.register(Propaganda, PropagandaAdmin)
 BMS_admin_site.register(Products, ProductsAdmin)
