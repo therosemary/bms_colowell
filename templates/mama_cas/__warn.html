@@ -1,0 +1,11 @@
+{% extends "mama_cas/__base.html" %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-sm-12 col-md-12">
+            {% include "mama_cas/_messages.html" %}
+            <a href="{{ service }}" class="btn btn-lg btn-primary btn-block" role="button">是的，继续</a>
+            <a href="{% url "cas_logout" %}" class="btn btn-link pull-right" role="button">不，退出登陆</a>
+        </div>
+    </div>
+{% endblock content %}

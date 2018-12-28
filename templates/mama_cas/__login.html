@@ -1,0 +1,19 @@
+{% extends "mama_cas/__base.html" %}
+
+{% block content %}
+    <h1 class="text-center login-title">{% block content_title %}<strong>常易舒<sup>&reg;</sup></strong>-统一认证{% endblock content_title %}</h1><hr>
+    <div class="row">
+        <div class="col-sm-12 col-md-12">
+            {% include "mama_cas/_messages.html" %}
+            <form class="form-login" method="post">
+                {% csrf_token %}
+                <label class="sr-only" for="id_username">{{ form.username.label }}</label>
+                <input type="text" class="form-control" id="id_username" name="username" placeholder="{{ form.username.label }}" required autofocus>
+                <label class="sr-only" for="id_password">{{ form.password.label }}</label>
+                <input type="password" class="form-control" id="id_password" name="password" placeholder="{{ form.password.label }}" required>
+                {% if form.warn %}<label class="checkbox"><input type="checkbox" id="id_warn" name="warn"> {{ form.warn.label }}</label>{% endif %}
+                <button class="btn btn-lg btn-primary btn-block" type="submit">登&nbsp;&nbsp;陆</button>
+            </form>
+        </div>
+    </div>
+{% endblock content %}
