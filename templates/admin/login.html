@@ -63,7 +63,10 @@
         <div style="margin: 20px auto; text-align: left;height: 25px">
             <span style="display: block;float: left;margin: 0 auto; text-align: left;height: 25px; line-height: 25px;">其它方式登陆：</span>
             <a style="display: block;float: left;" href="{{ dingtalk_qrcode_uri }}">
-                <img src="/static/imgs/dingtalk_icon.svg" height="25" style="float: left;display: block;padding: 0 0;">
+                <img src="{% static "admin/img/dingtalk-icon.svg" %}" height="25" style="float: left;display: block;padding: 0 0;">
+            </a>
+            <a style="display: block;float: left;" href="{{ cas_ng_login_url }}">
+                <img src="{% static "admin/img/cas-colowell.png" %}" height="25" style="float: left;display: block;padding: 0 10px;">
             </a>
         </div>
     </form>
