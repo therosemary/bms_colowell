@@ -4,8 +4,8 @@
 <html lang="{{ LANGUAGE_CODE|default:"en-us" }}" {% if LANGUAGE_BIDI %}dir="rtl"{% endif %}>
     <head>
         <title>{% block title %}{% endblock %}</title>
-        <link rel="icon" href="{% static "admin/img/favicon.png" %}" type="image/x-icon">
-        <link rel="shortcut icon" href="{% static "admin/img/favicon.png" %}" type="image/x-icon">
+        <link rel="icon" href="{% static "favicon.png" %}" type="image/x-icon">
+        <link rel="shortcut icon" href="{% static "favicon.png" %}" type="image/x-icon">
         <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
         <link rel="stylesheet" type="text/css" href="{% static "admin/css/modal-messages.css" %}" />
         {% block extrastyle %}{% endblock %}
