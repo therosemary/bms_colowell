@@ -1,6 +1,7 @@
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import Group, GroupAdmin
 from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy
 from django.views.decorators.cache import never_cache
 from urllib import parse
@@ -16,7 +17,7 @@ from products.models import Products
 
 class BMSAdminSite(AdminSite):
     site_title = "锐翌医学BMS系统"
-    site_header = ugettext_lazy('后台管理')
+    site_header = ugettext_lazy('锐翌医学BMS系统')
     login_template = "admin/login.html"
 
     @never_cache
@@ -40,8 +41,7 @@ class BMSAdminSite(AdminSite):
     @never_cache
     def login(self, request, extra_context=None):
         extra_context = extra_context or {}
-        # url = "http://{}/dingtalk_auth/".format(request.META["HTTP_HOST"])
-        url = "http://127.0.0.1:8000/dingtalk_auth/"
+        url = "http://{}/dingtalk_auth/".format(request.META["HTTP_HOST"])
         redirect_uri = parse.quote(url)
         params = {
             "appid": DINGTALK_APPID,
@@ -56,6 +56,7 @@ class BMSAdminSite(AdminSite):
                      "redirect_uri={redirect_uri}".format(**params)
         dingtalk_qrcode_uri = "{}{}".format(uri_main, uri_params)
         extra_context["dingtalk_qrcode_uri"] = dingtalk_qrcode_uri
+        extra_context["cas_ng_login_url"] = reverse("cas_ng_login")
         return super().login(request, extra_context=extra_context)
 
 
