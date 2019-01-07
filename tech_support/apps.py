@@ -1,0 +1,5 @@
+from django.apps import AppConfig
+
+
+class TechSupportConfig(AppConfig):
+    name = 'tech_support'
