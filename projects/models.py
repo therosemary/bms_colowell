@@ -21,10 +21,11 @@ class ContractsInfo(models.Model):
         verbose_name="合同号", max_length=12
     )
     client = models.ForeignKey(
-        Partners, verbose_name="客户", on_delete='DO_NOTHING', null=True, blank=True
+        Partners, verbose_name="客户", on_delete='SET_NULL', null=True, blank=True
     )
     staff_name = models.ForeignKey(
-        AUTH_USER_MODEL, verbose_name="业务员", on_delete='SET_NULL', null=True, blank=True
+        AUTH_USER_MODEL, verbose_name="业务员", on_delete='SET_NULL', null=True,
+        blank=True
     )
     box_price = models.FloatField(
         verbose_name="盒子单价", null=True, blank=True
@@ -64,7 +65,7 @@ class ContractsInfo(models.Model):
     )
 
     class Meta:
-        verbose_name = "合同信息"
+        verbose_name = verbose_name_plural = "合同信息"
         ordering = ["send_back_date"]
 
     def __str__(self):
@@ -129,7 +130,7 @@ class BoxApplications(models.Model):
     )
 
     class Meta:
-        verbose_name = "盒子申请"
+        verbose_name = verbose_name_plural = "盒子申请"
         ordering = ["-submit_time"]
 
 
@@ -207,5 +208,5 @@ class InvoiceInfo(models.Model):
 
 
     class Meta:
-        verbose_name = "申请开票"
+        verbose_name = verbose_name_plural = "申请开票"
         ordering = ["fill_date"]
