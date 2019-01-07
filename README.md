@@ -32,7 +32,13 @@ fork之前请务必认真阅读[开发规范](https://github.com/gmdzy2010/bms_c
 -----------
 #### `CAS系统`
 
-本项目适合作为CAS系统的server端，提供所有站点的web认证和授权服务，特别是对于SSO
+1.Introduction    
+>本项提供所有站点的web认证和授权服务    
+>需要结合OAuth2.0认证系统    
+
+2.Implementation
+>CAS client: `django-cas-ng`  
+>CAS server: `django-mama-cas`
 
 #### `开发人员`
 
@@ -41,3 +47,7 @@ fork之前请务必认真阅读[开发规范](https://github.com/gmdzy2010/bms_c
 2.市场部UI人员已经问询开发进度    
 
 3.本周五邮件通知各部门负责人目前进度
+
+#### `注册/登陆流程设计`
+
+1.如果要保持cas client与server端的用户信息同步，必须server端提供用户注册的接口，这样就能用户在子站点注册的同时，与server保持用户表同步
