@@ -45,7 +45,9 @@ class ContractsInfoAdmin(admin.ModelAdmin):
     def count_invoice_value(self, obj):
         """自定义列表字段：已开票额；包含未审核金额"""
         total_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=obj.contract_id)
+        invoice_datas = InvoiceInfo.objects.filter(
+            contract_id=obj.contract_id, flag=True
+        )
         if invoice_datas:
             for data in invoice_datas:
                 total_value += data.invoice_value
@@ -60,7 +62,7 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         invoice_datas = InvoiceInfo.objects.filter(contract_id=obj.contract_id)
         if invoice_datas:
             for data in invoice_datas:
-                if data.sendinvoice.invoice_flaginvoice_flag:
+                if data.sendinvoices.invoice_flag:
                     receive_value += data.invoice_value
         return format_html(
             '<span>{}</span>', receive_value
