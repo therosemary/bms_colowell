@@ -3,3 +3,4 @@ selenium==3.141.0
 dingtalk-sdk-gmdzy2010==0.4.2
 requests==2.21.0
 django-cas-ng==3.6.0
+django-import-export==1.1.0
