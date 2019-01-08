@@ -13,7 +13,13 @@ from partners.admin import PartnersAdmin, PropagandaAdmin
 from partners.models import Partners, Propaganda
 from products.admin import ProductsAdmin
 from products.models import Products
-
+from experiment.models import ExtExecute,QualityTest,\
+    FluorescenceQuantification,BsTask
+from experiment.admin import ExtExecuteAdmin,QualityTestAdmin,\
+    FluorescenceQuantificationAdmin,BsTaskAdmin
+from tech_support.models import ExtSubmit,ExtMethod,BoxDeliveries,Boxes
+from tech_support.admin import ExtMethodAdmin,ExtSubmitAdmin,BoxesAdmin,\
+    BoxDeliveriesAdmin
 
 class BMSAdminSite(AdminSite):
     site_title = "锐翌医学BMS系统"
@@ -56,7 +62,7 @@ class BMSAdminSite(AdminSite):
                      "redirect_uri={redirect_uri}".format(**params)
         dingtalk_qrcode_uri = "{}{}".format(uri_main, uri_params)
         extra_context["dingtalk_qrcode_uri"] = dingtalk_qrcode_uri
-        extra_context["cas_ng_login_url"] = reverse("cas_ng_login")
+        # extra_context["cas_ng_login_url"] = reverse("cas_ng_login")
         return super().login(request, extra_context=extra_context)
 
 
@@ -69,3 +75,11 @@ BMS_admin_site.register(DingtalkInfo, DingtalkInfoAdmin)
 BMS_admin_site.register(Partners, PartnersAdmin)
 BMS_admin_site.register(Propaganda, PropagandaAdmin)
 BMS_admin_site.register(Products, ProductsAdmin)
+BMS_admin_site.register(ExtExecute, ExtExecuteAdmin)
+BMS_admin_site.register(QualityTest, QualityTestAdmin)
+BMS_admin_site.register(BsTask, BsTaskAdmin)
+BMS_admin_site.register(FluorescenceQuantification, FluorescenceQuantificationAdmin)
+BMS_admin_site.register(BoxDeliveries,BoxDeliveriesAdmin)
+BMS_admin_site.register(Boxes,BoxesAdmin)
+BMS_admin_site.register(ExtMethod,ExtMethodAdmin)
+BMS_admin_site.register(ExtSubmit,ExtSubmitAdmin)
