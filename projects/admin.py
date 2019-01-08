@@ -15,6 +15,8 @@ def make_contract_id():
 
 
 class ContractsInfoAdmin(admin.ModelAdmin):
+    """合同信息管理"""
+    # TODO: 20190108 合同信息外键关联代理商和业务员，造成其中一个外键无用
     fields = (
         'contract_number', 'client', 'staff_name', 'box_price',
         'detection_price', 'contract_money', 'send_date', 'tracking_number',
@@ -70,6 +72,7 @@ class ContractsInfoAdmin(admin.ModelAdmin):
     receive_invoice_value.short_description = "已到账金额"
 
     def get_readonly_fields(self, request, obj=None):
+        """功能：配合change_view()使用，实现合同完成后信息变为只读"""
         self.readonly_fields = ()
         if hasattr(obj, 'end_status'):
             if obj.end_status:
@@ -98,6 +101,7 @@ class ContractsInfoAdmin(admin.ModelAdmin):
 
 
 class InvoiceInfoAdmin(admin.ModelAdmin):
+    """申请发票信息管理"""
     fields = (
         'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
         'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
@@ -114,6 +118,7 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
     save_as_continue = False
 
     def get_readonly_fields(self, request, obj=None):
+        """功能：配合change_view()使用，实现申请提交后信息变为只读"""
         self.readonly_fields = ()
         if hasattr(obj, 'flag'):
             if obj.flag:
@@ -133,17 +138,25 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
+        """重写model保存函数，保存申请信息，同时新建寄送发票信息记录"""
         if change:
+            send_invoices = SendInvoices.objects.filter(invoice_id=obj)
+            print('1111111111111%s' % type(send_invoices))
+            if not send_invoices.exists():
+                if request.POST.get('flag'):
+                    SendInvoices.objects.create(invoice_id=obj)
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
         else:
             obj.invoice_id = make_contract_id()
             obj.apply_name = re.search(r'[^【].*[^】]', str(request.user))[0]
             #新建保存开票邮寄信息
-            SendInvoices.objects.create(invoice_id=obj)
+            if request.POST.get('flag'):
+                SendInvoices.objects.create(invoice_id=obj)
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
 
 
 class BoxApplicationsAdmin(admin.ModelAdmin):
+    """申请盒子信息管理"""
     fields = (
         'contract_id', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'box_price', 'detection_price',
@@ -158,6 +171,7 @@ class BoxApplicationsAdmin(admin.ModelAdmin):
     save_as_continue = False
 
     def get_readonly_fields(self, request, obj=None):
+        """功能：配合change_view()使用，实现申请提交后信息变为只读"""
         self.readonly_fields = ()
         if hasattr(obj, 'box_submit_flag'):
             if obj.box_submit_flag:

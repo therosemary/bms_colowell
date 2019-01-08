@@ -206,7 +206,6 @@ class InvoiceInfo(models.Model):
         verbose_name="审批状态", default=False, null=True, blank=True
     )
 
-
     class Meta:
         verbose_name = verbose_name_plural = "申请开票"
         ordering = ["fill_date"]
