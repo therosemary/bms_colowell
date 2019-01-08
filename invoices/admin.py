@@ -5,6 +5,9 @@ from .models import SendInvoices
 
 
 class SendInvoiceAdmin(admin.ModelAdmin):
+    """发票寄送信息管理
+       注：每条记录在发票申请提交后自动被创建
+    """
     fields = (
         'invoice_id', 'invoice_number', 'billing_date', 'send_date',
         'tracking_number', 'ele_invoice', 'invoice_flag', 'sender', 'flag'
@@ -23,7 +26,6 @@ class SendInvoiceAdmin(admin.ModelAdmin):
         #     self.readonly_fields = []
         # elif hasattr(obj, 'flag'):
         if hasattr(obj, 'flag'):
-            print('1111111111111%s' % obj.flag)
             if obj.flag:
                 self.readonly_fields = (
                     'invoice_id', 'invoice_number', 'billing_date', 'send_date',
@@ -45,20 +47,3 @@ class SendInvoiceAdmin(admin.ModelAdmin):
         else:
             obj.fill_name = request.user
             obj.save()
-
-    # def get_invoice_info(self, obj):
-    #     data = InvoiceInfo.objects.filter(flag=True)
-    #     return data.invoice_id
-    # get_invoice_info.short_description = "合同信息"
-
-    # def get_readonly_fields(self, request, obj=None):
-    #     if request.user.is_supper:
-    #         self.readonly_fields = ('invoice_id')
-    #     else:
-    #         self.readonly_fields = ()
-    #
-    # def change_view(self, request, object_id, form_url='', extra_context=None):
-    #     invoice_data = InvoiceInfo.objects.filter(flag=True)
-    #     return super(SendInvoiceAdmin, self).change_view(
-    #         request, object_id, form_url='', extra_context=None
-    #     )
