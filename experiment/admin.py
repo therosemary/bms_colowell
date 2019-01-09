@@ -14,6 +14,7 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
         'status',
     )
     list_display_links = ('ext_number',)
+    filter_horizontal = ['boxes', ]
 
 
 class QualityTestAdmin(ImportExportActionModelAdmin):
@@ -26,6 +27,7 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
         "status",
     )
     list_display_links = ('qua_number',)
+    filter_horizontal = ['boxes', ]
 
 
 class BsTaskAdmin(ImportExportActionModelAdmin):
@@ -38,6 +40,7 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
         "status",
     )
     list_display_links = ('bs_number',)
+    filter_horizontal = ['boxes', ]
 
 
 class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
@@ -49,9 +52,6 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
         'fq_number', "boxes", 'test_number', 'operator', 'fq_date', "status",
     )
     list_display_links = ('fq_number',)
+    filter_horizontal = ['boxes', ]
 
 
-admin.site.register(ExtExecute, ExtExecuteAdmin)
-admin.site.register(QualityTest, QualityTestAdmin)
-admin.site.register(BsTask, BsTaskAdmin)
-admin.site.register(FluorescenceQuantification, FluorescenceQuantificationAdmin)
