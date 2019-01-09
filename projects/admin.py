@@ -1,10 +1,12 @@
-from django.contrib import admin
-from django.utils.html import format_html
 import datetime
 import random
+import re
+
+from django.contrib import admin
+from django.utils.html import format_html
+
 from .models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
-import re
 
 
 def make_contract_id():
@@ -141,7 +143,6 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
         """重写model保存函数，保存申请信息，同时新建寄送发票信息记录"""
         if change:
             send_invoices = SendInvoices.objects.filter(invoice_id=obj)
-            print('1111111111111%s' % type(send_invoices))
             if not send_invoices.exists():
                 if request.POST.get('flag'):
                     SendInvoices.objects.create(invoice_id=obj)
