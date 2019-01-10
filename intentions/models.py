@@ -27,7 +27,7 @@ class Intentions(models.Model):
     )
 
     class Meta:
-        verbose_name = "意向池"
+        verbose_name = verbose_name_plural = "意向池"
         ordering = ["fill_date"]
 
     def __str__(self):
