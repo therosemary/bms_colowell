@@ -26,13 +26,21 @@ class ExtExecute(models.Model):
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
                                  on_delete=models.SET_NULL, null=True)
     ext_date = models.DateField("提取日期", null=True)
-    note = models.TextField("实验异常备注")
+    note = models.TextField(verbose_name="实验异常备注",blank=True)
     status = models.IntegerField(choices=EXT_STATUS, verbose_name="状态")
+    submit = models.NullBooleanField(
+        verbose_name='实验完成，提交数据', default=None
+    )
+    fail = models.NullBooleanField(
+        verbose_name='实验重做，记录数据', default=None
+    )
 
     class Meta:
         app_label = "experiment"
         verbose_name = verbose_name_plural = "1-提取任务管理"
 
+    def __str__(self):
+        return self.ext_number
 
 class QualityTest(models.Model):
     """实验的质检表"""
@@ -52,18 +60,28 @@ class QualityTest(models.Model):
     loop_number = models.CharField("循环数", max_length=50)
     background_baseline = models.CharField("Background/Baseline",
                                            max_length=50)
-    ct = models.CharField("非甲基化ACTB-CT值", max_length=50)
-    amplification_curve = models.CharField("非甲基化ACTB-扩增曲线",
+    ct = models.CharField("CT值", max_length=50)
+    amplification_curve = models.CharField("扩增曲线",
                                            max_length=50)
-    threshold_line = models.CharField("非甲基化ACTB-阀值线", max_length=50)
+    threshold_line = models.CharField("阀值线", max_length=50)
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
                                  on_delete=models.SET_NULL, null=True)
     status = models.IntegerField(choices= QUA_STATUS, verbose_name="状态")
     qua_date = models.DateField("质检日期", null=True)
+    note = models.TextField(verbose_name="实验异常备注",default="",blank=True)
+    submit = models.NullBooleanField(
+        verbose_name='实验完成，提交数据', default=None
+    )
+    fail = models.NullBooleanField(
+        verbose_name='实验重做，记录数据', default=None
+    )
 
     class Meta:
         app_label = "experiment"
         verbose_name = verbose_name_plural = "2-质检任务管理"
+
+    def __str__(self):
+        return self.qua_number
 
 
 class BsTask(models.Model):
@@ -87,12 +105,21 @@ class BsTask(models.Model):
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
                                  on_delete=models.SET_NULL, null=True)
     bs_date = models.DateField("BS实验日期", null=True)
-    note = models.TextField("实验异常备注")
+    note = models.TextField(verbose_name="实验异常备注",blank=True)
     status = models.IntegerField(choices=BS_STATUS, verbose_name="状态")
+    submit = models.NullBooleanField(
+        verbose_name='实验完成，提交数据', default=None
+    )
+    fail = models.NullBooleanField(
+        verbose_name='实验重做，记录数据', default=None
+    )
 
     class Meta:
         app_label = "experiment"
         verbose_name = verbose_name_plural = "3-BS任务管理"
+
+    def __str__(self):
+        return self.bs_number
 
 
 class FluorescenceQuantification(models.Model):
@@ -112,18 +139,18 @@ class FluorescenceQuantification(models.Model):
     instrument = models.CharField("仪器", max_length=50)
     loop_number = models.CharField("循环数", max_length=50)
     background = models.CharField("Background", max_length=50)
-    actb_noise = models.CharField("内参ACTB--NoiseBand/STDMultiplier",
+    actb_noise = models.CharField("NoiseBand/STDMultiplier",
                                   max_length=50)
-    actb_ct = models.CharField("内参ACTB--CT值", max_length=50)
-    actb_amp = models.CharField("内参ACTB--扩增曲线", max_length=50)
-    sfrp2_noise = models.CharField("sfrp2--NoiseBand/STDMultiplier",
+    actb_ct = models.CharField("CT值", max_length=50)
+    actb_amp = models.CharField("扩增曲线", max_length=50)
+    sfrp2_noise = models.CharField("NoiseBand/STDMultiplier",
                                    max_length=50)
-    sfrp2_ct = models.CharField("sfrp2--CT值", max_length=50)
-    sfrp2_amp = models.CharField("sfrp2--扩增曲线", max_length=50)
-    sdc2_noise = models.CharField("sdc2--NoiseBand/STDMultiplier",
+    sfrp2_ct = models.CharField("CT值", max_length=50)
+    sfrp2_amp = models.CharField("扩增曲线", max_length=50)
+    sdc2_noise = models.CharField("NoiseBand/STDMultiplier",
                                   max_length=50)
-    sdc2_ct = models.CharField("sdc2--CT值", max_length=50)
-    sdc2_amp = models.CharField("sdc2--扩增曲线", max_length=50)
+    sdc2_ct = models.CharField("CT值", max_length=50)
+    sdc2_amp = models.CharField("扩增曲线", max_length=50)
     is_quality = models.BooleanField("有无质控")
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
                                  on_delete=models.SET_NULL, null=True)
@@ -132,7 +159,17 @@ class FluorescenceQuantification(models.Model):
     qpcr_suggest = models.CharField("建议", max_length=200)
     status = models.IntegerField(choices=FQ_STATUS, verbose_name="状态")
     result = models.TextField("结果")
+    note = models.TextField(verbose_name="实验异常备注",blank=True)
+    submit = models.NullBooleanField(
+        verbose_name='实验完成，提交数据', default=None
+    )
+    fail = models.NullBooleanField(
+        verbose_name='实验重做，记录数据', default=None
+    )
 
     class Meta:
         app_label = "experiment"
         verbose_name = verbose_name_plural = "4-荧光定量管理"
+
+    def __str__(self):
+        return self.fq_number
