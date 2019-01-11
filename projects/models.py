@@ -69,7 +69,7 @@ class ContractsInfo(models.Model):
         ordering = ["send_back_date"]
 
     def __str__(self):
-        return '%s' % self.contract_number
+        return '{}'.format(self.contract_number)
 
 
 class BoxApplications(models.Model):
@@ -132,6 +132,9 @@ class BoxApplications(models.Model):
     class Meta:
         verbose_name = verbose_name_plural = "盒子申请"
         ordering = ["-submit_time"]
+
+    def __str__(self):
+        return '盒子申请编号：{}'.format(self.application_id)
 
 
 class InvoiceInfo(models.Model):
@@ -205,6 +208,9 @@ class InvoiceInfo(models.Model):
     invoice_approval_status = models.BooleanField(
         verbose_name="审批状态", default=False, null=True, blank=True
     )
+
+    def __str__(self):
+        return "{}".format(self.invoice_id)
 
     class Meta:
         verbose_name = verbose_name_plural = "申请开票"

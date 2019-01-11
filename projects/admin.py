@@ -93,14 +93,21 @@ class ContractsInfoAdmin(admin.ModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
+    def judeg_greate_date(self, obj):
+        compare_flag = 1
+        if (obj.send_back_date is not None) and (obj.send_date is not None):
+            if obj.send_back_date < obj.send_date:
+                compare_flag = 0
+        return compare_flag
+
     def save_model(self, request, obj, form, change):
+        """重写合同信息保存
+        """
         if change:
-            super(ContractsInfoAdmin, self).save_model(request, obj, form,
-                                                       change)
+            super(ContractsInfoAdmin, self).save_model(request, obj, form, change)
         else:
             obj.contract_id = make_contract_id()
             obj.save()
-
 
 class InvoiceInfoAdmin(admin.ModelAdmin):
     """申请发票信息管理"""
