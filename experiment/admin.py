@@ -1,80 +1,6 @@
-from django.contrib import admin
-
 from import_export.admin import ImportExportActionModelAdmin
-from experiment.models import *
-from django import forms
-
-
-class ExtExecuteForm(forms.ModelForm):
-    """提取任务表的字段限制"""
-
-    class Meta:
-        model = ExtExecute
-        fields = "__all__"
-
-    def clean_fail(self):
-        sub = self.cleaned_data['submit']
-        fa = self.cleaned_data["fail"]
-        if sub and fa:
-            raise forms.ValidationError(
-                "请不要同时勾选任务完成和任务重做", code='invalid value'
-            )
-        else:
-            return self.cleaned_data['fail']
-
-
-class QualityTestForm(forms.ModelForm):
-    """提取任务表的字段限制"""
-
-    class Meta:
-        model = QualityTest
-        fields = "__all__"
-
-    def clean_fail(self):
-        sub = self.cleaned_data['submit']
-        fa = self.cleaned_data["fail"]
-        if sub and fa:
-            raise forms.ValidationError(
-                "请不要同时勾选任务完成和任务重做", code='invalid value'
-            )
-        else:
-            return self.cleaned_data['fail']
-
-
-class BsTaskForm(forms.ModelForm):
-    """提取任务表的字段限制"""
-
-    class Meta:
-        model = BsTask
-        fields = "__all__"
-
-    def clean_fail(self):
-        sub = self.cleaned_data['submit']
-        fa = self.cleaned_data["fail"]
-        if sub and fa:
-            raise forms.ValidationError(
-                "请不要同时勾选任务完成和任务重做", code='invalid value'
-            )
-        else:
-            return self.cleaned_data['fail']
-
-
-class FluorescenceQuantificationForm(forms.ModelForm):
-    """提取任务表的字段限制"""
-
-    class Meta:
-        model = FluorescenceQuantification
-        fields = "__all__"
-
-    def clean_fail(self):
-        sub = self.cleaned_data['submit']
-        fa = self.cleaned_data["fail"]
-        if sub and fa:
-            raise forms.ValidationError(
-                "请不要同时勾选任务完成和任务重做", code='invalid value'
-            )
-        else:
-            return self.cleaned_data['fail']
+from experiment.forms import ExtExecuteForm, QualityTestForm, BsTaskForm, \
+    FluorescenceQuantificationForm
 
 
 class ExtExecuteAdmin(ImportExportActionModelAdmin):
@@ -113,19 +39,16 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
                                         "elution_volume", "produce", 'note',
                                         "submit", "fail"]
                 return self.readonly_fields
-        except:
+        except AttributeError:
             return self.readonly_fields
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         if obj.submit:
             obj.status = 1
-            obj.save()
         elif obj.fail:
             obj.status = 2
-            obj.save()
-        else:
-            obj.save()
+        obj.save()
 
 
 class QualityTestAdmin(ImportExportActionModelAdmin):
@@ -165,19 +88,16 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
                                         "amplification_curve", "submit",
                                         'note', "threshold_line", "fail"]
                 return self.readonly_fields
-        except:
+        except AttributeError:
             return self.readonly_fields
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         if obj.submit:
             obj.status = 1
-            obj.save()
         elif obj.fail:
             obj.status = 2
-            obj.save()
-        else:
-            obj.save()
+        obj.save()
 
 
 class BsTaskAdmin(ImportExportActionModelAdmin):
@@ -212,19 +132,16 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
                                         'bis_template', "bis_elution", 'note',
                                         "is_quality", "submit", "fail"]
                 return self.readonly_fields
-        except:
+        except AttributeError:
             return self.readonly_fields
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         if obj.submit:
             obj.status = 1
-            obj.save()
         elif obj.fail:
             obj.status = 2
-            obj.save()
-        else:
-            obj.save()
+        obj.save()
 
 
 class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
@@ -271,16 +188,13 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
                                         "sdc2_ct", "sdc2_amp", 'note',
                                         "submit", 'loop_number']
                 return self.readonly_fields
-        except:
+        except AttributeError:
             return self.readonly_fields
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
         if obj.submit:
             obj.status = 1
-            obj.save()
         elif obj.fail:
             obj.status = 2
-            obj.save()
-        else:
-            obj.save()
+        obj.save()
