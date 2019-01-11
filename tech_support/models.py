@@ -12,10 +12,14 @@ class BoxDeliveries(models.Model):
     send_number = models.CharField(max_length=200,verbose_name="快递单号信息")
     send_date = models.DateField("邮寄日期", null=True)
     made_date = models.DateField("生产日期",null=True)
+    submit = models.BooleanField(verbose_name='提交', default=False)
 
     class Meta:
         app_label = "tech_support"
         verbose_name = verbose_name_plural = "盒子发货管理"
+
+    def __str__(self):
+        return self.index_number
 
 
 class Boxes(models.Model):
@@ -40,9 +44,13 @@ class Boxes(models.Model):
     picking_interval = models.CharField(max_length=20,verbose_name="采收间隔")
     report_date = models.DateField("报告日期",null=True)
 
+
     class Meta:
         app_label = "tech_support"
         verbose_name = verbose_name_plural = "盒子管理"
+
+    def __str__(self):
+        return self.index_number
 
 
 class ExtMethod(models.Model):
@@ -53,13 +61,20 @@ class ExtMethod(models.Model):
         app_label = "tech_support"
         verbose_name = verbose_name_plural = "提取方法管理"
 
+    def __str__(self):
+        return self.method
+
 
 class ExtSubmit(models.Model):
     """提取下单管理"""
     extsubmit_number = models.CharField("提取下单编号",max_length=50)
     boxes = models.ForeignKey(BoxDeliveries,verbose_name="对应盒子信息",on_delete=models.SET_NULL,null=True)
     exp_method = models.ForeignKey(ExtMethod,verbose_name="提取方法",on_delete=models.SET_NULL,null=True)
+    submit = models.BooleanField(verbose_name='提交', default=False)
 
     class Meta:
         app_label = "tech_support"
         verbose_name = verbose_name_plural = "提取下单管理"
+
+    def __str__(self):
+        return self.extsubmit_number
