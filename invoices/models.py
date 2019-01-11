@@ -34,8 +34,11 @@ class SendInvoices(models.Model):
     fill_name = models.CharField(
         verbose_name="填写人", max_length=20, null=True, blank=True
     )
-    flag = models.BooleanField(
+    send_flag = models.BooleanField(
         verbose_name="是否提交", default=False
+    )
+    invoice_approval_status = models.BooleanField(
+        verbose_name="审批状态", default=False, null=True, blank=True
     )
 
     class Meta:
