@@ -38,7 +38,7 @@ class SendInvoices(models.Model):
         verbose_name="是否提交", default=False
     )
     invoice_approval_status = models.BooleanField(
-        verbose_name="审批状态", default=False, null=True, blank=True
+        verbose_name="审批状态", null=True, blank=True
     )
 
     class Meta:

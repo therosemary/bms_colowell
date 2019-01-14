@@ -33,7 +33,7 @@ class SendInvoiceAdmin(admin.ModelAdmin):
     )
     list_per_page = 40
     save_as_continue = False
-    readonly_fields = ('invoice_id', 'fill_name') + invoice_info
+    readonly_fields = ('invoice_id',) + invoice_info
 
     def get_contract_number(self, obj):
         return obj.invoice_id.contract_id.constract_number
@@ -83,9 +83,17 @@ class SendInvoiceAdmin(admin.ModelAdmin):
         # if request.user.is_superuser:
         #     self.readonly_fields = []
         # elif hasattr(obj, 'flag'):
+
+        # 审批状态选定保存后是否提交均不可再修改
+        if hasattr(obj, 'invoice_approval_status'):
+            if not obj.invoice_approval_status is None:
+                self.readonly_fields = self.invoice_info + \
+                                       ('invoice_id', 'invoice_approval_status',)
         if hasattr(obj, 'send_flag'):
             if obj.send_flag:
-                self.readonly_fields = self.invoice_info + self.send_invoice_info
+                self.readonly_fields = self.invoice_info + \
+                                       ('invoice_approval_status',) + \
+                                       self.send_invoice_info
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):

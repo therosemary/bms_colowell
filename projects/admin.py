@@ -121,10 +121,21 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
         'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
         'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
         'receivables', 'address_name', 'address_phone', 'send_address',
-        'remark', 'apply_name', 'fill_date', 'flag', 'invoice_approval_status'
+        'remark', 'apply_name', 'fill_date', 'flag',
+        'get_invoice_approval_status',
     )
     list_per_page = 40
     save_as_continue = False
+
+    def get_invoice_approval_status(self, obj):
+        if obj.sendinvoices.invoice_approval_status is None:
+            status_value = "审核中"
+        elif obj.sendinvoices.invoice_approval_status:
+            status_value = "通过"
+        else:
+            status_value = "未通过"
+        return status_value
+    get_invoice_approval_status.short_description = "审批状态"
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""

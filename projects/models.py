@@ -205,9 +205,9 @@ class InvoiceInfo(models.Model):
     apply_name = models.CharField(
         verbose_name="申请人", max_length=20, null=True, blank=True
     )
-    invoice_approval_status = models.BooleanField(
-        verbose_name="审批状态", default=False, null=True, blank=True
-    )
+    # invoice_approval_status = models.BooleanField(
+    #     verbose_name="审批状态", default=False, null=True, blank=True
+    # )
 
     def __str__(self):
         return "{}".format(self.invoice_id)
