@@ -4,9 +4,9 @@ import re
 
 from django.contrib import admin
 from django.utils.html import format_html
-
 from .models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
+from .forms import ContractInfoForm, InvoiceInfoForm
 
 
 def make_contract_id():
@@ -26,14 +26,15 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         'contract_type', 'remark', 'end_status'
     )
     list_display = (
-        'contract_id', 'contract_number', 'client', 'staff_name',
-        'box_price', 'detection_price', 'full_set_price', 'contract_money',
+        'contract_number', 'client', 'staff_name', 'box_price',
+        'detection_price', 'full_set_price', 'contract_money',
         'count_invoice_value', 'receive_invoice_value', 'send_date',
         'tracking_number', 'send_back_date', 'contract_content',
-        'shipping_status', 'contract_type', 'remark', 'end_status'
+        'shipping_status', 'contract_type', 'end_status'
     )
     list_per_page = 40
     save_as_continue = False
+    form = ContractInfoForm
 
     def full_set_price(self, obj):
         """自定义列表字段：单套总价"""
@@ -54,7 +55,8 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         )
         if invoice_datas:
             for data in invoice_datas:
-                total_value += data.invoice_value
+                if data.sendinvoices.invoice_approval_status:
+                    total_value += data.invoice_value
         return format_html(
             '<span>{}</span>', total_value
         )
@@ -126,6 +128,8 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
     )
     list_per_page = 40
     save_as_continue = False
+    date_hierarchy = "fill_date"
+    form = InvoiceInfoForm
 
     def get_invoice_approval_status(self, obj):
         if obj.sendinvoices.invoice_approval_status is None:
@@ -182,7 +186,7 @@ class BoxApplicationsAdmin(admin.ModelAdmin):
         'use', 'box_submit_flag'
     )
     list_display = (
-        'amount', 'classification', 'contract_id', 'address_name',
+        'colored_contract_number', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'proposer', 'box_price',
         'detection_price', 'use', 'approval_status', 'box_submit_flag'
     )

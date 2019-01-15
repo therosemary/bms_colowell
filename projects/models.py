@@ -1,6 +1,7 @@
 from django.db import models
 from partners.models import Partners
 from bms_colowell.settings import AUTH_USER_MODEL
+from django.utils.html import format_html
 
 
 class ContractsInfo(models.Model):
@@ -128,6 +129,17 @@ class BoxApplications(models.Model):
     box_submit_flag = models.BooleanField(
         verbose_name="是否提交", default=False
     )
+
+    def colored_contract_number(self):
+        if self.contract_id.contract_type:
+            return format_html(
+                '<span style="color:{}">{}</span>', 'red', self.contract_id
+            )
+        return format_html(
+            '<span>{}</span>', self.contract_id
+        )
+    colored_contract_number.short_description = "合同号"
+
 
     class Meta:
         verbose_name = verbose_name_plural = "盒子申请"

@@ -1,7 +1,6 @@
 from django.contrib import admin
-from django.utils.html import format_html
 from .models import SendInvoices
-from projects.models import InvoiceInfo
+from .forms import SendInvoicesForm
 
 
 class SendInvoiceAdmin(admin.ModelAdmin):
@@ -15,7 +14,7 @@ class SendInvoiceAdmin(admin.ModelAdmin):
         'get_address_phone', 'get_send_address',
     )
     send_invoice_info = (
-        'invoice_id', 'billing_date', 'send_date', 'tracking_number',
+        'invoice_id', 'billing_date', 'invoice_send_date', 'tracking_number',
         'ele_invoice', 'invoice_flag', 'sender', 'send_flag',
     )
     fieldsets = (
@@ -28,12 +27,14 @@ class SendInvoiceAdmin(admin.ModelAdmin):
     )
     list_display = (
         'invoice_id', 'invoice_number', 'billing_date', 'ele_invoice',
-        'tracking_number', 'send_date', 'sender', 'invoice_flag',
+        'tracking_number', 'invoice_send_date', 'sender', 'invoice_flag',
         'fill_name', 'invoice_approval_status', 'send_flag'
     )
     list_per_page = 40
     save_as_continue = False
+    date_hierarchy = 'billing_date'
     readonly_fields = ('invoice_id',) + invoice_info
+    form = SendInvoicesForm
 
     def get_contract_number(self, obj):
         return obj.invoice_id.contract_id.constract_number

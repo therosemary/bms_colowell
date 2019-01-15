@@ -9,7 +9,7 @@ class SendInvoices(models.Model):
     billing_date = models.DateField(
         verbose_name="开票日期", null=True, blank=True
     )
-    send_date = models.DateField(
+    invoice_send_date = models.DateField(
         verbose_name="寄出日期", null=True, blank=True
     )
     tracking_number = models.CharField(
@@ -46,4 +46,5 @@ class SendInvoices(models.Model):
         ordering = ["billing_date"]
 
     def __str__(self):
-        return '%s' % self.invoice_number
+        return '发票号{}'.format(self.invoice_number)
+
