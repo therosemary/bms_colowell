@@ -31,4 +31,4 @@ class Intentions(models.Model):
         ordering = ["fill_date"]
 
     def __str__(self):
-        return "%s" % self.intention_id
+        return "{}".format(self.intention_id)

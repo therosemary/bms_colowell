@@ -18,8 +18,7 @@ class ContractsInfo(models.Model):
         verbose_name="合同编号", max_length=12, primary_key=True
     )
     contract_number = models.CharField(
-
-        verbose_name="合同号", max_length=12
+        verbose_name="合同号", max_length=12, unique=True
     )
     client = models.ForeignKey(
         Partners, verbose_name="客户", on_delete='SET_NULL', null=True, blank=True
