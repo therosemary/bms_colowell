@@ -1,10 +1,12 @@
-from django.contrib import admin
-from django.utils.html import format_html
 import datetime
 import random
+import re
+
+from django.contrib import admin
+from django.utils.html import format_html
 from .models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
-import re
+from .forms import ContractInfoForm, InvoiceInfoForm
 
 
 def make_contract_id():
@@ -24,14 +26,15 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         'contract_type', 'remark', 'end_status'
     )
     list_display = (
-        'contract_id', 'contract_number', 'client', 'staff_name',
-        'box_price', 'detection_price', 'full_set_price', 'contract_money',
+        'contract_number', 'client', 'staff_name', 'box_price',
+        'detection_price', 'full_set_price', 'contract_money',
         'count_invoice_value', 'receive_invoice_value', 'send_date',
         'tracking_number', 'send_back_date', 'contract_content',
-        'shipping_status', 'contract_type', 'remark', 'end_status'
+        'shipping_status', 'contract_type', 'end_status'
     )
     list_per_page = 40
     save_as_continue = False
+    form = ContractInfoForm
 
     def full_set_price(self, obj):
         """自定义列表字段：单套总价"""
@@ -52,7 +55,8 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         )
         if invoice_datas:
             for data in invoice_datas:
-                total_value += data.invoice_value
+                if data.sendinvoices.invoice_approval_status:
+                    total_value += data.invoice_value
         return format_html(
             '<span>{}</span>', total_value
         )
@@ -91,14 +95,21 @@ class ContractsInfoAdmin(admin.ModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
+    def judeg_greate_date(self, obj):
+        compare_flag = 1
+        if (obj.send_back_date is not None) and (obj.send_date is not None):
+            if obj.send_back_date < obj.send_date:
+                compare_flag = 0
+        return compare_flag
+
     def save_model(self, request, obj, form, change):
+        """重写合同信息保存
+        """
         if change:
-            super(ContractsInfoAdmin, self).save_model(request, obj, form,
-                                                       change)
+            super(ContractsInfoAdmin, self).save_model(request, obj, form, change)
         else:
             obj.contract_id = make_contract_id()
             obj.save()
-
 
 class InvoiceInfoAdmin(admin.ModelAdmin):
     """申请发票信息管理"""
@@ -112,10 +123,23 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
         'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
         'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
         'receivables', 'address_name', 'address_phone', 'send_address',
-        'remark', 'apply_name', 'fill_date', 'flag', 'invoice_approval_status'
+        'remark', 'apply_name', 'fill_date', 'flag',
+        'get_invoice_approval_status',
     )
     list_per_page = 40
     save_as_continue = False
+    date_hierarchy = "fill_date"
+    form = InvoiceInfoForm
+
+    def get_invoice_approval_status(self, obj):
+        if obj.sendinvoices.invoice_approval_status is None:
+            status_value = "审核中"
+        elif obj.sendinvoices.invoice_approval_status:
+            status_value = "通过"
+        else:
+            status_value = "未通过"
+        return status_value
+    get_invoice_approval_status.short_description = "审批状态"
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
@@ -141,7 +165,6 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
         """重写model保存函数，保存申请信息，同时新建寄送发票信息记录"""
         if change:
             send_invoices = SendInvoices.objects.filter(invoice_id=obj)
-            print('1111111111111%s' % type(send_invoices))
             if not send_invoices.exists():
                 if request.POST.get('flag'):
                     SendInvoices.objects.create(invoice_id=obj)
@@ -163,7 +186,7 @@ class BoxApplicationsAdmin(admin.ModelAdmin):
         'use', 'box_submit_flag'
     )
     list_display = (
-        'amount', 'classification', 'contract_id', 'address_name',
+        'colored_contract_number', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'proposer', 'box_price',
         'detection_price', 'use', 'approval_status', 'box_submit_flag'
     )

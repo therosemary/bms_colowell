@@ -1,6 +1,7 @@
 from django.db import models
 from partners.models import Partners
 from bms_colowell.settings import AUTH_USER_MODEL
+from django.utils.html import format_html
 
 
 class ContractsInfo(models.Model):
@@ -69,7 +70,7 @@ class ContractsInfo(models.Model):
         ordering = ["send_back_date"]
 
     def __str__(self):
-        return '%s' % self.contract_number
+        return '{}'.format(self.contract_number)
 
 
 class BoxApplications(models.Model):
@@ -129,9 +130,23 @@ class BoxApplications(models.Model):
         verbose_name="是否提交", default=False
     )
 
+    def colored_contract_number(self):
+        if self.contract_id.contract_type:
+            return format_html(
+                '<span style="color:{}">{}</span>', 'red', self.contract_id
+            )
+        return format_html(
+            '<span>{}</span>', self.contract_id
+        )
+    colored_contract_number.short_description = "合同号"
+
+
     class Meta:
         verbose_name = verbose_name_plural = "盒子申请"
         ordering = ["-submit_time"]
+
+    def __str__(self):
+        return '盒子申请编号：{}'.format(self.application_id)
 
 
 class InvoiceInfo(models.Model):
@@ -202,9 +217,12 @@ class InvoiceInfo(models.Model):
     apply_name = models.CharField(
         verbose_name="申请人", max_length=20, null=True, blank=True
     )
-    invoice_approval_status = models.BooleanField(
-        verbose_name="审批状态", default=False, null=True, blank=True
-    )
+    # invoice_approval_status = models.BooleanField(
+    #     verbose_name="审批状态", default=False, null=True, blank=True
+    # )
+
+    def __str__(self):
+        return "{}".format(self.invoice_id)
 
     class Meta:
         verbose_name = verbose_name_plural = "申请开票"
