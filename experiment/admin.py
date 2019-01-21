@@ -1,6 +1,65 @@
 from import_export.admin import ImportExportActionModelAdmin
 from experiment.forms import ExtExecuteForm, QualityTestForm, BsTaskForm, \
     FluorescenceQuantificationForm
+from import_export import resources
+from experiment.models import *
+from accounts.models import *
+
+
+class ExtExecuteResource(resources.ModelResource):
+    class Meta:
+        model = ExtExecute
+        skip_unchanged = True
+        import_id_fields = 'ext_number'
+        fields = ('ext_number', 'operator',
+                  'test_number', 'ext_method', "objective", 'start_number',
+                  'hemoglobin', 'cizhutiji', 'ext_density','elution_volume',
+                  "ext_date", "note")
+        export_order =  ('ext_number', 'operator',
+                  'test_number', 'ext_method', "objective", 'start_number',
+                  'hemoglobin', 'cizhutiji', 'ext_density','elution_volume',
+                  "ext_date", "note")
+
+    def get_export_headers(self):
+        return ["实验编号", "操作人员", "试剂批号", "提取方法", "目的",
+                "起始取样量(ml)", "血红蛋白", "磁珠体积(ul)", "提取浓度(ng/ul)",
+                "洗脱体积(ul)", "提取日期", "实验异常备注"]
+
+    def get_diff_headers(self):
+        return ["实验编号", "操作人员", "试剂批号", "提取方法", "目的",
+                "起始取样量(ml)", "血红蛋白", "磁珠体积(ul)", "提取浓度(ng/ul)",
+                "洗脱体积(ul)", "提取日期", "实验异常备注"]
+
+    def get_or_init_instance(self, instance_loader, row):
+        instance = self.get_instance(instance_loader, row)
+        if instance:
+            # instance.operator = BmsUser.objects.get()
+            instance.test_number = row['试剂批号']
+            instance.ext_method = row['提取方法']
+            instance.objective = row['目的']
+            instance.start_number = row['起始取样量(ml)']
+            instance.hemoglobin = row['血红蛋白']
+            instance.cizhutiji = row['磁珠体积(ul)']
+            instance.ext_density = row['提取浓度(ng/ul)']
+            instance.elution_volume = row["洗脱体积(ul)"]
+            instance.ext_date = row["提取日期"]
+            instance.note = row["实验异常备注"]
+            instance.save()
+            return (instance, False)
+        else:
+            return (self.init_instance(row), True)
+
+    def init_instance(self, row=None):
+        if not row:
+            row = {}
+        instance = self._meta.model()
+        for attr, value in row.items():
+            setattr(instance, attr, value)
+        if ExtExecute.objects.all().count() == 0:
+            instance.id = "1"
+        else:
+            instance.id = str(int(ExtExecute.objects.latest('id').id) + 1)
+        return instance
 
 
 class ExtExecuteAdmin(ImportExportActionModelAdmin):
@@ -9,6 +68,7 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
     list_per_page = 50
     search_fields = ("status", "ext_date")
     save_on_top = False
+    resource_class = ExtExecuteResource
     list_display = (
         'ext_number', "boxes", "test_number", 'ext_method', 'ext_date',
         'status',
@@ -22,12 +82,15 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
         ('实验数据', {
             'fields': ("test_number", ('start_number', "hemoglobin"),
                        ("cizhutiji", "ext_density"),
-                       ("elution_volume", "produce"))
+                       ("elution_volume", ))
         }),
         ('实验结果', {
             'fields': ('note', ("submit", "fail"))
         }),
     )
+
+    # def produce(self):
+    #     if
 
     def get_readonly_fields(self, request, obj=None):
         try:
@@ -40,15 +103,17 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
                                         "submit", "fail"]
                 return self.readonly_fields
         except AttributeError:
+            self.readonly_fields = []
             return self.readonly_fields
+        self.readonly_fields = []
         return self.readonly_fields
 
-    def save_model(self, request, obj, form, change):
-        if obj.submit:
-            obj.status = 1
-        elif obj.fail:
-            obj.status = 2
-        obj.save()
+    # def save_model(self, request, obj, form, change):
+    #     if obj.submit:
+    #         QualityTest.objects.create(boxes=obj.boxes, qua_number= obj.)
+    #     elif obj.fail:
+    #         obj.status = 2
+    #     obj.save()
 
 
 class QualityTestAdmin(ImportExportActionModelAdmin):
@@ -89,7 +154,9 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
                                         'note', "threshold_line", "fail"]
                 return self.readonly_fields
         except AttributeError:
+            self.readonly_fields = []
             return self.readonly_fields
+        self.readonly_fields = []
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
@@ -133,7 +200,9 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
                                         "is_quality", "submit", "fail"]
                 return self.readonly_fields
         except AttributeError:
+            self.readonly_fields = []
             return self.readonly_fields
+        self.readonly_fields = []
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
@@ -189,7 +258,9 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
                                         "submit", 'loop_number']
                 return self.readonly_fields
         except AttributeError:
+            self.readonly_fields = []
             return self.readonly_fields
+        self.readonly_fields = []
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):

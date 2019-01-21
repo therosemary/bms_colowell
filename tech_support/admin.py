@@ -4,6 +4,10 @@ from django.contrib.admin import ModelAdmin
 from tech_support.models import *
 
 
+Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
+ 8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
+
+
 class BoxesInline(admin.TabularInline):
     model = Boxes
     fields = ["bar_code", "name", "type", "projec_source", "is_danger"]
@@ -34,7 +38,9 @@ class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
                                         'made_date', "submit"]
                 return self.readonly_fields
         except AttributeError:
+            self.readonly_fields = []
             return self.readonly_fields
+        self.readonly_fields = []
         return self.readonly_fields
 
     """命名规则未定"""
@@ -86,7 +92,9 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
                                         "exp_method", "submit"]
                 return self.readonly_fields
         except AttributeError:
+            self.readonly_fields = []
             return self.readonly_fields
+        self.readonly_fields = []
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
