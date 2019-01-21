@@ -25,10 +25,13 @@ class Intentions(models.Model):
     fill_date = models.DateField(
         verbose_name="填写日期", auto_now_add=True
     )
+    submit_flag = models.BooleanField(
+        verbose_name="是否提交", default=False
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = "意向池"
         ordering = ["fill_date"]
 
     def __str__(self):
-        return "{}".format(self.intention_id)
+        return "意向{}".format(self.intention_id)
