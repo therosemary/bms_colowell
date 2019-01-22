@@ -4,9 +4,75 @@ import re
 
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import InvoiceInfo, ContractsInfo, BoxApplications
+from import_export import resources
+from import_export.admin import ImportExportActionModelAdmin
+from import_export.fields import Field
+from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
-from .forms import ContractInfoForm, InvoiceInfoForm
+from projects.forms import ContractInfoForm, InvoiceInfoForm
+
+
+class ContractInfoResources(resources.ModelResource):
+    full_set_price = Field(
+        column_name="全套价格",
+    )
+    count_invoice_value = Field(
+        column_name="已开票金额"
+    )
+    receive_invoice_value = Field(
+        column_name="已到账金额"
+    )
+
+    class Meta:
+        model = ContractsInfo
+        fields = (
+            'contract_number', 'client', 'staff_name', 'box_price',
+            'detection_price', 'full_set_price', 'contract_money',
+            'count_invoice_value', 'receive_invoice_value', 'send_date',
+            'tracking_number', 'send_back_date', 'shipping_status',
+            'contract_type', 'end_status'
+        )
+        export_order = (
+            'contract_number', 'client', 'staff_name', 'box_price',
+            'detection_price', 'full_set_price', 'contract_money',
+            'count_invoice_value', 'receive_invoice_value', 'send_date',
+            'tracking_number', 'send_back_date', 'shipping_status',
+            'contract_type', 'end_status'
+        )
+        skip_unchanged = True
+
+    def get_export_headers(self):
+        export_headers = [u'合同号', u'客户', u'业务员', u'盒子单价', u'检测单价',
+                          u'全套价格', u'合同金额', u'已开票额', u'已到账额',
+                          u'合同寄出时间', u'邮件单号', u'合同寄回时间', u'发货状态',
+                          u'合同类型', u'是否完结']
+        return export_headers
+
+    def dehydrate_full_set_price(self, contractinfo):
+        full_set_price = contractinfo.box_price + contractinfo.detection_price
+        return full_set_price
+
+    def dehydrate_count_invoice_value(self, contractinfo):
+        """获取已开票总额，包含未审核金额"""
+        total_value = 0
+        invoice_datas = InvoiceInfo.objects.filter(
+            contract_id=contractinfo.contract_id, flag=True
+        )
+        if invoice_datas:
+                for data in invoice_datas:
+                    if data.sendinvoices.invoice_approval_status:
+                        total_value += data.invoice_value
+        return total_value
+
+    def dehydrate_receive_invoice_value(self, contractinfo):
+        """获取已到账总金额"""
+        receive_value = 0
+        invoice_datas = InvoiceInfo.objects.filter(contract_id=contractinfo.contract_id)
+        if invoice_datas:
+            for data in invoice_datas:
+                if data.sendinvoices.invoice_flag:
+                    receive_value += data.invoice_value
+        return receive_value
 
 
 def make_contract_id():
@@ -16,7 +82,7 @@ def make_contract_id():
     return 'YX' + now_datetime + str(number)
 
 
-class ContractsInfoAdmin(admin.ModelAdmin):
+class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""
     # TODO: 20190108 合同信息外键关联代理商和业务员，造成其中一个外键无用
     fields = (
@@ -29,12 +95,13 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         'contract_number', 'client', 'staff_name', 'box_price',
         'detection_price', 'full_set_price', 'contract_money',
         'count_invoice_value', 'receive_invoice_value', 'send_date',
-        'tracking_number', 'send_back_date', 'contract_content',
-        'shipping_status', 'contract_type', 'end_status'
+        'tracking_number', 'send_back_date', 'shipping_status',
+        'contract_type', 'end_status'
     )
     list_per_page = 40
     save_as_continue = False
     form = ContractInfoForm
+    resource_class = ContractInfoResources
 
     def full_set_price(self, obj):
         """自定义列表字段：单套总价"""
@@ -94,13 +161,6 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         return super(ContractsInfoAdmin, self).change_view(
             request, object_id, form_url, extra_context=extra_context
         )
-
-    def judeg_greate_date(self, obj):
-        compare_flag = 1
-        if (obj.send_back_date is not None) and (obj.send_date is not None):
-            if obj.send_back_date < obj.send_date:
-                compare_flag = 0
-        return compare_flag
 
     def save_model(self, request, obj, form, change):
         """重写合同信息保存
