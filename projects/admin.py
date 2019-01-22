@@ -12,6 +12,13 @@ from invoices.models import SendInvoices
 from projects.forms import ContractInfoForm, InvoiceInfoForm
 
 
+def make_contract_id():
+    """时间+随机生成数组合为合同编号"""
+    now_datetime = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+    number = str(random.randint(1, 10000))
+    return 'YX' + now_datetime + str(number)
+
+
 class ContractInfoResources(resources.ModelResource):
     full_set_price = Field(
         column_name="全套价格",
@@ -75,11 +82,60 @@ class ContractInfoResources(resources.ModelResource):
         return receive_value
 
 
-def make_contract_id():
-    """时间+随机生成数组合为合同编号"""
-    now_datetime = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    number = str(random.randint(1, 10000))
-    return 'YX' + now_datetime + str(number)
+class InvoiceInfoResources(resources.ModelResource):
+    """发票信息导入导出"""
+
+    contract_number = Field(
+        column_name="合同号", attribute='contract_id__contract_number',
+    )
+    approval_status = Field(
+        column_name="审批状态", attribute='sendinvoices__invoice_approval_status'
+    )
+
+    class Meta:
+        model = InvoiceInfo
+        fields = (
+            'contract_number', 'cost_type', 'invoice_title', 'tariff_item',
+            'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
+            'receivables', 'address_name', 'address_phone', 'send_address',
+            'apply_name', 'remark', 'flag', 'approval_status'
+        )
+        export_order = fields
+        skip_unchanged = True
+
+    def get_export_headers(self):
+        export_headers = [u'合同号', u'发票类型', u'发票抬头', u'税号', u'开票金额',
+                          u'税率', u'开票单位', u'到账日期', u'应收金额', u'收件人姓名',
+                          u'收件人号码', u'寄送地址', u'申请人', u'备注', '是否提交',
+                          u'审批状态']
+        return export_headers
+
+
+class BoxApplicationsResources(resources.ModelResource):
+    """盒子申请信息导入导出"""
+
+    contract_number = Field(
+        column_name="合同号", attribute='contract_id__contract_number',
+    )
+
+    class Meta:
+        model = BoxApplications
+        fields = (
+            'contract_number', 'amount', 'classification', 'address_name',
+            'address_phone', 'send_address', 'box_price', 'detection_price',
+            'use', 'box_submit_flag'
+        )
+        export_order = (
+            'contract_number', 'amount', 'classification', 'address_name',
+            'address_phone', 'send_address', 'box_price', 'detection_price',
+            'use', 'box_submit_flag'
+        )
+
+    def get_export_headers(self):
+        export_headers = [u'合同号', u'申请数量', u'申请类别', u'收件人姓名',
+                          u'收件人号码', u'邮寄地址', u'盒子单价', u'用途',
+                          u'是否提交']
+        return export_headers
 
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
@@ -171,7 +227,7 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
             obj.contract_id = make_contract_id()
             obj.save()
 
-class InvoiceInfoAdmin(admin.ModelAdmin):
+class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     """申请发票信息管理"""
     fields = (
         'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
@@ -190,6 +246,7 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
     save_as_continue = False
     date_hierarchy = "fill_date"
     form = InvoiceInfoForm
+    resource_class = InvoiceInfoResources
 
     def get_invoice_approval_status(self, obj):
         if obj.sendinvoices.invoice_approval_status is None:
@@ -238,7 +295,7 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
 
 
-class BoxApplicationsAdmin(admin.ModelAdmin):
+class BoxApplicationsAdmin(ImportExportActionModelAdmin):
     """申请盒子信息管理"""
     fields = (
         'contract_id', 'amount', 'classification', 'address_name',
@@ -252,6 +309,7 @@ class BoxApplicationsAdmin(admin.ModelAdmin):
     )
     list_per_page = 40
     save_as_continue = False
+    resource_class = BoxApplicationsResources
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
