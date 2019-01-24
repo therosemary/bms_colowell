@@ -2,14 +2,13 @@ import datetime
 import random
 import re
 
-from django.contrib import admin
 from django.utils.html import format_html
-from import_export import resources
 from import_export.admin import ImportExportActionModelAdmin
-from import_export.fields import Field
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
 from projects.forms import ContractInfoForm, InvoiceInfoForm
+from projects.resources import ContractInfoResources, InvoiceInfoResources, \
+    BoxApplicationsResources
 
 
 def make_contract_id():
@@ -17,125 +16,6 @@ def make_contract_id():
     now_datetime = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
     number = str(random.randint(1, 10000))
     return 'YX' + now_datetime + str(number)
-
-
-class ContractInfoResources(resources.ModelResource):
-    full_set_price = Field(
-        column_name="全套价格",
-    )
-    count_invoice_value = Field(
-        column_name="已开票金额"
-    )
-    receive_invoice_value = Field(
-        column_name="已到账金额"
-    )
-
-    class Meta:
-        model = ContractsInfo
-        fields = (
-            'contract_number', 'client', 'staff_name', 'box_price',
-            'detection_price', 'full_set_price', 'contract_money',
-            'count_invoice_value', 'receive_invoice_value', 'send_date',
-            'tracking_number', 'send_back_date', 'shipping_status',
-            'contract_type', 'end_status'
-        )
-        export_order = (
-            'contract_number', 'client', 'staff_name', 'box_price',
-            'detection_price', 'full_set_price', 'contract_money',
-            'count_invoice_value', 'receive_invoice_value', 'send_date',
-            'tracking_number', 'send_back_date', 'shipping_status',
-            'contract_type', 'end_status'
-        )
-        skip_unchanged = True
-
-    def get_export_headers(self):
-        export_headers = [u'合同号', u'客户', u'业务员', u'盒子单价', u'检测单价',
-                          u'全套价格', u'合同金额', u'已开票额', u'已到账额',
-                          u'合同寄出时间', u'邮件单号', u'合同寄回时间', u'发货状态',
-                          u'合同类型', u'是否完结']
-        return export_headers
-
-    def dehydrate_full_set_price(self, contractinfo):
-        full_set_price = contractinfo.box_price + contractinfo.detection_price
-        return full_set_price
-
-    def dehydrate_count_invoice_value(self, contractinfo):
-        """获取已开票总额，包含未审核金额"""
-        total_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(
-            contract_id=contractinfo.contract_id, flag=True
-        )
-        if invoice_datas:
-                for data in invoice_datas:
-                    if data.sendinvoices.invoice_approval_status:
-                        total_value += data.invoice_value
-        return total_value
-
-    def dehydrate_receive_invoice_value(self, contractinfo):
-        """获取已到账总金额"""
-        receive_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=contractinfo.contract_id)
-        if invoice_datas:
-            for data in invoice_datas:
-                if data.sendinvoices.invoice_flag:
-                    receive_value += data.invoice_value
-        return receive_value
-
-
-class InvoiceInfoResources(resources.ModelResource):
-    """发票信息导入导出"""
-
-    contract_number = Field(
-        column_name="合同号", attribute='contract_id__contract_number',
-    )
-    approval_status = Field(
-        column_name="审批状态", attribute='sendinvoices__invoice_approval_status'
-    )
-
-    class Meta:
-        model = InvoiceInfo
-        fields = (
-            'contract_number', 'cost_type', 'invoice_title', 'tariff_item',
-            'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
-            'receivables', 'address_name', 'address_phone', 'send_address',
-            'apply_name', 'remark', 'flag', 'approval_status'
-        )
-        export_order = fields
-        skip_unchanged = True
-
-    def get_export_headers(self):
-        export_headers = [u'合同号', u'发票类型', u'发票抬头', u'税号', u'开票金额',
-                          u'税率', u'开票单位', u'到账日期', u'应收金额', u'收件人姓名',
-                          u'收件人号码', u'寄送地址', u'申请人', u'备注', '是否提交',
-                          u'审批状态']
-        return export_headers
-
-
-class BoxApplicationsResources(resources.ModelResource):
-    """盒子申请信息导入导出"""
-
-    contract_number = Field(
-        column_name="合同号", attribute='contract_id__contract_number',
-    )
-
-    class Meta:
-        model = BoxApplications
-        fields = (
-            'contract_number', 'amount', 'classification', 'address_name',
-            'address_phone', 'send_address', 'box_price', 'detection_price',
-            'use', 'box_submit_flag'
-        )
-        export_order = (
-            'contract_number', 'amount', 'classification', 'address_name',
-            'address_phone', 'send_address', 'box_price', 'detection_price',
-            'use', 'box_submit_flag'
-        )
-
-    def get_export_headers(self):
-        export_headers = [u'合同号', u'申请数量', u'申请类别', u'收件人姓名',
-                          u'收件人号码', u'邮寄地址', u'盒子单价', u'用途',
-                          u'是否提交']
-        return export_headers
 
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
@@ -297,15 +177,17 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
 
 class BoxApplicationsAdmin(ImportExportActionModelAdmin):
     """申请盒子信息管理"""
+
     fields = (
         'contract_id', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'box_price', 'detection_price',
-        'use', 'box_submit_flag'
+        'use', 'proposer', 'box_submit_flag'
     )
     list_display = (
         'colored_contract_number', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'proposer', 'box_price',
-        'detection_price', 'use', 'approval_status', 'box_submit_flag'
+        'detection_price', 'use', 'submit_time', 'approval_status',
+        'box_submit_flag'
     )
     list_per_page = 40
     save_as_continue = False
@@ -330,10 +212,7 @@ class BoxApplicationsAdmin(ImportExportActionModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def save_model(self, request, obj, form, change):
-        if change:
-            super(BoxApplicationsAdmin, self).save_model(request, obj, form,
-                                                         change)
-        else:
-            obj.proposer = re.search(r'[^【].*[^】]', str(request.user))[0]
-            obj.save()
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial['proposer'] = request.user
+        return initial
