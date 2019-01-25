@@ -9,7 +9,7 @@ class SendInvoices(models.Model):
     billing_date = models.DateField(
         verbose_name="开票日期", null=True, blank=True
     )
-    send_date = models.DateField(
+    invoice_send_date = models.DateField(
         verbose_name="寄出日期", null=True, blank=True
     )
     tracking_number = models.CharField(
@@ -34,8 +34,11 @@ class SendInvoices(models.Model):
     fill_name = models.CharField(
         verbose_name="填写人", max_length=20, null=True, blank=True
     )
-    flag = models.BooleanField(
+    send_flag = models.BooleanField(
         verbose_name="是否提交", default=False
+    )
+    invoice_approval_status = models.BooleanField(
+        verbose_name="审批状态", null=True, blank=True
     )
 
     class Meta:
@@ -43,4 +46,5 @@ class SendInvoices(models.Model):
         ordering = ["billing_date"]
 
     def __str__(self):
-        return '%s' % self.invoice_number
+        return '发票号{}'.format(self.invoice_number)
+
