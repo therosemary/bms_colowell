@@ -13,10 +13,10 @@ from partners.admin import PartnersAdmin, PropagandaAdmin
 from partners.models import Partners, Propaganda
 from products.admin import ProductsAdmin
 from products.models import Products
-from experiment.models import ExtExecute,QualityTest,\
-    FluorescenceQuantification,BsTask
-from experiment.admin import ExtExecuteAdmin,QualityTestAdmin,\
-    FluorescenceQuantificationAdmin,BsTaskAdmin
+from experiment.models import ExtExecute, QualityTest, \
+    FluorescenceQuantification, BsTask, ResultJudgement
+from experiment.admin import ExtExecuteAdmin, QualityTestAdmin, \
+    FluorescenceQuantificationAdmin, BsTaskAdmin, ResultJudgementAdmin
 from tech_support.models import ExtSubmit,ExtMethod,BoxDeliveries,Boxes
 from tech_support.admin import ExtMethodAdmin,ExtSubmitAdmin,BoxesAdmin,\
     BoxDeliveriesAdmin
@@ -78,8 +78,10 @@ BMS_admin_site.register(Products, ProductsAdmin)
 BMS_admin_site.register(ExtExecute, ExtExecuteAdmin)
 BMS_admin_site.register(QualityTest, QualityTestAdmin)
 BMS_admin_site.register(BsTask, BsTaskAdmin)
-BMS_admin_site.register(FluorescenceQuantification, FluorescenceQuantificationAdmin)
+BMS_admin_site.register(FluorescenceQuantification,
+                        FluorescenceQuantificationAdmin)
 BMS_admin_site.register(BoxDeliveries,BoxDeliveriesAdmin)
 BMS_admin_site.register(Boxes,BoxesAdmin)
 BMS_admin_site.register(ExtMethod,ExtMethodAdmin)
 BMS_admin_site.register(ExtSubmit,ExtSubmitAdmin)
+BMS_admin_site.register(ResultJudgement,ResultJudgementAdmin)
