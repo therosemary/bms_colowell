@@ -17,7 +17,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     )
     send_invoice_info = (
         'invoice_id', 'invoice_number', 'billing_date', 'invoice_send_date',
-        'tracking_number', 'ele_invoice', 'invoice_flag', 'sender', 'send_flag',
+        'tracking_number', 'ele_invoice', 'invoice_flag', 'sender', 'fill_name',
+        'send_flag',
     )
     fieldsets = (
         ('发票申请信息', {
@@ -27,11 +28,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
             'fields': send_invoice_info
         }),
     )
-    list_display = (
-        'invoice_id', 'get_apply_name', 'invoice_number', 'billing_date',
-        'ele_invoice', 'tracking_number', 'invoice_send_date', 'sender',
-        'invoice_flag', 'fill_name', 'invoice_approval_status', 'send_flag'
-    )
+    list_display = invoice_info + send_invoice_info
     list_per_page = 40
     save_as_continue = False
     date_hierarchy = 'billing_date'
@@ -109,9 +106,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def save_model(self, request, obj, form, change):
-        if change:
-            super(SendInvoiceAdmin, self).save_model(request, obj, form, change)
-        else:
-            obj.fill_name = request.user
-            obj.save()
+    def get_changeform_initial_data(self, request):
+        initial = super(SendInvoiceAdmin, self).get_changeform_initial_data(request)
+        print('11111111111111%s' %request.user)
+        initial['fill_name'] = request.user
+        return initial

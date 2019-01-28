@@ -15,9 +15,6 @@ class Intentions(models.Model):
     items = models.TextField(
         verbose_name="事项", null=True, blank=True
     )
-    # fill_name = models.CharField(
-    #     verbose_name="填写人姓名", max_length=20, null=True, blank=True
-    # )
     fill_name = models.ForeignKey(
         AUTH_USER_MODEL, verbose_name="填写人", on_delete=models.SET_NULL,
         null=True, blank=True
