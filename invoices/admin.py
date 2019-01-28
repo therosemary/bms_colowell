@@ -1,3 +1,4 @@
+from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
 from projects.models import InvoiceInfo
 from invoices.models import SendInvoices
@@ -12,13 +13,12 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     invoice_info = (
         'get_contract_number', 'get_invoice_title', 'get_tariff_item',
         'get_invoice_value', 'get_tax_rate', 'get_invoice_issuing',
-        'get_receive_date', 'get_receivables', 'get_address_name',
-        'get_address_phone', 'get_send_address', 'get_apply_name',
+        'get_receive_date', 'get_address_name', 'get_address_phone',
+        'get_send_address', 'get_apply_name',
     )
     send_invoice_info = (
         'invoice_id', 'invoice_number', 'billing_date', 'invoice_send_date',
-        'tracking_number', 'ele_invoice', 'invoice_flag', 'sender', 'fill_name',
-        'send_flag',
+        'tracking_number', 'ele_invoice', 'invoice_flag', 'sender', 'send_flag'
     )
     fieldsets = (
         ('发票申请信息', {
@@ -28,7 +28,15 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
             'fields': send_invoice_info
         }),
     )
-    list_display = invoice_info + send_invoice_info
+    list_display = (
+        'invoice_id', 'get_contract_number', 'get_invoice_title',
+        'get_tariff_item', 'get_invoice_value', 'receivables', 'get_tax_rate',
+        'get_invoice_issuing', 'get_receive_date', 'get_address_name',
+        'get_address_phone', 'get_send_address', 'get_apply_name',
+        'invoice_approval_status', 'invoice_number', 'billing_date',
+        'invoice_send_date', 'tracking_number', 'ele_invoice', 'invoice_flag',
+        'sender', 'fill_name', 'send_flag',
+    )
     list_per_page = 40
     save_as_continue = False
     date_hierarchy = 'billing_date'
@@ -37,13 +45,24 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     list_filter = ('invoice_id__fill_date', 'invoice_id__apply_name')
     resource_class = SendInvoiceResources
 
+    def receivables(self, obj):
+        if obj.invoice_flag:
+            money = 0
+        else:
+            money = self.get_invoice_value(obj)
+        return format_html('<span>{}</span>', money)
+    receivables.short_description = "应收金额"
+
     def get_apply_name(self, obj):
         return obj.invoice_id.apply_name
     get_apply_name.short_description = "申请人"
 
     def get_contract_number(self, obj):
         invoice_data = InvoiceInfo.objects.get(invoice_id=obj.invoice_id)
-        return invoice_data.contract_id.contract_number
+        if invoice_data.contract_id is not None:
+            return invoice_data.contract_id.contract_number
+        else:
+            return '-'
     get_contract_number.short_description = "合同号"
 
     def get_invoice_title(self, obj):
@@ -71,9 +90,9 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         return obj.invoice_id.receive_date
     get_receive_date.short_description = "到账日期"
 
-    def get_receivables(self, obj):
-        return obj.invoice_id.receivables
-    get_receivables.short_description = "应收金额"
+    # def get_receivables(self, obj):
+    #     return obj.invoice_id.receivables
+    # get_receivables.short_description = "应收金额"
 
     def get_address_name(self, obj):
         return obj.invoice_id.address_name
@@ -106,8 +125,12 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def get_changeform_initial_data(self, request):
-        initial = super(SendInvoiceAdmin, self).get_changeform_initial_data(request)
-        print('11111111111111%s' %request.user)
-        initial['fill_name'] = request.user
-        return initial
+    # def get_changeform_initial_data(self, request):
+    #     initial = super(SendInvoiceAdmin, self).get_changeform_initial_data(request)
+    #     initial['fill_name'] = request.user
+    #     return initial
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            obj.fill_name = request.user
+        super(SendInvoiceAdmin, self).save_model(request, obj, form, change)
