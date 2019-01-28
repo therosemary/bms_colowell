@@ -18,8 +18,7 @@ class ContractsInfo(models.Model):
         verbose_name="合同编号", max_length=12, primary_key=True
     )
     contract_number = models.CharField(
-
-        verbose_name="合同号", max_length=12
+        verbose_name="合同号", max_length=12, unique=True
     )
     client = models.ForeignKey(
         Partners, verbose_name="客户", on_delete='SET_NULL', null=True, blank=True
@@ -118,26 +117,24 @@ class BoxApplications(models.Model):
     use = models.CharField(
         verbose_name="用途", max_length=100, null=True, blank=True
     )
-    # proposer = models.ForeignKey(
-    #     AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True
-    # )
-    proposer = models.CharField(
-        verbose_name="申请人", max_length=20, null=True, blank=True
+    proposer = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
     box_submit_flag = models.BooleanField(
         verbose_name="是否提交", default=False
     )
 
     def colored_contract_number(self):
-        if self.contract_id.contract_type:
+        if self.contract_id is not None:
+            if self.contract_id.contract_type:
+                return format_html(
+                    '<span style="color:{}">{}</span>', 'red', self.contract_id
+                )
             return format_html(
-                '<span style="color:{}">{}</span>', 'red', self.contract_id
+                '<span>{}</span>', self.contract_id
             )
-        return format_html(
-            '<span>{}</span>', self.contract_id
-        )
     colored_contract_number.short_description = "合同号"
 
 

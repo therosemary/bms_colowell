@@ -1,9 +1,11 @@
-from django.contrib import admin
-from .models import SendInvoices
-from .forms import SendInvoicesForm
+from import_export.admin import ImportExportActionModelAdmin
+from projects.models import InvoiceInfo
+from invoices.models import SendInvoices
+from invoices.forms import SendInvoicesForm
+from invoices.resources import SendInvoiceResources
 
 
-class SendInvoiceAdmin(admin.ModelAdmin):
+class SendInvoiceAdmin(ImportExportActionModelAdmin):
     """发票寄送信息管理
        注：每条记录在发票申请提交后自动被创建
     """
@@ -11,11 +13,12 @@ class SendInvoiceAdmin(admin.ModelAdmin):
         'get_contract_number', 'get_invoice_title', 'get_tariff_item',
         'get_invoice_value', 'get_tax_rate', 'get_invoice_issuing',
         'get_receive_date', 'get_receivables', 'get_address_name',
-        'get_address_phone', 'get_send_address',
+        'get_address_phone', 'get_send_address', 'get_apply_name',
     )
     send_invoice_info = (
-        'invoice_id', 'billing_date', 'invoice_send_date', 'tracking_number',
-        'ele_invoice', 'invoice_flag', 'sender', 'send_flag',
+        'invoice_id', 'invoice_number', 'billing_date', 'invoice_send_date',
+        'tracking_number', 'ele_invoice', 'invoice_flag', 'sender', 'fill_name',
+        'send_flag',
     )
     fieldsets = (
         ('发票申请信息', {
@@ -25,19 +28,22 @@ class SendInvoiceAdmin(admin.ModelAdmin):
             'fields': send_invoice_info
         }),
     )
-    list_display = (
-        'invoice_id', 'invoice_number', 'billing_date', 'ele_invoice',
-        'tracking_number', 'invoice_send_date', 'sender', 'invoice_flag',
-        'fill_name', 'invoice_approval_status', 'send_flag'
-    )
+    list_display = invoice_info + send_invoice_info
     list_per_page = 40
     save_as_continue = False
     date_hierarchy = 'billing_date'
     readonly_fields = ('invoice_id',) + invoice_info
     form = SendInvoicesForm
+    list_filter = ('invoice_id__fill_date', 'invoice_id__apply_name')
+    resource_class = SendInvoiceResources
+
+    def get_apply_name(self, obj):
+        return obj.invoice_id.apply_name
+    get_apply_name.short_description = "申请人"
 
     def get_contract_number(self, obj):
-        return obj.invoice_id.contract_id.constract_number
+        invoice_data = InvoiceInfo.objects.get(invoice_id=obj.invoice_id)
+        return invoice_data.contract_id.contract_number
     get_contract_number.short_description = "合同号"
 
     def get_invoice_title(self, obj):
@@ -57,7 +63,8 @@ class SendInvoiceAdmin(admin.ModelAdmin):
     get_tax_rate.short_description = "税率"
 
     def get_invoice_issuing(self, obj):
-        return obj.invoice_id.invoice_issuing
+        issuing_entities = {'shry': '上海锐翌', 'hzth': '杭州拓宏', 'hzry': '杭州锐翌'}
+        return issuing_entities[obj.invoice_id.invoice_issuing]
     get_invoice_issuing.short_description = "开票单位"
 
     def get_receive_date(self, obj):
@@ -81,13 +88,8 @@ class SendInvoiceAdmin(admin.ModelAdmin):
     get_send_address.short_description = "收件人地址"
 
     def get_readonly_fields(self, request, obj=None):
-        # if request.user.is_superuser:
-        #     self.readonly_fields = []
-        # elif hasattr(obj, 'flag'):
-
-        # 审批状态选定保存后是否提交均不可再修改
         if hasattr(obj, 'invoice_approval_status'):
-            if not obj.invoice_approval_status is None:
+            if obj.invoice_approval_status is not None:
                 self.readonly_fields = self.invoice_info + \
                                        ('invoice_id', 'invoice_approval_status',)
         if hasattr(obj, 'send_flag'):
@@ -104,9 +106,8 @@ class SendInvoiceAdmin(admin.ModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def save_model(self, request, obj, form, change):
-        if change:
-            super(SendInvoiceAdmin, self).save_model(request, obj, form, change)
-        else:
-            obj.fill_name = request.user
-            obj.save()
+    def get_changeform_initial_data(self, request):
+        initial = super(SendInvoiceAdmin, self).get_changeform_initial_data(request)
+        print('11111111111111%s' %request.user)
+        initial['fill_name'] = request.user
+        return initial

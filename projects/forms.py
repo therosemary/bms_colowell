@@ -34,15 +34,16 @@ class ContractInfoForm(forms.ModelForm):
 
 class InvoiceInfoForm(forms.ModelForm):
     """发票申请信息表单输入限制
-       注：税率应为小数值
     """
+
     class Meta:
         model = InvoiceInfo
         fields = "__all__"
 
     def clean_tax_rate(self):
+        """税率应为小数值"""
         tax_rate = self.cleaned_data['tax_rate']
-        if re.match(r'0\.[0-9]+', str(tax_rate)):
-            return tax_rate
-        else:
-            raise forms.ValidationError('税率填写错误！只能填写小于1的小数')
+        if tax_rate is not None:
+            if not re.match(r'0\.[0-9]+', str(tax_rate)):
+                raise forms.ValidationError('税率填写错误！只能填写小于1的小数')
+        return tax_rate

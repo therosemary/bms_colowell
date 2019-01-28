@@ -2,11 +2,13 @@ import datetime
 import random
 import re
 
-from django.contrib import admin
 from django.utils.html import format_html
-from .models import InvoiceInfo, ContractsInfo, BoxApplications
+from import_export.admin import ImportExportActionModelAdmin
+from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
-from .forms import ContractInfoForm, InvoiceInfoForm
+from projects.forms import ContractInfoForm, InvoiceInfoForm
+from projects.resources import ContractInfoResources, InvoiceInfoResources, \
+    BoxApplicationsResources
 
 
 def make_contract_id():
@@ -16,7 +18,7 @@ def make_contract_id():
     return 'YX' + now_datetime + str(number)
 
 
-class ContractsInfoAdmin(admin.ModelAdmin):
+class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""
     # TODO: 20190108 合同信息外键关联代理商和业务员，造成其中一个外键无用
     fields = (
@@ -29,12 +31,13 @@ class ContractsInfoAdmin(admin.ModelAdmin):
         'contract_number', 'client', 'staff_name', 'box_price',
         'detection_price', 'full_set_price', 'contract_money',
         'count_invoice_value', 'receive_invoice_value', 'send_date',
-        'tracking_number', 'send_back_date', 'contract_content',
-        'shipping_status', 'contract_type', 'end_status'
+        'tracking_number', 'send_back_date', 'shipping_status',
+        'contract_type', 'end_status'
     )
     list_per_page = 40
     save_as_continue = False
     form = ContractInfoForm
+    resource_class = ContractInfoResources
 
     def full_set_price(self, obj):
         """自定义列表字段：单套总价"""
@@ -95,13 +98,6 @@ class ContractsInfoAdmin(admin.ModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def judeg_greate_date(self, obj):
-        compare_flag = 1
-        if (obj.send_back_date is not None) and (obj.send_date is not None):
-            if obj.send_back_date < obj.send_date:
-                compare_flag = 0
-        return compare_flag
-
     def save_model(self, request, obj, form, change):
         """重写合同信息保存
         """
@@ -111,7 +107,7 @@ class ContractsInfoAdmin(admin.ModelAdmin):
             obj.contract_id = make_contract_id()
             obj.save()
 
-class InvoiceInfoAdmin(admin.ModelAdmin):
+class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     """申请发票信息管理"""
     fields = (
         'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
@@ -130,6 +126,7 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
     save_as_continue = False
     date_hierarchy = "fill_date"
     form = InvoiceInfoForm
+    resource_class = InvoiceInfoResources
 
     def get_invoice_approval_status(self, obj):
         if obj.sendinvoices.invoice_approval_status is None:
@@ -178,20 +175,23 @@ class InvoiceInfoAdmin(admin.ModelAdmin):
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
 
 
-class BoxApplicationsAdmin(admin.ModelAdmin):
+class BoxApplicationsAdmin(ImportExportActionModelAdmin):
     """申请盒子信息管理"""
+
     fields = (
         'contract_id', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'box_price', 'detection_price',
-        'use', 'box_submit_flag'
+        'use', 'proposer', 'box_submit_flag'
     )
     list_display = (
         'colored_contract_number', 'amount', 'classification', 'address_name',
         'address_phone', 'send_address', 'proposer', 'box_price',
-        'detection_price', 'use', 'approval_status', 'box_submit_flag'
+        'detection_price', 'use', 'submit_time', 'approval_status',
+        'box_submit_flag'
     )
     list_per_page = 40
     save_as_continue = False
+    resource_class = BoxApplicationsResources
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
@@ -212,10 +212,7 @@ class BoxApplicationsAdmin(admin.ModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def save_model(self, request, obj, form, change):
-        if change:
-            super(BoxApplicationsAdmin, self).save_model(request, obj, form,
-                                                         change)
-        else:
-            obj.proposer = re.search(r'[^【].*[^】]', str(request.user))[0]
-            obj.save()
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial['proposer'] = request.user
+        return initial
