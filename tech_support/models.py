@@ -26,12 +26,14 @@ class BoxDeliveries(models.Model):
 class Boxes(models.Model):
     """盒子管理"""
     BOX_STATUS = (
-        (1, '待提取'),
-        (2, '提取完成，待质检'),
-        (3, '质检完成，待BS'),
-        (4, 'BS完成，待荧光定量'),
-        (5, '荧光定量完成，结果待审核'),
-        (6, '报告已发送'),
+        (0, '技术支持已发货'),
+        (1, '实验已核对'),
+        (2, '待提取'),
+        (3, '提取完成，待质检'),
+        (4, '质检完成，待BS'),
+        (5, 'BS完成，待荧光定量'),
+        (6, '荧光定量完成，结果待审核'),
+        (7, '报告已发送'),
     )
     index_number = models.CharField(max_length=30, verbose_name="盒子编号")
     sample_photo = models.FileField('样品照片', upload_to='samplephoto/%Y/%m',

@@ -6,9 +6,9 @@ from tech_support.models import *
 class ExtExecute(models.Model):
     """实验的提取表"""
     EXT_STATUS = (
-        (0, '实验进行中'),
-        (1, '实验成功，数据已提交'),
-        (2, '实验重做，不提交数据'),
+        (0, '提取实验数据已上传，待审核'),
+        (1, '实验已审核，进入质检环节'),
+        (2, '特殊情况，自行控制'),
     )
     ext_number = models.CharField(
         "提取编号", max_length=50, blank=True, null=True
@@ -40,12 +40,12 @@ class ExtExecute(models.Model):
     objective = models.CharField(
         verbose_name="目的", max_length=50, default=""
     )
-    submit = models.BooleanField(
-        verbose_name='实验正常，进行下一步', null=True
-    )
-    fail = models.BooleanField(
-        verbose_name='特殊情况，自行控制', null=True
-    )
+    # submit = models.BooleanField(
+    #     verbose_name='实验正常，进行下一步', null=True
+    # )
+    # fail = models.BooleanField(
+    #     verbose_name='特殊情况，自行控制', null=True
+    # )
 
     class Meta:
         app_label = "experiment"
@@ -58,9 +58,9 @@ class ExtExecute(models.Model):
 class QualityTest(models.Model):
     """实验的质检表"""
     QUA_STATUS = (
-        (0, '实验进行中'),
-        (1, '实验成功，数据已提交'),
-        (2, '实验重做，不提交数据'),
+        (0, '质检实验数据已上传，待审核'),
+        (1, '实验已审核，进入BS环节'),
+        (2, '特殊情况，自行控制'),
     )
     qua_number = models.CharField("质检编号", max_length=50, null=True)
     boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
@@ -73,10 +73,13 @@ class QualityTest(models.Model):
     loop_number = models.CharField("循环数", max_length=50, null=True)
     background_baseline = models.CharField("Background/Baseline",
                                            max_length=50, null=True)
-    ct = models.CharField("CT值", max_length=50, null=True)
-    amplification_curve = models.CharField("扩增曲线",
+    is_quality = models.BooleanField(verbose_name="有无质控", null=True)
+    ct = models.CharField("非甲基化内参ACTB_CT值", max_length=50, null=True)
+    amplification_curve = models.CharField("非甲基化内参ACTB_扩增曲线",
                                            max_length=50, null=True)
-    threshold_line = models.CharField("阀值线", max_length=50, null=True)
+    noise = models.CharField(
+        "非甲基化内参ACTB_Noise Band", max_length=50, null=True
+    )
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
                                  on_delete=models.SET_NULL, null=True)
     status = models.IntegerField(
@@ -84,12 +87,12 @@ class QualityTest(models.Model):
     )
     qua_date = models.DateField("质检日期", null=True)
     note = models.TextField(verbose_name="实验异常备注", default="", blank=True)
-    submit = models.BooleanField(
-        verbose_name='实验正常，进行下一步', null=True
-    )
-    fail = models.BooleanField(
-        verbose_name='特殊情况，自行控制', null=True
-    )
+    # submit = models.BooleanField(
+    #     verbose_name='实验正常，进行下一步', null=True
+    # )
+    # fail = models.BooleanField(
+    #     verbose_name='特殊情况，自行控制', null=True
+    # )
 
     class Meta:
         app_label = "experiment"
@@ -102,9 +105,9 @@ class QualityTest(models.Model):
 class BsTask(models.Model):
     """实验的BS表"""
     BS_STATUS = (
-        (0, '实验进行中'),
-        (1, '实验成功，数据已提交'),
-        (2, '实验重做，不提交数据'),
+        (0, 'BS实验数据已上传，待审核'),
+        (1, '实验已审核，进入荧光定量环节'),
+        (2, '特殊情况，自行控制'),
     )
     bs_number = models.CharField("BS编号", max_length=50, null=True)
     boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
@@ -122,7 +125,7 @@ class BsTask(models.Model):
         verbose_name="BIS模板量(ul)", max_length=50
     )
     bis_elution = models.CharField(
-        verbose_name="bis洗脱体积(ul)", max_length=50
+        verbose_name="BIS洗脱体积(ul)", max_length=50
     )
     is_quality = models.BooleanField(verbose_name="有无质控", null=True)
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
@@ -131,12 +134,6 @@ class BsTask(models.Model):
     note = models.TextField(verbose_name="实验异常备注", blank=True, null=True)
     status = models.IntegerField(
         choices=BS_STATUS, verbose_name="状态", null=True)
-    submit = models.BooleanField(
-        verbose_name='实验正常，进行下一步', null=True
-    )
-    fail = models.BooleanField(
-        verbose_name='特殊情况，自行控制', null=True
-    )
 
     class Meta:
         app_label = "experiment"
@@ -149,10 +146,14 @@ class BsTask(models.Model):
 class FluorescenceQuantification(models.Model):
     """实验的荧光定量表"""
     FQ_STATUS = (
-        (0, '实验进行中'),
-        (1, '实验成功，数据已提交'),
-        (2, '实验重做，不提交数据'),
-        (3, '实验数据已核对'),
+        (0, '荧光定量实验数据已上传，待审核'),
+        (1, '实验已审核，进入结果判定环节'),
+        (2, '特殊情况，自行控制'),
+    )
+    IS_QUALIFIED = (
+        (0, '是'),
+        (1, '否'),
+        (2, '污染'),
     )
     boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
                               on_delete=models.SET_NULL, null=True)
@@ -166,46 +167,46 @@ class FluorescenceQuantification(models.Model):
         verbose_name="仪器", max_length=50, null=True)
     loop_number = models.CharField(
         verbose_name="循环数", max_length=50, null=True
-                                   )
+    )
     background = models.CharField(
         verbose_name="Background", max_length=50, null=True
     )
     actb_noise = models.CharField(
-        verbose_name="NoiseBand/STDMultiplier", max_length=50, null=True
+        verbose_name="ACTB_NoiseBand/STDMultiplier", max_length=50, null=True
     )
-    actb_ct = models.CharField(verbose_name="CT值", max_length=50, null=True)
+    actb_ct = models.CharField(verbose_name="ACTB_CT值", max_length=50,
+                               null=True)
     actb_amp = models.CharField(
-        verbose_name="扩增曲线", max_length=50, null=True
+        verbose_name="ACTB_扩增曲线", max_length=50, null=True
     )
-    sfrp2_noise = models.CharField(verbose_name="NoiseBand/STDMultiplier",
-                                   max_length=50, null=True)
-    sfrp2_ct = models.CharField(verbose_name="CT值", max_length=50, null=True)
+    sfrp2_noise = models.CharField(
+        verbose_name="Sfrp2_NoiseBand/STDMultiplier",
+        max_length=50, null=True)
+    sfrp2_ct = models.CharField(verbose_name="Sfrp2_CT值", max_length=50,
+                                null=True)
     sfrp2_amp = models.CharField(
-        verbose_name="扩增曲线", max_length=50, null=True
+        verbose_name="Sfrp2_扩增曲线", max_length=50, null=True
     )
-    sdc2_noise = models.CharField(verbose_name="NoiseBand/STDMultiplier",
+    sdc2_noise = models.CharField(verbose_name="Sdc2_NoiseBand/STDMultiplier",
                                   max_length=50, null=True)
-    sdc2_ct = models.CharField(verbose_name="CT值", max_length=50, null=True)
+    sdc2_ct = models.CharField(verbose_name="Sdc2_CT值", max_length=50,
+                               null=True)
     sdc2_amp = models.CharField(
-        verbose_name="扩增曲线", max_length=50, null=True
+        verbose_name="Sdc2_扩增曲线", max_length=50, null=True
     )
     is_quality = models.BooleanField(verbose_name="有无质控", null=True)
     operator = models.ForeignKey(AUTH_USER_MODEL, verbose_name="操作人员",
                                  on_delete=models.SET_NULL, null=True)
     fq_date = models.DateField("荧光定量日期", null=True)
-    qpcr_index = models.CharField("QPCR反馈", max_length=50, null=True)
+    is_qualified = models.IntegerField(verbose_name="是否合格",
+                                     choices=IS_QUALIFIED, null=True)
     qpcr_suggest = models.CharField("建议", max_length=200, null=True)
     status = models.IntegerField(
         choices=FQ_STATUS, verbose_name="状态", null=True
     )
     result = models.TextField(verbose_name="结果", null=True)
     note = models.TextField(verbose_name="实验异常备注", blank=True, null=True)
-    submit = models.BooleanField(
-        verbose_name='实验正常，进行下一步', null=True
-    )
-    fail = models.BooleanField(
-        verbose_name='特殊情况，自行控制', null=True
-    )
+
 
     class Meta:
         app_label = "experiment"
@@ -213,3 +214,11 @@ class FluorescenceQuantification(models.Model):
 
     def __str__(self):
         return self.fq_number
+
+
+class ResultJudgement(models.Model):
+    boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
+                              on_delete=models.SET_NULL, null=True)
+    fq = models.ForeignKey(
+        FluorescenceQuantification, verbose_name="荧光定量信息",
+        on_delete=models.SET_NULL, null=True)
