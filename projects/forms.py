@@ -1,15 +1,15 @@
 import re
 
 from django import forms
-from .models import ContractsInfo, InvoiceInfo
+from .models import ContractsInfo, InvoiceInfo, BoxApplications
 
 
 class ContractInfoForm(forms.ModelForm):
-    """合同信息表单输入限制"""
+    """合同信息表单输入验证"""
 
     class Meta:
         model = ContractsInfo
-        fields = "__all__"
+        fields = '__all__'
 
     def clean_send_back_date(self):
         """合同寄回时间应大于合同寄出时间"""
@@ -33,16 +33,35 @@ class ContractInfoForm(forms.ModelForm):
 
 
 class InvoiceInfoForm(forms.ModelForm):
-    """发票申请信息表单输入限制
-       注：税率应为小数值
-    """
+    """发票申请信息表单输入验证"""
+
     class Meta:
         model = InvoiceInfo
-        fields = "__all__"
+        fields = '__all__'
 
     def clean_tax_rate(self):
+        """税率应为小数值"""
         tax_rate = self.cleaned_data['tax_rate']
-        if re.match(r'0\.[0-9]+', str(tax_rate)):
-            return tax_rate
-        else:
-            raise forms.ValidationError('税率填写错误！只能填写小于1的小数')
+        if tax_rate is not None:
+            if not re.match(r'0\.[0-9]+', str(tax_rate)):
+                raise forms.ValidationError('税率填写错误！只能填写小于1的小数')
+        return tax_rate
+
+
+class BoxApplicationsForm(forms.ModelForm):
+    """盒子申请信息表单输入验证"""
+
+    class Meta:
+        model = BoxApplications
+        fields = '__all__'
+
+    def clean_intention_client(self):
+        """意向代理申请盒子时，客户为必填项"""
+        classification = self.cleaned_data['classification']
+        intention_client = self.cleaned_data['intention_client']
+        print('111111111111%s' % intention_client)
+        if classification == 'YX':
+            # TODO: to test "==" and "is"
+            if intention_client is None:
+                raise forms.ValidationError('该申请为意向代理申请，客户信息为必填项，请填写！')
+        return intention_client

@@ -9,11 +9,11 @@ class SendInvoicesForm(forms.ModelForm):
         model = SendInvoices
         fields = "__all__"
 
-    # def clean_billing_date(self):
-    #     """开票日期应小于寄出日期"""
-    #     billing_date = self.cleaned_data['billing_date']
-    #     invoice_send_date = self.cleaned_data['invoice_send_date']
-    #     if billing_date < invoice_send_date:
-    #         return billing_date
-    #     else:
-    #         raise forms.ValidationError('填写错误！发票寄出时间应大于开票时间')
+    def clean_invoice_send_date(self):
+        """开票日期应小于寄出日期"""
+        billing_date = self.cleaned_data['billing_date']
+        invoice_send_date = self.cleaned_data['invoice_send_date']
+        if billing_date and invoice_send_date:
+            if billing_date > invoice_send_date:
+                raise forms.ValidationError('填写错误！发票寄出时间应大于开票时间')
+        return invoice_send_date

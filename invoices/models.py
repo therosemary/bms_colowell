@@ -1,4 +1,5 @@
 from django.db import models
+from bms_colowell.settings import AUTH_USER_MODEL
 from projects.models import InvoiceInfo
 
 
@@ -31,8 +32,9 @@ class SendInvoices(models.Model):
     invoice_id = models.OneToOneField(
         InvoiceInfo, verbose_name="发票编号", on_delete=models.CASCADE
     )
-    fill_name = models.CharField(
-        verbose_name="填写人", max_length=20, null=True, blank=True
+    fill_name = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="填写人", on_delete=models.SET_NULL,
+        null=True, blank=True,
     )
     send_flag = models.BooleanField(
         verbose_name="是否提交", default=False
