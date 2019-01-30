@@ -222,3 +222,10 @@ class ResultJudgement(models.Model):
     fq = models.ForeignKey(
         FluorescenceQuantification, verbose_name="荧光定量信息",
         on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        app_label = "experiment"
+        verbose_name = verbose_name_plural = "5-结果判定"
+
+    def __str__(self):
+        return self.id
