@@ -307,7 +307,7 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.status == 1:
             BsTask.objects.create(bs_number=obj.qua_number,
-                                       boxes=obj.boxex)
+                                  boxes=obj.boxex)
         else:
             pass
         obj.save()
@@ -413,7 +413,7 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
     def save_model(self, request, obj, form, change):
         if obj.status == 1:
             FluorescenceQuantification.objects.create(fq_number=obj.bs_number,
-                                       boxes=obj.boxex)
+                                                      boxes=obj.boxex)
         else:
             pass
         obj.save()
@@ -542,7 +542,7 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
 
 class ResultJudgementAdmin(admin.ModelAdmin):
     list_per_page = 50
-    search_fields = ("boxes")
+    search_fields = ["boxes",]
     save_on_top = False
     list_display = (
          "boxes", 'fq_date', 'fq_operator'
