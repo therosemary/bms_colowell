@@ -20,13 +20,13 @@ class ExtExecuteResource(resources.ModelResource):
         fields = ('ext_number', 'operator',
                   'test_number', 'ext_method', "objective", 'start_number',
                   'hemoglobin', 'cizhutiji', 'ext_density', 'elution_volume',
-                  "ext_date", "note", "submit")
+                  "ext_date", "note")
         export_order = ('ext_number', 'operator',
                         'test_number', 'ext_method', "objective",
                         'start_number',
                         'hemoglobin', 'cizhutiji', 'ext_density',
                         'elution_volume',
-                        "ext_date", "note", "submit")
+                        "ext_date", "note")
 
     def get_export_headers(self):
         return ["实验编号", "操作人员", "试剂批号", "提取方法", "目的",
@@ -107,7 +107,7 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
                        ("elution_volume", 'produce_',), "is_qualified")
         }),
         ('实验结果', {
-            'fields': ('note', ("submit", "fail"))
+            'fields': ('note',)
         }),
     )
 
@@ -150,8 +150,7 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
                                         'start_number', "hemoglobin",
                                         "cizhutiji", "ext_density",
                                         "elution_volume", "produce_",
-                                        "is_qualified",
-                                        "submit", "fail", 'note', ]
+                                        "is_qualified", 'note', ]
                 return self.readonly_fields
         except AttributeError:
             self.readonly_fields = ["produce_", "is_qualified"]
@@ -284,7 +283,7 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
             'fields': ("ct", "amplification_curve", "threshold_line")
         }),
         ('实验结果', {
-            'fields': ('note', ("submit", "fail"))
+            'fields': ('note',)
         }),
     )
 
@@ -295,8 +294,8 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
                                         "test_number", "instrument",
                                         'template_number', "loop_number",
                                         "background_baseline", "ct",
-                                        "amplification_curve", "submit",
-                                        'note', "threshold_line", "fail"]
+                                        "amplification_curve",
+                                        'note', "threshold_line"]
                 return self.readonly_fields
         except AttributeError:
             self.readonly_fields = []
@@ -392,7 +391,7 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
                        ("bis_elution", "is_quality"))
         }),
         ('实验结果', {
-            'fields': ('note', ("submit", "fail"))
+            'fields': ('note',)
         }),
     )
 
@@ -402,7 +401,7 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
                 self.readonly_fields = ['boxes', "operator", "bs_times",
                                         "bs_date", "test_number", "bis_begin",
                                         'bis_template', "bis_elution", 'note',
-                                        "is_quality", "submit", "fail"]
+                                        "is_quality", ]
                 return self.readonly_fields
         except AttributeError:
             self.readonly_fields = []
@@ -511,7 +510,7 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
             'fields': (('sdc2_noise', "sdc2_ct", "sdc2_amp"),)
         }),
         ('实验结果', {
-            'fields': ("result", 'note', ("submit", "fail"))
+            'fields': ("result", 'note')
         }),
     )
 
@@ -519,12 +518,12 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
         try:
             if obj.status == 1 or obj.status == 2:
                 self.readonly_fields = ['boxes', "operator", "fq_date",
-                                        "test_number", "instrument", "fail",
+                                        "test_number", "instrument",
                                         "background", "is_quality", "sfrp2_ct",
                                         "actb_ct", 'actb_noise', 'sfrp2_noise',
                                         "sfrp2_amp", "actb_amp", 'sdc2_noise',
                                         "sdc2_ct", "sdc2_amp", 'note',
-                                        "submit", 'loop_number']
+                                        'loop_number']
                 return self.readonly_fields
         except AttributeError:
             self.readonly_fields = []
@@ -542,16 +541,16 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
 
 class ResultJudgementAdmin(admin.ModelAdmin):
     list_per_page = 50
-    search_fields = ["boxes",]
+    search_fields = ["boxes", ]
     save_on_top = False
     list_display = (
-         "boxes", 'fq_date', 'fq_operator'
+        "boxes", 'fq_date', 'fq_operator'
     )
     list_display_links = ('boxes',)
-    readonly_fields = ["boxes","fq_date","fq_operator","fq_instrument",
-                       "fq_actb_ct","fq_actb_amp","fq_sfrp2_ct",
-                       "fq_sfrp2_amp","fq_sdc2_ct","fq_sdc2_amp",
-                       "fq_is_qualified",]
+    readonly_fields = ["boxes", "fq_date", "fq_operator", "fq_instrument",
+                       "fq_actb_ct", "fq_actb_amp", "fq_sfrp2_ct",
+                       "fq_sfrp2_amp", "fq_sdc2_ct", "fq_sdc2_amp",
+                       "fq_is_qualified", ]
 
     def fq_date(self, obj):
         if obj.fq.fq_date:

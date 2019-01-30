@@ -20,7 +20,7 @@ class BoxesInline(admin.TabularInline):
             if obj.submit:
                 self.readonly_fields = ["bar_code", "name", "type",
                                         "projec_source", "is_danger"]
-        except AttributeError :
+        except AttributeError:
             self.readonly_fields = []
             return self.readonly_fields
         return self.readonly_fields
@@ -59,6 +59,16 @@ class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
             else:
                 obj.index_number = str(sj.year) + Monthchoose[sj.month] + str(
                     BoxDeliveries.objects.latest('id').id + 1)
+        # if obj.submit:
+        #     sj = datetime.datetime.now()
+        #     if BoxDeliveries.objects.all().count() == 0:
+        #         ext_number = "Ext_" + str(sj.year) + Monthchoose[
+        #             sj.month] + "1"
+        #
+        #     else:
+        #         ext_number = "Ext_" + str(sj.year) + Monthchoose[
+        #             sj.month] + str(ExtSubmit.objects.latest('id').id + 1)
+        #     ExtSubmit.objects.create(extsubmit_number=ext_number,)
         obj.save()
 
     def save_formset(self, request, form, formset, change):
@@ -112,6 +122,7 @@ class BoxesAdmin(ImportExportActionModelAdmin):
             else:
                 pass
         self.message_user(request, "已成功核对{0}个盒子样本".format(n))
+
     accept_box.short_description = '核对所选盒子'
 
     def get_actions(self, request):
@@ -148,7 +159,7 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
     save_on_top = False
     list_display = ("extsubmit_number", 'boxes', "exp_method",)
     list_display_links = ('extsubmit_number',)
-    exclude = ["extsubmit_number",]
+    exclude = ["extsubmit_number", ]
 
     def get_readonly_fields(self, request, obj=None):
         try:
@@ -172,4 +183,17 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
                 obj.extsubmit_number = str(sj.year) + Monthchoose[
                     sj.month] + str(
                     ExtSubmit.objects.latest('id').id + 1)
+        if obj.submit:
+            sj = datetime.datetime.now()
+            if ExtExecute.objects.all().count() == 0:
+                ext_number = str(sj.year) + Monthchoose[
+                    sj.month] + "1".zfill(5)
+
+            else:
+                ext_number = str(sj.year) + Monthchoose[
+                    sj.month] + str(
+                    BoxDeliveries.objects.latest('id').id + 1).zfill(5)
+            boxes = form.cleaned_data["boxes"].boxes_set.all()
+            for i in boxes:
+                ExtExecute.objects.create(ext_number=ext_number, boxes=i)
         obj.save()
