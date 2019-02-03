@@ -35,9 +35,24 @@ class Suggestions(models.Model):
     notes = models.TextField(
         verbose_name="备注", null=True, blank=True,
     )
+    kras_rate = models.DecimalField(
+        verbose_name="KRAS突变率", null=True, blank=True,
+    )
+    bmp3_rate = models.DecimalField(
+        verbose_name="BMP3突变率", null=True, blank=True,
+    )
+    ndrg4_rate = models.DecimalField(
+        verbose_name="NDRG4突变率", null=True, blank=True,
+    )
+    hemoglobin = models.DecimalField(
+        verbose_name="血红蛋白含量", null=True, blank=True,
+    )
+    final_score = models.SmallIntegerField(
+        verbose_name="总得分", null=True, blank=True,
+    )
     
     class Meta:
-        verbose_name = verbose_name_plural = "健康建议"
+        verbose_name = verbose_name_plural = "健康建议与打分"
 
     def __str__(self):
         return '盒子{}'.format(self.product)
