@@ -40,4 +40,4 @@ class Suggestions(models.Model):
         verbose_name = verbose_name_plural = "健康建议"
 
     def __str__(self):
-        return '盒子编号：{}'.format(self.product.barcode)
+        return '盒子{}'.format(self.product)
