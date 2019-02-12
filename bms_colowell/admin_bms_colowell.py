@@ -1,7 +1,7 @@
 from django.contrib.admin import AdminSite
 from django.contrib.auth.admin import Group, GroupAdmin
 from django.template.response import TemplateResponse
-from django.urls import reverse
+# from django.urls import reverse
 from django.utils.translation import ugettext_lazy
 from django.views.decorators.cache import never_cache
 from urllib import parse
@@ -17,9 +17,18 @@ from experiment.models import ExtExecute, QualityTest, \
     FluorescenceQuantification, BsTask, ResultJudgement
 from experiment.admin import ExtExecuteAdmin, QualityTestAdmin, \
     FluorescenceQuantificationAdmin, BsTaskAdmin, ResultJudgementAdmin
-from tech_support.models import ExtSubmit,ExtMethod,BoxDeliveries,Boxes
-from tech_support.admin import ExtMethodAdmin,ExtSubmitAdmin,BoxesAdmin,\
+from tech_support.models import ExtSubmit, ExtMethod, BoxDeliveries, Boxes
+from tech_support.admin import ExtMethodAdmin, ExtSubmitAdmin, BoxesAdmin,\
     BoxDeliveriesAdmin
+
+from intentions.admin import IntentionAdmin
+from intentions.models import Intentions
+from projects.admin import ContractsInfoAdmin, BoxApplicationsAdmin,\
+    InvoiceInfoAdmin
+from projects.models import ContractsInfo, BoxApplications, InvoiceInfo
+from invoices.admin import SendInvoiceAdmin
+from invoices.models import SendInvoices
+
 
 class BMSAdminSite(AdminSite):
     site_title = "锐翌医学BMS系统"
@@ -80,8 +89,14 @@ BMS_admin_site.register(QualityTest, QualityTestAdmin)
 BMS_admin_site.register(BsTask, BsTaskAdmin)
 BMS_admin_site.register(FluorescenceQuantification,
                         FluorescenceQuantificationAdmin)
-BMS_admin_site.register(BoxDeliveries,BoxDeliveriesAdmin)
-BMS_admin_site.register(Boxes,BoxesAdmin)
-BMS_admin_site.register(ExtMethod,ExtMethodAdmin)
-BMS_admin_site.register(ExtSubmit,ExtSubmitAdmin)
-BMS_admin_site.register(ResultJudgement,ResultJudgementAdmin)
+BMS_admin_site.register(BoxDeliveries, BoxDeliveriesAdmin)
+BMS_admin_site.register(Boxes, BoxesAdmin)
+BMS_admin_site.register(ExtMethod, ExtMethodAdmin)
+BMS_admin_site.register(ExtSubmit, ExtSubmitAdmin)
+BMS_admin_site.register(ResultJudgement, ResultJudgementAdmin)
+
+BMS_admin_site.register(Intentions, IntentionAdmin)
+BMS_admin_site.register(ContractsInfo, ContractsInfoAdmin)
+BMS_admin_site.register(BoxApplications, BoxApplicationsAdmin)
+BMS_admin_site.register(InvoiceInfo, InvoiceInfoAdmin)
+BMS_admin_site.register(SendInvoices, SendInvoiceAdmin)
