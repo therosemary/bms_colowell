@@ -48,5 +48,5 @@ class SendInvoices(models.Model):
         ordering = ["billing_date"]
 
     def __str__(self):
-        return '发票号{}'.format(self.invoice_number)
+        return '发票编号{}'.format(self.invoice_id)
 

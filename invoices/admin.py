@@ -1,5 +1,7 @@
 from django.utils.html import format_html
 from import_export.admin import ImportExportActionModelAdmin
+from daterange_filter.filter import DateRangeFilter
+# from django.contrib.admin.views.main import ChangeList
 from projects.models import InvoiceInfo
 from invoices.models import SendInvoices
 from invoices.forms import SendInvoicesForm
@@ -10,6 +12,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     """发票寄送信息管理
        注：每条记录在发票申请提交后自动被创建
     """
+    change_list_template = 'admin/invoices/change_list_template_invoices.html'
     invoice_info = (
         'get_contract_number', 'get_invoice_title', 'get_tariff_item',
         'get_invoice_value', 'get_tax_rate', 'get_invoice_issuing',
@@ -42,7 +45,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     date_hierarchy = 'billing_date'
     readonly_fields = ('invoice_id',) + invoice_info
     form = SendInvoicesForm
-    list_filter = ('invoice_id__fill_date', 'invoice_id__apply_name')
+    list_filter = (('invoice_id__fill_date', DateRangeFilter),
+                   'invoice_id__apply_name')
     resource_class = SendInvoiceResources
 
     def receivables(self, obj):
@@ -82,7 +86,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_tax_rate.short_description = "税率"
 
     def get_invoice_issuing(self, obj):
-        issuing_entities = {'shry': '上海锐翌', 'hzth': '杭州拓宏', 'hzry': '杭州锐翌'}
+        issuing_entities = {'shry': "上海锐翌", 'hzth': "杭州拓宏", 'hzry': "杭州锐翌",
+                            'sdry': "山东锐翌"}
         return issuing_entities[obj.invoice_id.invoice_issuing]
     get_invoice_issuing.short_description = "开票单位"
 
@@ -106,16 +111,34 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         return obj.invoice_id.send_address
     get_send_address.short_description = "收件人地址"
 
+    @staticmethod
+    def statistic_invoice_value(qs):
+        invoice_values = 0
+        receive_values = 0
+        if qs is not None:
+            for data in qs:
+                invoice_data = InvoiceInfo.objects.get(invoice_id=data.invoice_id)
+                if invoice_data.invoice_value is not None:
+                    invoice_values += invoice_data.invoice_value
+                if invoice_data.invoice_value is not None and data.invoice_flag:
+                    receive_values += invoice_data.invoice_value
+        return invoice_values, receive_values
+
     def get_readonly_fields(self, request, obj=None):
-        if hasattr(obj, 'invoice_approval_status'):
-            if obj.invoice_approval_status is not None:
-                self.readonly_fields = self.invoice_info + \
-                                       ('invoice_id', 'invoice_approval_status',)
+        # TODO：先后逻辑错误，readonly_fields变量赋值错误（已有缓存值问题）
+        self.readonly_fields = ('invoice_id',) + self.invoice_info
+        # TODO: hasattr函数的隐含作用，在执行hasattr之前obj.name出现属性不存在错误
+        # TODO：但执行后正常，为啥呢？
+        # if obj:
         if hasattr(obj, 'send_flag'):
             if obj.send_flag:
                 self.readonly_fields = self.invoice_info + \
                                        ('invoice_approval_status',) + \
                                        self.send_invoice_info
+        elif hasattr(obj, 'invoice_approval_status'):
+            if obj.invoice_approval_status is not None:
+                self.readonly_fields = self.invoice_info + \
+                                       ('invoice_id', 'invoice_approval_status',)
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -124,6 +147,25 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         return super(SendInvoiceAdmin, self).change_view(
             request, object_id, form_url, extra_context=extra_context
         )
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        # TODO: 查询集换为按条件过滤后的
+        # 筛选后的查询集由ListFilter中的queryset()返回，但不知如何获取
+        # 发现template中的数据集由ChangeList类负责显示，显示集为调用get_results()
+        # 函数后result_list的值，即筛选后的查询集
+        result = self.get_changelist_instance(request)
+        result.get_results(request)
+        # print(request.META["QUERY"])
+        # queryset = self.get_queryset()
+        # query_string_dict = dict(request.META["QUERY"])
+        # queryset.filter(invoice_id__gte=balald)
+        # 获取model中的所有查询集
+        # qs = super().get_queryset(request)
+        qs = result.result_list
+        extra_context['invoice_values'], extra_context['receive_values'] \
+            = self.statistic_invoice_value(qs)
+        return super(SendInvoiceAdmin, self).changelist_view(request, extra_context)
 
     # def get_changeform_initial_data(self, request):
     #     initial = super(SendInvoiceAdmin, self).get_changeform_initial_data(request)
