@@ -5,7 +5,7 @@ from projects.models import InvoiceInfo
 
 class SendInvoices(models.Model):
     invoice_number = models.CharField(
-        verbose_name="发票号码", max_length=8, null=True, blank=True
+        verbose_name="发票号码", max_length=50, null=True, blank=True
     )
     billing_date = models.DateField(
         verbose_name="开票日期", null=True, blank=True
@@ -20,12 +20,6 @@ class SendInvoices(models.Model):
         verbose_name="电子发票", upload_to="#", max_length=100, null=True,
         blank=True
     )
-    invoice_flag = models.BooleanField(
-        verbose_name="到款标志", default=False, null=True, blank=True
-    )
-    sender = models.CharField(
-        verbose_name="寄件人", max_length=20, null=True, blank=True
-    )
     fill_date = models.DateField(
         verbose_name="填写日期", auto_now=True
     )
@@ -38,9 +32,6 @@ class SendInvoices(models.Model):
     )
     send_flag = models.BooleanField(
         verbose_name="是否提交", default=False
-    )
-    invoice_approval_status = models.BooleanField(
-        verbose_name="审批状态", null=True, blank=True
     )
 
     class Meta:

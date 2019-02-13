@@ -11,28 +11,20 @@ from projects.resources import ContractInfoResources, InvoiceInfoResources, \
     BoxApplicationsResources
 
 
-def make_contract_id():
-    """时间+随机生成数组合为合同编号"""
-    now_datetime = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-    number = str(random.randint(1, 10000))
-    return 'YX' + now_datetime + str(number)
-
-
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""
     # TODO: 20190108 合同信息外键关联代理商和业务员，造成其中一个外键无用
     fields = (
         'contract_number', 'client', 'box_price', 'detection_price',
         'contract_money', 'send_date', 'tracking_number', 'send_back_date',
-        'contract_content', 'shipping_status', 'contract_type', 'remark',
-        'end_status',
+        'contract_content', 'contract_type', 'start_date', 'end_date',
+        'staff_name', 'remark',
     )
     list_display = (
-        'contract_number', 'client', 'box_price', 'detection_price',
-        'full_set_price', 'contract_money', 'count_invoice_value',
+        'staff_name', 'contract_number', 'contract_type', 'client', 'box_price',
+        'detection_price', 'full_set_price', 'contract_money',
         'receive_invoice_value', 'send_date', 'tracking_number',
-        'send_back_date', 'shipping_status', 'contract_type', 'end_status',
-        'staff_name',
+        'send_back_date', 'start_date', 'end_date',
     )
     list_per_page = 40
     save_as_continue = False
@@ -50,29 +42,30 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
         )
     full_set_price.short_description = "单套总价"
 
-    def count_invoice_value(self, obj):
-        """自定义列表字段：已开票额；包含未审核金额"""
-        total_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(
-            contract_id=obj.contract_id, flag=True
-        )
-        if invoice_datas:
-            for data in invoice_datas:
-                if data.sendinvoices.invoice_approval_status:
-                    total_value += data.invoice_value
-        return format_html(
-            '<span>{}</span>', total_value
-        )
-    count_invoice_value.short_description = "已开票金额"
+    # def count_invoice_value(self, obj):
+    #     """自定义列表字段：已开票额；包含未审核金额"""
+    #     total_value = 0
+    #     invoice_datas = InvoiceInfo.objects.filter(
+    #         contract_id=obj.contract_id, flag=True
+    #     )
+    #     if invoice_datas:
+    #         for data in invoice_datas:
+    #             if data.sendinvoices.invoice_approval_status:
+    #                 total_value += data.invoice_value
+    #     return format_html(
+    #         '<span>{}</span>', total_value
+    #     )
+    # count_invoice_value.short_description = "已开票金额"
 
     def receive_invoice_value(self, obj):
         """自定义列表字段：已到账金额"""
+        # TODO: 修改开票信息后改
         receive_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=obj.contract_id)
+        invoice_datas = InvoiceInfo.objects.filter(contract_id=obj.id)
         if invoice_datas:
             for data in invoice_datas:
-                if data.sendinvoices.invoice_flag:
-                    receive_value += data.invoice_value
+                if data.sendinvoices.send_flag and data.receive_value is not None:
+                    receive_value += data.receive_value
         return format_html(
             '<span>{}</span>', receive_value
         )
@@ -92,33 +85,30 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        contract_data = ContractsInfo.objects.filter(contract_id=object_id)
+        contract_data = ContractsInfo.objects.filter(id=object_id)
         self.get_readonly_fields(request, obj=contract_data)
         return super(ContractsInfoAdmin, self).change_view(
             request, object_id, form_url, extra_context=extra_context
         )
 
-    def save_model(self, request, obj, form, change):
-        """重写合同信息保存"""
-        if change:
-            super(ContractsInfoAdmin, self).save_model(request, obj, form, change)
-        else:
-            obj.contract_id = make_contract_id()
-            obj.staff_name = re.search(r'[^【].*[^】]', str(request.user))[0]
-            obj.save()
 
 class InvoiceInfoAdmin(ImportExportActionModelAdmin):
-    """申请发票信息管理"""
-    fields = (
-        'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
-        'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
-        'address_name', 'address_phone', 'send_address', 'remark', 'flag'
+    """开票信息管理"""
+    fieldsets = (
+        (u'开票信息', {
+            'fields': ('contract_id', 'salesman', 'invoice_type',
+                       'invoice_issuing', 'invoice_title', 'tariff_item',
+                       'send_address', 'address_phone', 'opening_bank',
+                       'bank_account_number', 'invoice_value', 'invoice_content',
+                       'remark', 'apply_name', 'flag',)
+        }),
+        (u'到账信息', {
+            'fields': ('receive_value', 'receive_date',)
+        })
     )
     list_display = (
-        'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
-        'invoice_value', 'tax_rate', 'invoice_issuing', 'receive_date',
-        'address_name', 'address_phone', 'send_address', 'remark',
-        'apply_name', 'fill_date', 'flag', 'get_invoice_approval_status',
+        'salesman', 'invoice_title', 'invoice_value', 'invoice_type',
+        'invoice_content', 'receive_value', 'receive_date',
     )
     list_per_page = 40
     save_as_continue = False
@@ -126,31 +116,22 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     form = InvoiceInfoForm
     resource_class = InvoiceInfoResources
 
-    def get_invoice_approval_status(self, obj):
-        if obj.sendinvoices.invoice_approval_status is None:
-            status_value = "审核中"
-        elif obj.sendinvoices.invoice_approval_status:
-            status_value = "通过"
-        else:
-            status_value = "未通过"
-        return status_value
-    get_invoice_approval_status.short_description = "审批状态"
-
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
         self.readonly_fields = ()
         if hasattr(obj, 'flag'):
             if obj.flag:
                 self.readonly_fields = (
-                    'contract_id', 'cost_type', 'invoice_title', 'tariff_item',
-                    'invoice_value', 'tax_rate', 'invoice_issuing',
-                    'receive_date', 'address_name', 'address_phone',
-                    'send_address', 'remark', 'flag'
+                    'contract_id', 'salesman', 'invoice_type',
+                    'invoice_issuing', 'invoice_title', 'tariff_item',
+                    'send_address', 'address_phone', 'opening_bank',
+                    'bank_account_number', 'invoice_value', 'invoice_content',
+                    'remark', 'apply_name', 'flag',
                 )
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        contract_data = InvoiceInfo.objects.filter(invoice_id=object_id)
+        contract_data = InvoiceInfo.objects.filter(id=object_id)
         self.get_readonly_fields(request, obj=contract_data)
         return super(InvoiceInfoAdmin, self).change_view(
             request, object_id, form_url, extra_context=extra_context
@@ -165,19 +146,17 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
                     SendInvoices.objects.create(invoice_id=obj)
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
         else:
-            obj.invoice_id = make_contract_id()
-            obj.apply_name = re.search(r'[^【].*[^】]', str(request.user))[0]
-            #新建保存开票邮寄信息
+            #新建发票信息
+            super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
             if request.POST.get('flag'):
                 SendInvoices.objects.create(invoice_id=obj)
-            super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
 
 
 class BoxApplicationsAdmin(ImportExportActionModelAdmin):
     """申请盒子信息管理"""
 
     fields = (
-        'contract_id', 'amount', 'classification', 'intention_client',
+        'contract_number', 'amount', 'classification', 'intention_client',
         'address_name', 'address_phone', 'send_address', 'box_price',
         'detection_price', 'use', 'proposer', 'box_submit_flag'
     )
@@ -198,7 +177,7 @@ class BoxApplicationsAdmin(ImportExportActionModelAdmin):
         if hasattr(obj, 'box_submit_flag'):
             if obj.box_submit_flag:
                 self.readonly_fields = (
-                    'contract_id', 'amount', 'classification',
+                    'contract_number', 'amount', 'classification',
                     'intention_client', 'address_name', 'address_phone',
                     'send_address', 'box_price', 'detection_price', 'use',
                     'box_submit_flag'
