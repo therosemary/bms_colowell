@@ -1,7 +1,9 @@
 from django.contrib import admin
+from import_export.admin import ImportExportActionModelAdmin
+from partners.resources import PartnersResources
 
 
-class PartnersAdmin(admin.ModelAdmin):
+class PartnersAdmin(ImportExportActionModelAdmin):
     autocomplete_fields = ("bms_user", )
     fields = (
         "bms_user", "name", "code", "mode", "region", "materials",
@@ -17,6 +19,7 @@ class PartnersAdmin(admin.ModelAdmin):
     radio_fields = {"mode": admin.HORIZONTAL, "region": admin.HORIZONTAL}
     save_as_continue = False
     search_fields = ("bms_user__username", )
+    resource_class = PartnersResources
 
 
 # class PropagandaAdmin(admin.ModelAdmin):

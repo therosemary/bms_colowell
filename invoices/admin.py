@@ -45,6 +45,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     list_filter = (('invoice_id__fill_date', DateRangeFilter),
                    'invoice_id__salesman')
     resource_class = SendInvoiceResources
+    list_display_links = ('get_salesman', 'get_contract_number')
+    search_fields = ('invoice_number',)
 
     def receivables(self, obj):
         if obj.send_flag:

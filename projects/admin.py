@@ -30,6 +30,7 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
     save_as_continue = False
     form = ContractInfoForm
     resource_class = ContractInfoResources
+    list_display_links = ('staff_name', 'contract_number')
 
     def full_set_price(self, obj):
         """自定义列表字段：单套总价"""
@@ -115,6 +116,8 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     date_hierarchy = "fill_date"
     form = InvoiceInfoForm
     resource_class = InvoiceInfoResources
+    list_display_links = ('salesman', 'invoice_title')
+    search_fields = ('salesman',)
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""

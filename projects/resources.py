@@ -9,7 +9,7 @@ class ContractInfoResources(resources.ModelResource):
     """合同信息导入导出resources"""
 
     contract_id = Field(
-        column_name="编号", attribute='id'
+        column_name="编号", attribute='id', default=None
     )
     contract_number = Field(
         column_name="合同号", attribute='contract_number'
@@ -18,16 +18,16 @@ class ContractInfoResources(resources.ModelResource):
         column_name="客户", attribute='client', default=None
     )
     box_price = Field(
-        column_name="盒子单价", attribute='box_price'
+        column_name="盒子单价", attribute='box_price', default=None
     )
     detection_price = Field(
-        column_name="检测单价", attribute='detection_price'
+        column_name="检测单价", attribute='detection_price', default=None
     )
     full_set_price = Field(
         column_name="全套价格", attribute='full_set_price', default=None
     )
     contract_money = Field(
-        column_name="合同金额", attribute='contract_money'
+        column_name="合同金额", attribute='contract_money', default=None
     )
     # count_invoice_value = Field(
     #     column_name="已开票额", attribute='count_invoice_value', default=None
@@ -36,22 +36,26 @@ class ContractInfoResources(resources.ModelResource):
         column_name="已到账额", attribute='receive_invoice_value', default=None
     )
     send_date = Field(
-        column_name="寄出时间", attribute='send_date', default=None
+        column_name="寄出时间", attribute='send_date', default=None,
+        widget=DateWidget(format='%Y-%m-%d')
     )
     tracking_number = Field(
         column_name="邮寄单号", attribute='tracking_number'
     )
     send_back_date = Field(
-        column_name="寄回时间", attribute='send_back_date', default=None
+        column_name="寄回时间", attribute='send_back_date', default=None,
+        widget=DateWidget(format='%Y-%m-%d')
     )
     contract_type = Field(
         column_name="合同类型", attribute='contract_type'
     )
     start_date = Field(
-        column_name="起始时间", attribute='start_date', default=None
+        column_name="起始时间", attribute='start_date', default=None,
+        widget=DateWidget(format='%Y-%m-%d')
     )
     end_date = Field(
-        column_name="截止时间", attribute='end_date', default=None
+        column_name="截止时间", attribute='end_date', default=None,
+        widget=DateWidget(format='%Y-%m-%d')
     )
     remark = Field(
         column_name="备注", attribute='remark'
@@ -117,7 +121,7 @@ class InvoiceInfoResources(resources.ModelResource):
     """发票信息导入导出resources"""
 
     invoice_id = Field(
-        column_name="编号", attribute='invoice_id'
+        column_name="编号", attribute='id', default=None
     )
     contract_number = Field(
         column_name="合同号", attribute='contract_id__contract_number',
@@ -150,7 +154,7 @@ class InvoiceInfoResources(resources.ModelResource):
         column_name="账号", attribute='bank_account_number'
     )
     invoice_value = Field(
-        column_name="开票金额", attribute='invoice_value'
+        column_name="开票金额", attribute='invoice_value', default=None
     )
     invoice_content = Field(
         column_name="开票内容", attribute='invoice_content'
@@ -159,19 +163,21 @@ class InvoiceInfoResources(resources.ModelResource):
         column_name="备注", attribute='remark'
     )
     apply_name = Field(
-        column_name="申请人", attribute='apply_name'
+        column_name="申请人", attribute='apply_name', default=None
     )
     flag = Field(
         column_name="是否提交", attribute='flag'
     )
     receive_value = Field(
-        column_name="到账金额", attribute='receive_value'
+        column_name="到账金额", attribute='receive_value', default=None
     )
     receive_date = Field(
-        column_name="到账时间", attribute='receive_date'
+        column_name="到账时间", attribute='receive_date',
+        widget=DateWidget(format='%Y-%m-%d'),
     )
     fill_date = Field(
-        column_name="填写时间", attribute='fill_date'
+        column_name="填写时间", attribute='fill_date',
+        widget=DateWidget(format='%Y-%m-%d'),
     )
 
     class Meta:
@@ -185,7 +191,7 @@ class InvoiceInfoResources(resources.ModelResource):
         )
         export_order = fields
         skip_unchanged = True
-        import_id_fields = ['invoice_id']
+        import_id_fields = ['id']
 
     def get_export_headers(self):
         export_headers = [u'编号', u'合同号', u'业务员', u'开票类型', u'开票单位',
@@ -201,7 +207,6 @@ class BoxApplicationsResources(resources.ModelResource):
     application_id = Field(
         column_name="申请编号", attribute='application_id', default=None
     )
-    # TODO: 合同号导出时，无法获取
     contract_id = Field(
         column_name="合同号", attribute='contract_id',
         widget=ForeignKeyWidget(ContractsInfo, 'contract_number'), default=None

@@ -18,6 +18,7 @@ class IntentionAdmin(ImportExportActionModelAdmin):
     list_per_page = 40
     save_as_continue = False
     date_hierarchy = 'fill_date'
+    list_display_links = ('salesman', 'intention_client')
     resource_class = IntentionSource
 
     # def get_changeform_initial_data(self, request):

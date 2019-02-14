@@ -19,11 +19,11 @@ class Partners(models.Model):
         ("3", u"经销商"),
         ("4", u"体检中心"),
         ("5", u"医院"),
-        ("4", u"其它"),
+        ("6", u"其它"),
     )
     bms_user = models.ForeignKey(
         settings.AUTH_USER_MODEL, verbose_name="业务员",
-        on_delete=models.CASCADE,
+        on_delete=models.CASCADE, null=True, blank=True
     )
     name = models.CharField(
         verbose_name="合作方名称", max_length=32, null=True, blank=True,
@@ -55,7 +55,8 @@ class Partners(models.Model):
         verbose_name="策划活动支持", null=True, blank=True,
     )
     propaganda = models.TextField(
-        verbose_name="宣讲", null=True, blank=True
+        verbose_name="宣讲", null=True, blank=True,
+        help_text="填写宣讲的单位、地址、时间、其他备注信息等"
     )
     note = models.TextField(
         verbose_name="备注信息", max_length=128, null=True, blank=True,
