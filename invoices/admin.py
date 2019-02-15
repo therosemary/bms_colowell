@@ -12,7 +12,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     """发票寄送信息管理
        注：每条记录在发票申请提交后自动被创建
     """
-    change_list_template = 'admin/invoices/change_list_template_invoices.html'
+    # change_list_template = 'admin/invoices/change_list_template_invoices.html'
+    change_list_template = 'admin/invoices/invoice_change_list.html'
     invoice_info = (
         'get_contract_number', 'get_invoice_type', 'get_invoice_issuing',
         'get_invoice_title', 'get_tariff_item',  'get_send_address',
@@ -143,6 +144,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         # TODO: hasattr函数的隐含作用，在执行hasattr之前obj.name出现属性不存在错误
         # TODO：但执行后正常，为啥呢？
+        self.readonly_fields = self.invoice_info
         # if obj:
         if hasattr(obj, 'send_flag'):
             if obj.send_flag:
