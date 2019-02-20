@@ -173,13 +173,13 @@ class InvoiceInfo(models.Model):
         verbose_name="抬头", max_length=100, null=True, blank=True
     )
     tariff_item = models.CharField(
-        verbose_name="税号", max_length=50, null=True, blank=True
+        verbose_name="税号", max_length=200, null=True, blank=True
     )
     send_address = models.CharField(
         verbose_name="对方地址", max_length=150, null=True, blank=True
     )
     address_phone = models.CharField(
-        verbose_name="号码", max_length=20, null=True, blank=True
+        verbose_name="电话", max_length=20, null=True, blank=True
     )
     opening_bank = models.CharField(
         verbose_name="开户行", max_length=150, null=True, blank=True

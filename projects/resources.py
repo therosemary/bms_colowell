@@ -120,7 +120,7 @@ class ContractInfoResources(resources.ModelResource):
 class InvoiceInfoResources(resources.ModelResource):
     """发票信息导入导出resources"""
 
-    invoice_id = Field(
+    id = Field(
         column_name="编号", attribute='id', default=None
     )
     contract_number = Field(
@@ -183,7 +183,7 @@ class InvoiceInfoResources(resources.ModelResource):
     class Meta:
         model = InvoiceInfo
         fields = (
-            'invoice_id', 'contract_number', 'salesman', 'invoice_type',
+            'id', 'contract_number', 'salesman', 'invoice_type',
             'invoice_issuing', 'invoice_title', 'tariff_item',
             'send_address', 'address_phone', 'opening_bank',
             'bank_account_number', 'invoice_value', 'invoice_content', 'remark',

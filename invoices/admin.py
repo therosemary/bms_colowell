@@ -137,7 +137,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
                 invoice_data = InvoiceInfo.objects.get(id=data.invoice_id.id)
                 if invoice_data.invoice_value is not None:
                     invoice_values += invoice_data.invoice_value
-                if invoice_data.receive_value is not None and data.send_flag:
+                if invoice_data.receive_value is not None:
                     receive_values += invoice_data.receive_value
         return invoice_values, receive_values
 

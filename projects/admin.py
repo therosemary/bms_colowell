@@ -1,14 +1,14 @@
-import datetime
-import random
-import re
-
+from django.urls import path
+from django.http import JsonResponse, HttpResponse
 from django.utils.html import format_html
+import json
 from import_export.admin import ImportExportActionModelAdmin
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
 from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
 from projects.resources import ContractInfoResources, InvoiceInfoResources, \
     BoxApplicationsResources
+from projects import views
 
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
@@ -95,6 +95,8 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
 
 class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     """开票信息管理"""
+
+    # change_form_template = 'admin/projects/projects_invoices_change_form.html'
     fieldsets = (
         (u'开票信息', {
             'fields': ('contract_id', 'salesman', 'invoice_type',
@@ -118,6 +120,26 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     resource_class = InvoiceInfoResources
     list_display_links = ('salesman', 'invoice_title')
     search_fields = ('salesman',)
+
+    # def get_urls(self):
+    #     urls = super().get_urls()
+    #     ajax_url = [
+    #         path(r'add/projects/ajax_salesman/', self.ajax_salesman)
+    #     ]
+    #     return ajax_url + urls
+    #
+    # def ajax_salesman(self, request):
+    #     """动态获取当前合同对应的业务员"""
+    #     self.admin_site.name = 'projects'
+    #     print('111111111%s' % request.path)
+    #     salesman_result = {'salesamn': 'salesman'}
+    #     if request.is_ajax():
+    #         contract_val = request.GET['contract_number']
+    #         if contract_val is not None:
+    #             contract_data = ContractsInfo.objects.get(contract_number=contract_val)
+    #             salesman_result = {'salesamn': contract_data['staff_name']}
+    #     return JsonResponse(salesman_result)
+    #     # return HttpResponse(json.dumps(salesman_result), content_type='application/json')
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""

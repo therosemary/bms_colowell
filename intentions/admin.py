@@ -5,6 +5,8 @@ from intentions.models import Intentions
 
 class IntentionAdmin(ImportExportActionModelAdmin):
     """意向池信息管理"""
+
+    # change_list_template = 'admin/intentions/intentions_change_list.html'
     fields = (
         'salesman', 'intention_client', 'contact_name', 'contact_number',
         'follow_situations', 'material_situations', 'other_situations',
