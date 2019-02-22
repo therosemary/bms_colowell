@@ -1,7 +1,8 @@
+import random
 from django.contrib import admin
 from suggestions.forms import CollectionsForm
-from suggestions.utilities import ScoreEvaluation
-from suggestions.models import Choices
+from suggestions.utilities import ScoreEvaluation, mapping_suggestions
+from suggestions.models import Choices, Factors, Suggestions
 
 
 class CollectionsAdmin(admin.ModelAdmin):
@@ -26,7 +27,7 @@ class CollectionsAdmin(admin.ModelAdmin):
     form = CollectionsForm
     list_display = (
         'product', 'f01', 'f02', 'f03', 'f04', 'f05_string', 'f06_string',
-        'f07_string', 'f08', 'f09', 'f10', 'f11', 'f12',
+        'f07_string', 'f08', 'f09', 'f10',
     )
     radio_fields = {
         'f01': admin.HORIZONTAL,
@@ -62,29 +63,29 @@ class CollectionsAdmin(admin.ModelAdmin):
             'suggestions', 'is_submit',
         ) if obj and obj.is_submit else ()
         return self.readonly_fields
-
+    
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
         initial = context["adminform"].form.initial
-        mapping_risk = {
+        mapping = {
             "f10c01": "LOW_RISK",
             "f10c02": "HIGH_RISK",
-        }
-        mapping_hemoglobin = {
             "f12c01": "NEGATIVE",
             "f12c02": "WEAK_POSITIVE",
             "f12c03": "POSITIVE",
         }
         if obj and obj.f10 and obj.f12:
             result = ScoreEvaluation(
-                risk_state=mapping_risk[obj.f10],
-                hemoglobin_state=mapping_hemoglobin[obj.f12]
+                risk_state=mapping[obj.f10], hemoglobin_state=mapping[obj.f12]
             )
             initial["kras_mutation_rate"] = result.kras_mutation_rate
             initial["bmp3_mutation_rate"] = result.bmp3_mutation_rate
             initial["ndrg4_mutation_rate"] = result.ndrg4_mutation_rate
             initial["hemoglobin_content"] = result.hemoglobin_content
             initial["score"] = result.score
+        # life = random.sample(mapping_suggestions(obj, code="t01"), 4)
+        life_suggestions = "\n\n".join(mapping_suggestions(obj, code="t01"))
+        initial["suggestions"] = life_suggestions
         if obj and obj.is_submit:
             context['show_save'] = False
             context['show_delete'] = False
@@ -109,6 +110,29 @@ class FactorsAdmin(admin.ModelAdmin):
 
 
 class SuggestionsAdmin(admin.ModelAdmin):
-    fields = ('code', 'name', 'factors', 'connections', 'expressions', )
-    list_display = ('code', 'name', )
+    fields = (
+        'code', 'name', 'factors', 'available_choices', 'connections',
+        'expressions',
+    )
+    list_display = (
+        'code', 'name', 'related_factors', 'connections', 'expressions',
+    )
     filter_horizontal = ('factors', )
+    readonly_fields = ('available_choices', )
+    
+    def related_factors(self, obj):
+        return "；".join([factor.code for factor in obj.factors.all()])
+    related_factors.short_description = "建议关联因子"
+
+    def available_choices(self, obj):
+        available_factor_codes = [factor.code for factor in obj.factors.all()]
+        available_choices = []
+        for code in available_factor_codes:
+            choices = Choices.objects.filter(factor__code=code)
+            code_name = ["{}→👉→{}【{}】".format(
+                c.code, c.name, c.factor.name
+            ) for c in choices]
+            available_choices.extend(code_name)
+        return "\n".join(available_choices)
+    available_choices.short_description = "可供选择的选项"
+

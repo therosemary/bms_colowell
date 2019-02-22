@@ -1,3 +1,4 @@
+import re
 from django.db import models
 from products.models import Products
 
@@ -138,15 +139,15 @@ class Collections(models.Model):
     
     @property
     def f05(self):
-        return {f05.code for f05 in self._f05.all()}
+        return ";".join([f05.code for f05 in self._f05.all()])
     
     @property
     def f06(self):
-        return {f06.code for f06 in self._f06.all()}
+        return ";".join([f06.code for f06 in self._f06.all()])
     
     @property
     def f07(self):
-        return {f07.code for f07 in self._f07.all()}
+        return ";".join([f07.code for f07 in self._f07.all()])
     
     class Meta:
         verbose_name = verbose_name_plural = "健康建议与打分"
@@ -160,32 +161,36 @@ class Suggestions(models.Model):
         Factors, verbose_name="关联因子", blank=True,
     )
     code = models.CharField(
-        verbose_name="建议代号", max_length=4, primary_key=True,
+        verbose_name="建议代号", max_length=6, primary_key=True,
+        help_text="【建议代号】共6位，前三位代表类别txx，后三位代表该类别下的序号sxx",
+        default="t00s00",
     )
     name = models.CharField(
         verbose_name="建议名称", max_length=64, null=True, blank=True,
     )
     connections = models.CharField(
         verbose_name="关联选项代号", max_length=128, null=True, blank=True,
-        help_text="参照可选择的选项输入，需要先选中关联因子保存，这里才可以显示"
+        help_text="这里选择要选择的选项，选项之间用英文的分号分隔开"
     )
     expressions = models.TextField(
         verbose_name="表达形式", null=True, blank=True,
     )
     
-    # @property
-    # def all_choices(self):
-    #     factors = self.factors.all()
-    #     choices = {factor.choices_set for factor in factors}
-    #     return choices
-    #
-    # @property
-    # def expression_set(self):
-    #     expressions_list = re.match("[【](.*?)[】]", self.expressions)
-    #     return set(expressions_list.groups())
+    @property
+    def _factors(self):
+        return [factor.code for factor in self.factors.all().order_by("code")]
+    
+    @property
+    def _choices(self):
+        connections = self.connections
+        return connections.split(";") if connections else ""
+
+    @property
+    def sentences(self):
+        return re.findall(r"[【](.*?)[】]", self.expressions)
     
     class Meta:
-        verbose_name = verbose_name_plural = "建议语料库"
+        verbose_name = verbose_name_plural = "建议语料"
     
     def __str__(self):
         return self.code
