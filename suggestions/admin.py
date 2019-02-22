@@ -4,21 +4,6 @@ from suggestions.utilities import ScoreEvaluation
 from suggestions.models import Choices
 
 
-class F05sAdmin(admin.ModelAdmin):
-    fields = ('code', 'content', )
-    list_display = ('code', 'content',)
-
-
-class F06sAdmin(admin.ModelAdmin):
-    fields = ('code', 'content', )
-    list_display = ('code', 'content', )
-
-
-class F07sAdmin(admin.ModelAdmin):
-    fields = ('code', 'content', )
-    list_display = ('code', 'content', )
-
-
 class CollectionsAdmin(admin.ModelAdmin):
     """合同信息管理"""
     fieldsets = (
@@ -58,15 +43,15 @@ class CollectionsAdmin(admin.ModelAdmin):
     ordering = ('product__barcode', )
 
     def f05_string(self, obj):
-        return "；".join([f05.content for f05 in obj._f05.all()])
+        return "；".join([f05.name for f05 in obj._f05.all()])
     f05_string.short_description = "下消化道症状"
 
     def f06_string(self, obj):
-        return "；".join([f06.content for f06 in obj._f06.all()])
+        return "；".join([f06.name for f06 in obj._f06.all()])
     f06_string.short_description = "其它病史"
 
     def f07_string(self, obj):
-        return "；".join([f07.content for f07 in obj._f07.all()])
+        return "；".join([f07.name for f07 in obj._f07.all()])
     f07_string.short_description = "慢性病史"
     
     def get_readonly_fields(self, request, obj=None):
