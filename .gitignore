@@ -3,6 +3,7 @@
 */__pycache__/
 */migrations/*
 bms_colowell/settings.py
+suggestions/utilities.py
 media/
 statics/
 collected_statics/
