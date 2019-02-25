@@ -124,7 +124,7 @@ class InvoiceInfoResources(resources.ModelResource):
         column_name="编号", attribute='id', default=None
     )
     contract_number = Field(
-        column_name="合同号", attribute='contract_id__contract_number',
+        column_name="合同号", attribute='contract_id', default=None
     )
     salesman = Field(
         column_name="业务员", attribute='salesman',
@@ -205,10 +205,10 @@ class BoxApplicationsResources(resources.ModelResource):
     """盒子申请信息导入导出"""
 
     application_id = Field(
-        column_name="申请编号", attribute='application_id', default=None
+        column_name="申请编号", attribute='id', default=None
     )
     contract_id = Field(
-        column_name="合同号", attribute='contract_id',
+        column_name="合同号", attribute='contract_number',
         widget=ForeignKeyWidget(ContractsInfo, 'contract_number'), default=None
     )
     amount = Field(

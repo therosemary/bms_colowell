@@ -1,14 +1,14 @@
-from django.urls import path
-from django.http import JsonResponse, HttpResponse
+# from django.urls import path
+# from django.http import JsonResponse, HttpResponse
 from django.utils.html import format_html
-import json
+# import json
 from import_export.admin import ImportExportActionModelAdmin
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices
 from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
 from projects.resources import ContractInfoResources, InvoiceInfoResources, \
     BoxApplicationsResources
-from projects import views
+# from projects import views
 
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
@@ -210,7 +210,7 @@ class BoxApplicationsAdmin(ImportExportActionModelAdmin):
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
-        contract_data = BoxApplications.objects.filter(application_id=object_id)
+        contract_data = BoxApplications.objects.filter(id=object_id)
         self.get_readonly_fields(request, obj=contract_data)
         return super(BoxApplicationsAdmin, self).change_view(
             request, object_id, form_url, extra_context=extra_context
