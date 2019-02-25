@@ -120,13 +120,13 @@ class BoxApplications(models.Model):
     )
 
     def colored_contract_number(self):
-        if self.contract_id is not None:
-            if self.contract_id.contract_type == 'YX':
+        if self.contract_number is not None:
+            if self.contract_number.contract_type == 'YX':
                 return format_html(
-                    '<span style="color:{}">{}</span>', 'red', self.contract_id
+                    '<span style="color:{}">{}</span>', 'red', self.contract_number
                 )
             return format_html(
-                '<span>{}</span>', self.contract_id
+                '<span>{}</span>', self.contract_number
             )
     colored_contract_number.short_description = "合同号"
 
@@ -136,7 +136,7 @@ class BoxApplications(models.Model):
         ordering = ["-submit_time"]
 
     def __str__(self):
-        return '盒子申请编号：{}'.format(self.application_id)
+        return '盒子申请编号：{}'.format(self.id)
 
 
 class InvoiceInfo(models.Model):
