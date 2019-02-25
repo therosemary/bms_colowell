@@ -205,10 +205,10 @@ class BoxApplicationsResources(resources.ModelResource):
     """盒子申请信息导入导出"""
 
     application_id = Field(
-        column_name="申请编号", attribute='application_id', default=None
+        column_name="申请编号", attribute='id', default=None
     )
     contract_id = Field(
-        column_name="合同号", attribute='contract_id',
+        column_name="合同号", attribute='contract_number',
         widget=ForeignKeyWidget(ContractsInfo, 'contract_number'), default=None
     )
     amount = Field(
