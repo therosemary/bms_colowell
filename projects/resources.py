@@ -124,7 +124,7 @@ class InvoiceInfoResources(resources.ModelResource):
         column_name="编号", attribute='id', default=None
     )
     contract_number = Field(
-        column_name="合同号", attribute='contract_id',
+        column_name="合同号", attribute='contract_id', default=None
     )
     salesman = Field(
         column_name="业务员", attribute='salesman',
