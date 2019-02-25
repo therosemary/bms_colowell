@@ -113,7 +113,10 @@ class SendInvoiceResources(resources.ModelResource):
 
     def dehydrate_contract_number(self, sendinvoices):
         invoice_data = InvoiceInfo.objects.get(id=sendinvoices.invoice_id.id)
-        return invoice_data.contract_id.contract_number
+        if invoice_data.contract_id is not None:
+            return invoice_data.contract_id.contract_number
+        else:
+            return None
 
     def dehydrate_invoice_issuing(self, sendinvoices):
         issuing_entities = {'shry': '上海锐翌', 'hzth': '杭州拓宏', 'hzry': '杭州锐翌',
