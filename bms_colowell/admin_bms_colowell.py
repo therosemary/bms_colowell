@@ -9,8 +9,8 @@ from bms_colowell.settings import DINGTALK_APPID
 
 from accounts.admin import BmsUserAdmin, WechatInfoAdmin, DingtalkInfoAdmin
 from accounts.models import BmsUser, WechatInfo, DingtalkInfo
-from partners.admin import PartnersAdmin, PropagandaAdmin
-from partners.models import Partners, Propaganda
+from partners.admin import PartnersAdmin
+from partners.models import Partners
 from products.admin import ProductsAdmin
 from products.models import Products
 from experiment.models import ExtExecute, QualityTest, \
@@ -28,6 +28,9 @@ from projects.admin import ContractsInfoAdmin, BoxApplicationsAdmin,\
 from projects.models import ContractsInfo, BoxApplications, InvoiceInfo
 from invoices.admin import SendInvoiceAdmin
 from invoices.models import SendInvoices
+
+from suggestions.models import Collections, Factors, Suggestions
+from suggestions.admin import CollectionsAdmin, FactorsAdmin, SuggestionsAdmin
 
 
 class BMSAdminSite(AdminSite):
@@ -82,8 +85,11 @@ BMS_admin_site.register(BmsUser, BmsUserAdmin)
 BMS_admin_site.register(WechatInfo, WechatInfoAdmin)
 BMS_admin_site.register(DingtalkInfo, DingtalkInfoAdmin)
 BMS_admin_site.register(Partners, PartnersAdmin)
-BMS_admin_site.register(Propaganda, PropagandaAdmin)
 BMS_admin_site.register(Products, ProductsAdmin)
+BMS_admin_site.register(Collections, CollectionsAdmin)
+BMS_admin_site.register(Factors, FactorsAdmin)
+BMS_admin_site.register(Suggestions, SuggestionsAdmin)
+
 BMS_admin_site.register(ExtExecute, ExtExecuteAdmin)
 BMS_admin_site.register(QualityTest, QualityTestAdmin)
 BMS_admin_site.register(BsTask, BsTaskAdmin)
