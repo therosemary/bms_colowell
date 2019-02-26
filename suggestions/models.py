@@ -67,8 +67,7 @@ class Collections(models.Model):
     )
     f04 = models.CharField(
         verbose_name="直系亲属肠癌息肉史", max_length=6, null=True, blank=True,
-        choices=choices_select(code__contains="f04"),
-        default="f04c02"
+        choices=choices_select(code__contains="f04"), default="f04c02"
     )
     _f05 = models.ManyToManyField(
         Choices, verbose_name="下消化道症状", blank=True,
@@ -182,8 +181,7 @@ class Suggestions(models.Model):
     
     @property
     def _choices(self):
-        connections = self.connections
-        return connections.split(";") if connections else ""
+        return self.connections.split(";") if self.connections else ""
 
     @property
     def sentences(self):
