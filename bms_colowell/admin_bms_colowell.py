@@ -29,8 +29,8 @@ from projects.models import ContractsInfo, BoxApplications, InvoiceInfo
 from invoices.admin import SendInvoiceAdmin
 from invoices.models import SendInvoices
 
-from suggestions.models import Collections, Factors, Suggestions
-from suggestions.admin import CollectionsAdmin, FactorsAdmin, SuggestionsAdmin
+# from suggestions.models import Collections, Factors, Suggestions
+# from suggestions.admin import CollectionsAdmin, FactorsAdmin, SuggestionsAdmin
 
 
 class BMSAdminSite(AdminSite):
@@ -86,9 +86,9 @@ BMS_admin_site.register(WechatInfo, WechatInfoAdmin)
 BMS_admin_site.register(DingtalkInfo, DingtalkInfoAdmin)
 BMS_admin_site.register(Partners, PartnersAdmin)
 BMS_admin_site.register(Products, ProductsAdmin)
-BMS_admin_site.register(Collections, CollectionsAdmin)
-BMS_admin_site.register(Factors, FactorsAdmin)
-BMS_admin_site.register(Suggestions, SuggestionsAdmin)
+# BMS_admin_site.register(Collections, CollectionsAdmin)
+# BMS_admin_site.register(Factors, FactorsAdmin)
+# BMS_admin_site.register(Suggestions, SuggestionsAdmin)
 
 BMS_admin_site.register(ExtExecute, ExtExecuteAdmin)
 BMS_admin_site.register(QualityTest, QualityTestAdmin)
