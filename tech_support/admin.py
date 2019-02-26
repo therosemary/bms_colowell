@@ -1,5 +1,5 @@
 import datetime
-
+from import_export import resources
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from import_export.admin import ImportExportActionModelAdmin
@@ -26,6 +26,51 @@ class BoxesInline(admin.TabularInline):
         return self.readonly_fields
 
 
+class BoxesResource(resources.ModelResource):
+    class Meta:
+        model = Boxes
+        skip_unchanged = True
+        import_id_fields = ('box_deliver',)
+        fields = ('box_deliver', 'index_number')
+        export_order = ('box_deliver', 'index_number')
+
+    def get_export_headers(self):
+        return ["box_deliver", "盒子编号"]
+
+    # def get_or_init_instance(self, instance_loader, row):
+    #     instance = self.get_instance(instance_loader, row)
+    #     if instance:
+    #         instance.box_deliver = BoxDeliveries.objects.get(
+    #             index_number=row["box_deliver"])
+    #         instance.note = row["盒子编号"]
+    #         instance.save()
+    #         return instance, False
+    #     else:
+    #         return self.init_instance(row), True
+
+    def init_instance(self, row=None):
+        if not row:
+            row = {}
+        instance = ExtExecute()
+        for attr, value in row.items():
+            setattr(instance, attr, value)
+        if Boxes.objects.all().count() == 0:
+            instance.id = "1"
+        else:
+            instance.id = str(int(Boxes.objects.latest('id').id) + 1)
+        instance.box_deliver = BoxDeliveries.objects.get(
+                        index_number=row["box_deliver"])
+        instance.note = row["盒子编号"]
+        instance.save()
+        return instance
+
+    # def export(self, queryset=None, *args, **kwargs):
+    #     queryset_result = SampleInfo.objects.filter(id=None)
+    #     for i in queryset:
+    #         queryset_result |= SampleInfo.objects.filter(sampleinfoform=i)
+    #     return super().export(queryset=queryset_result, *args, **kwargs)
+
+
 class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
     """盒子发货管理"""
     inlines = [BoxesInline]
@@ -35,20 +80,34 @@ class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
     list_display = ('index_number', "sale_man", "customer",
                     'send_number', 'send_date', 'made_date')
     list_display_links = ('index_number',)
-    exclude = ["index_number", ]
+    resource_class = BoxesResource
+    readonly_fields = ("box_number", "index_number")
+    fieldsets = (
+        ('盒子发货信息', {
+            'fields': ("index_number", 'sale_man', 'customer', 'send_number',
+                       "address", "box_number",
+                       "send_date", "made_date", 'submit')
+        }),
+    )
 
     def get_readonly_fields(self, request, obj=None):
         try:
             if obj.submit:
-                self.readonly_fields = ['sale_man', "customer", "box_number",
-                                        "send_number", "send_date",
-                                        'made_date', "submit"]
-                return self.readonly_fields
+                return ['sale_man', "customer", "box_number",
+                        "send_number", "send_date",
+                        'made_date', "submit", "index_number", "address"]
         except AttributeError:
-            self.readonly_fields = []
-            return self.readonly_fields
-        self.readonly_fields = []
-        return self.readonly_fields
+            pass
+        return ["box_number", "index_number"]
+
+    def box_number(self, obj):
+        if obj:
+            n = 0
+            for i in obj.boxes_set.all():
+                n += 1
+            return n
+        return 0
+    box_number.short_description = '盒子数量'
 
     def save_model(self, request, obj, form, change):
         if not obj.index_number:
@@ -128,7 +187,10 @@ class BoxesAdmin(ImportExportActionModelAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         current_group_set = Group.objects.filter(user=request.user)
+        print("第一步")
         for i in current_group_set:
+            print("***************************")
+            print(i.name)
             if i.name == "技术支持":
                 del actions['accept_box']
         return actions
@@ -157,9 +219,10 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
     """提取下单管理"""
     list_per_page = 50
     save_on_top = False
-    list_display = ("extsubmit_number", 'boxes', "exp_method",)
+    list_display = ("extsubmit_number", "exp_method", "submit")
     list_display_links = ('extsubmit_number',)
     exclude = ["extsubmit_number", ]
+    filter_horizontal = ("boxes",)
 
     def get_readonly_fields(self, request, obj=None):
         try:
@@ -184,16 +247,17 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
                     sj.month] + str(
                     ExtSubmit.objects.latest('id').id + 1)
         if obj.submit:
-            sj = datetime.datetime.now()
-            if ExtExecute.objects.all().count() == 0:
-                ext_number = str(sj.year) + Monthchoose[
-                    sj.month] + "1".zfill(5)
-
-            else:
-                ext_number = str(sj.year) + Monthchoose[
-                    sj.month] + str(
-                    BoxDeliveries.objects.latest('id').id + 1).zfill(5)
-            boxes = form.cleaned_data["boxes"].boxes_set.all()
+            boxes = form.cleaned_data["boxes"]
             for i in boxes:
+                sj = datetime.datetime.now()
+                # print(BoxDeliveries.objects.all().count())
+                if ExtExecute.objects.all().count() == 0:
+                    ext_number = str(sj.year) + Monthchoose[
+                        sj.month] + "1".zfill(5)
+
+                else:
+                    ext_number = str(sj.year) + Monthchoose[
+                        sj.month] + str(
+                        ExtExecute.objects.latest('id').id + 1).zfill(5)
                 ExtExecute.objects.create(ext_number=ext_number, boxes=i)
         obj.save()
