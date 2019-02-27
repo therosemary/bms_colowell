@@ -77,12 +77,12 @@ class Collections(models.Model):
     _f06 = models.ManyToManyField(
         Choices, verbose_name="指定病史",  blank=True,
         limit_choices_to={"code__contains": "f06"},
-        related_name = "collections_f06",
+        related_name="collections_f06",
     )
     _f07 = models.ManyToManyField(
         Choices, verbose_name="慢性病史",  blank=True,
         limit_choices_to={"code__contains": "f07"},
-        related_name = "collections_f07",
+        related_name="collections_f07",
     )
     f08 = models.CharField(
         verbose_name="身体指数", max_length=6, null=True, blank=True,
@@ -173,6 +173,9 @@ class Suggestions(models.Model):
     )
     expressions = models.TextField(
         verbose_name="表达形式", null=True, blank=True,
+    )
+    is_required = models.BooleanField(
+        verbose_name="是否必要", default=False,
     )
     
     @property
