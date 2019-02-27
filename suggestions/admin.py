@@ -9,34 +9,36 @@ class CollectionsAdmin(admin.ModelAdmin):
     """The suggestions mapping and the scoring for sample."""
     
     fieldsets = (
-        (None, {'fields': ('product', 'f10', 'f12', 'f08', 'f09', )}),
+        (None, {'fields': ('product', '_f10', '_f12', '_f08', '_f09', )}),
         ('问卷答案', {
             'fields': (
-                'f01', 'f02', 'f11', 'f03', 'f04', ('_f05', '_f06', '_f07'),
+                '_f01', '_f02', '_f11', '_f03', '_f04', ('_f05', '_f06', '_f07'),
             )
         }),
-        ('建议和打分', {
+        ('健康管理', {
+            'fields': (('t01', 't02'), ('t03', 't04'), ('t05', 't06'), 't07')
+        }),
+        ('高通量打分', {
             'fields': (
-                'suggestions', 'kras_mutation_rate',
-                'bmp3_mutation_rate', 'ndrg4_mutation_rate',
-                'hemoglobin_content', 'score',
+                'kras_mutation_rate', 'bmp3_mutation_rate',
+                'ndrg4_mutation_rate', 'hemoglobin_content', 'score',
             )
         }),
         ('提交状态', {'fields': ('is_submit', )}),
     )
     form = CollectionsForm
     list_display = (
-        'product', 'f01', 'f02', 'f03', 'f04', 'f05_string', 'f06_string',
-        'f07_string', 'f08', 'f09', 'f10', 'is_submit',
+        'product', '_f01', '_f02', '_f03', '_f04', 'f05_string', 'f06_string',
+        'f07_string', '_f08', '_f09', '_f10', 'is_submit',
     )
     list_filter = ('is_submit', )
     ordering = ('product__barcode', )
     radio_fields = {
-        'f01': admin.HORIZONTAL, 'f02': admin.HORIZONTAL,
-        'f03': admin.HORIZONTAL, 'f04': admin.HORIZONTAL,
-        'f08': admin.HORIZONTAL, 'f09': admin.HORIZONTAL,
-        'f10': admin.HORIZONTAL, 'f11': admin.HORIZONTAL,
-        'f12': admin.HORIZONTAL,
+        '_f01': admin.HORIZONTAL, '_f02': admin.HORIZONTAL,
+        '_f03': admin.HORIZONTAL, '_f04': admin.HORIZONTAL,
+        '_f08': admin.HORIZONTAL, '_f09': admin.HORIZONTAL,
+        '_f10': admin.HORIZONTAL, '_f11': admin.HORIZONTAL,
+        '_f12': admin.HORIZONTAL,
     }
     search_fields = ('product__barcode', )
 
@@ -54,12 +56,16 @@ class CollectionsAdmin(admin.ModelAdmin):
     
     def get_readonly_fields(self, request, obj=None):
         self.readonly_fields = (
-            'product', 'f01', 'f02', 'f03', 'f04', '_f05', '_f06', '_f07',
-            'f08', 'f09', 'f10', 'f11', 'f12', 'kras_mutation_rate',
+            'product', '_f01', '_f02', '_f03', '_f04', '_f05', '_f06', '_f07',
+            '_f08', '_f09', '_f10', '_f11', '_f12', 'kras_mutation_rate',
             'bmp3_mutation_rate', 'ndrg4_mutation_rate', 'hemoglobin_content',
             'score', 'suggestions', 'is_submit',
         ) if obj and obj.is_submit else ()
         return self.readonly_fields
+    
+    @staticmethod
+    def zh_string_counts():
+        pass
     
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
@@ -70,8 +76,8 @@ class CollectionsAdmin(admin.ModelAdmin):
         if obj is not None:
             # food = random.sample(mapping_suggestions(obj, code="t02"), 4)
             # life = random.sample(mapping_suggestions(obj, code="t01"), 4)
-            life = "\n\n".join(mapping_suggestions(obj, code="t01"))
-            initial["suggestions"] = life
+            life = "\n\n".join(mapping_suggestions(obj, code="t02"))
+            initial["t02"] = life
         if obj and obj.f10 and obj.f12:
             mapping = {
                 "f10c01": "LOW_RISK",
@@ -112,13 +118,19 @@ class FactorsAdmin(admin.ModelAdmin):
     ordering = ['code']
 
 
+class TypesAdmin(admin.ModelAdmin):
+    fields = ('code', 'name', )
+    list_display = ('code', 'name', )
+    ordering = ['code']
+
+
 class SuggestionsAdmin(admin.ModelAdmin):
     fields = (
-        'code', 'name', 'factors', 'available_choices', 'connections',
+        'code', 'type_name', 'factors', 'available_choices', 'connections',
         'expressions',
     )
     list_display = (
-        'code', 'name', 'related_factors', 'connections', 'expressions',
+        'code', 'type_name', 'related_factors', 'connections', 'expressions',
     )
     filter_horizontal = ('factors', )
     readonly_fields = ('available_choices', )
@@ -139,4 +151,3 @@ class SuggestionsAdmin(admin.ModelAdmin):
             available_choices.extend(code_name)
         return "\n".join(available_choices)
     available_choices.short_description = "可供选择的选项"
-
