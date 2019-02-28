@@ -76,8 +76,14 @@ class CollectionsAdmin(admin.ModelAdmin):
         if obj is not None:
             # food = random.sample(mapping_suggestions(obj, code="t02"), 4)
             # life = random.sample(mapping_suggestions(obj, code="t01"), 4)
-            life = "\n\n".join(mapping_suggestions(obj, code="t02"))
-            initial["t02"] = life
+            # life = "\n\n".join(mapping_suggestions(obj, code="t02"))
+            initial["t01"] = "\n\n".join(mapping_suggestions(obj, code="t01"))
+            initial["t02"] = "\n\n".join(mapping_suggestions(obj, code="t02"))
+            initial["t03"] = "\n\n".join(mapping_suggestions(obj, code="t03"))
+            initial["t04"] = "\n\n".join(mapping_suggestions(obj, code="t04"))
+            initial["t05"] = "\n\n".join(mapping_suggestions(obj, code="t05"))
+            initial["t06"] = "\n\n".join(mapping_suggestions(obj, code="t06"))
+            initial["t07"] = "\n\n".join(mapping_suggestions(obj, code="t07"))
         if obj and obj.f10 and obj.f12:
             mapping = {
                 "f10c01": "LOW_RISK",
@@ -130,15 +136,24 @@ class SuggestionsAdmin(admin.ModelAdmin):
         'expressions',
     )
     list_display = (
-        'code', 'type_name', 'related_factors', 'connections', 'expressions',
+        'code', 'type_name', 'related_factors', 'related_choices',
+        'expressions',
     )
     filter_horizontal = ('factors', )
     readonly_fields = ('available_choices', )
     ordering = ['code']
     
     def related_factors(self, obj):
-        return "；".join([factor.code for factor in obj.factors.all()])
+        return "\n".join([factor.code for factor in obj.factors.all()])
     related_factors.short_description = "建议关联因子"
+
+    def related_choices(self, obj):
+        if obj.connections is not None:
+            strings = obj.connections.split(";")
+        else:
+            strings = ""
+        return "\n".join(strings)
+    related_choices.short_description = "建议关联选项"
 
     def available_choices(self, obj):
         available_factor_codes = [factor.code for factor in obj.factors.all()]

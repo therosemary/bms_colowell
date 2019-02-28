@@ -232,7 +232,7 @@ class Types(models.Model):
         verbose_name = verbose_name_plural = "建议类别"
 
     def __str__(self):
-        return "{}-{}".format(self.code, self.name)
+        return "{}".format(self.name)
 
 
 class Suggestions(models.Model):
@@ -248,7 +248,7 @@ class Suggestions(models.Model):
         Types, verbose_name="类别名称", on_delete=models.SET_NULL, null=True,
     )
     connections = models.CharField(
-        verbose_name="关联选项代号", max_length=128, null=True, blank=True,
+        verbose_name="关联选项代号", max_length=512, null=True, blank=True,
         help_text="这里选择要选择的选项，选项之间用英文的分号分隔开"
     )
     expressions = models.TextField(
@@ -268,7 +268,7 @@ class Suggestions(models.Model):
 
     @property
     def sentences(self):
-        return re.findall(r"[【](.*?)[】]", self.expressions)
+        return re.findall(r"[【]([\s\S]*?)[】]", self.expressions)
     
     class Meta:
         verbose_name = verbose_name_plural = "建议语料"
