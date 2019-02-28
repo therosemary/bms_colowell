@@ -8,82 +8,14 @@ from experiment.forms import ExtExecuteForm, QualityTestForm, BsTaskForm, \
     FluorescenceQuantificationForm
 from import_export import resources
 from experiment.models import *
+from experiment.resources import ExtExecuteResource, QualityTestResource, \
+    BsTaskResource, FluorescenceQuantificationResource
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
 
 
-class ExtExecuteResource(resources.ModelResource):
-    class Meta:
-        model = ExtExecute
-        skip_unchanged = True
-        import_id_fields = ('ext_number',)
-        fields = ('ext_number', 'operator',
-                  'test_number', 'ext_method', "objective", 'start_number',
-                  'hemoglobin', 'cizhutiji', 'ext_density', 'elution_volume',
-                  "note")
-        export_order = ('ext_number', 'operator',
-                        'test_number', 'ext_method', "objective",
-                        'start_number',
-                        'hemoglobin', 'cizhutiji', 'ext_density',
-                        'elution_volume',
-                        "note")
-
-    def get_export_headers(self):
-        return ["ext_number", "操作人员", "试剂批号", "提取方法", "目的",
-                "起始取样量(ml)", "血红蛋白", "磁珠体积(ul)", "提取浓度(ng/ul)",
-                "洗脱体积(ul)", "实验异常备注"]
-
-    # def get_diff_headers(self):
-    #     return ["实验编号", "操作人员", "试剂批号", "提取方法", "目的",
-    #             "起始取样量(ml)", "血红蛋白", "磁珠体积(ul)", "提取浓度(ng/ul)",
-    #             "洗脱体积(ul)", "提取日期", "实验异常备注"]
-
-    def get_or_init_instance(self, instance_loader, row):
-        instance = self.get_instance(instance_loader, row)
-        if instance:
-            # instance.operator = BmsUser.objects.get(username=row['操作人员'])
-            instance.test_number = row['试剂批号']
-            instance.ext_method = row['提取方法']
-            instance.objective = row['目的']
-            instance.start_number = row['起始取样量(ml)']
-            instance.hemoglobin = row['血红蛋白']
-            instance.cizhutiji = row['磁珠体积(ul)']
-            instance.ext_density = row['提取浓度(ng/ul)']
-            instance.elution_volume = row["洗脱体积(ul)"]
-            # instance.ext_date = row["提取日期"]
-            instance.note = row["实验异常备注"]
-            instance.save()
-            return instance, False
-        else:
-            return self.init_instance(row), True
-
-    def init_instance(self, row=None):
-        if not row:
-            row = {}
-        instance = ExtExecute()
-        for attr, value in row.items():
-            setattr(instance, attr, value)
-        if ExtExecute.objects.all().count() == 0:
-            instance.id = "1"
-        else:
-            instance.id = str(int(ExtExecute.objects.latest('id').id) + 1)
-        instance.ext_number = row['实验编号']
-        # instance.operator = BmsUser.objects.get(username=row['操作人员'])
-        instance.test_number = row['试剂批号']
-        instance.ext_method = row['提取方法']
-        instance.objective = row['目的']
-        instance.start_number = row['起始取样量(ml)']
-        instance.hemoglobin = row['血红蛋白']
-        instance.cizhutiji = row['磁珠体积(ul)']
-        instance.ext_density = row['提取浓度(ng/ul)']
-        instance.elution_volume = row["洗脱体积(ul)"]
-        # instance.ext_date = row["提取日期"]
-        instance.note = row["实验异常备注"]
-        instance.save()
-        return instance
-
-
+@admin.register(ExtExecute)
 class ExtExecuteAdmin(ImportExportActionModelAdmin):
     """提取管理"""
     form = ExtExecuteForm
@@ -95,12 +27,15 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
         'ext_number', "boxes", "ext_times", "test_number", 'ext_method',
         'ext_date', 'status',
     )
-    readonly_fields = ["produce_", "is_qualified", "ext_times"]
+    readonly_fields = ["produce_", "is_qualified", "ext_times", 'hemoglobin',
+                       'ext_method', "operator", "test_number", 'start_number',
+                       "boxes", "cizhutiji", "ext_density", "elution_volume",
+                       'note']
     list_display_links = ('ext_number',)
     autocomplete_fields = ("boxes",)
     fieldsets = (
         ('实验相关信息', {
-            'fields': ('boxes', 'ext_method', "operator",
+            'fields': ('boxes', "ext_times", 'ext_method', "operator",
                        "ext_date")
         }),
         ('实验数据', {
@@ -115,12 +50,18 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
     actions = ["a1", "a2"]
 
     def a1(self, request, queryset):
+        q = 0
         n = 0
         for i in queryset:
-            i.status = 0
-            i.save()
-            n += 1
-        self.message_user(request, "已成功提交{0}个盒子样本至实验总监".format(n))
+            if not i.status:
+                i.status = 0
+                i.save()
+                n += 1
+            else:
+                q += 1
+        self.message_user(
+            request, "已成功提交{0}个盒子样本至实验总监,{1}个盒子提交失败".
+                format(n, q))
 
     a1.short_description = '提交至实验总监'
 
@@ -243,13 +184,16 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
                         'start_number', "hemoglobin",
                         "cizhutiji", "ext_density", "submit",
                         "elution_volume", "produce_",
-                        "is_qualified", 'note', "ext_times"]
+                        "is_qualified", 'note', "ext_times", "status"]
         except AttributeError:
-            return ["produce_", "is_qualified", "ext_times"]
-        return ["produce_", "is_qualified", "ext_times"]
+            pass
+        return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
-        box = form.cleaned_data["boxes"]
+        # if form.cleaned_data["boxes"]:
+        #     box = form.cleaned_data["boxes"]
+        # else:
+        box = obj.boxes
         query_ext = ExtExecute.objects.filter(boxes=box)
         if not obj.ext_number:
             # box = form.cleaned_data["boxes"]
@@ -319,74 +263,6 @@ class ExtExecuteAdmin(ImportExportActionModelAdmin):
         obj.save()
 
 
-class QualityTestResource(resources.ModelResource):
-    class Meta:
-        model = QualityTest
-        skip_unchanged = True
-        import_id_fields = ('qua_number', )
-        fields = ('qua_number', "operator", 'test_number', 'template_number',
-                  'instrument', "loop_number", 'background_baseline', "noise",
-                  'ct', 'amplification_curve', 'is_quality', 'qua_date',
-                  "note")
-        export_order = (
-            'qua_number', "operator", 'test_number', 'template_number',
-            'instrument', "loop_number", 'background_baseline', "noise",
-            'ct', 'amplification_curve', 'is_quality', 'qua_date',
-            "note")
-
-    def get_export_headers(self):
-        return ["qua_number", "实验人员", "试剂批号", "上样模板量", "仪器", "循环数",
-                "Background/Baseline", "非甲基化内参ACTB_Noise Band",
-                "非甲基化内参ACTB_CT值", "非甲基化内参ACTB_扩增曲线",
-                "有无质控", "质检日期", "实验异常备注"]
-
-    def get_or_init_instance(self, instance_loader, row):
-        instance = self.get_instance(instance_loader, row)
-        if instance:
-            instance.test_number = row['试剂批号']
-            instance.template_number = row['上样模板量']
-            # instance.operator = BmsUser.objects.get(username=row['操作人员'])
-            instance.instrument = row['仪器']
-            instance.loop_number = row['循环数']
-            instance.background_baseline = row['Background/Baseline']
-            instance.noise = row['非甲基化内参ACTB_Noise Band']
-            instance.ct = row['非甲基化内参ACTB_CT值']
-            instance.amplification_curve = row["非甲基化内参ACTB_扩增曲线"]
-            instance.is_quality = row["有无质控"]
-            # instance.qua_date = row["提取日期"]
-            instance.note = row["实验异常备注"]
-            instance.save()
-            return instance, False
-        else:
-            return self.init_instance(row), True
-
-    def init_instance(self, row=None):
-        if not row:
-            row = {}
-        instance = QualityTest()
-        for attr, value in row.items():
-            setattr(instance, attr, value)
-        if QualityTest.objects.all().count() == 0:
-            instance.id = "1"
-        else:
-            instance.id = str(int(QualityTest.objects.latest('id').id) + 1)
-        instance.qua_number = row['实验编号']
-        instance.test_number = row['试剂批号']
-        instance.operator = BmsUser.objects.get(username=row['操作人员'])
-        instance.template_number = row['上样模板量']
-        instance.instrument = row['仪器']
-        instance.loop_number = row['循环数']
-        instance.background_baseline = row['Background/Baseline']
-        instance.noise = row['非甲基化内参ACTB_Noise Band']
-        instance.ct = row['非甲基化内参ACTB_CT值']
-        instance.amplification_curve = row["非甲基化内参ACTB_扩增曲线"]
-        instance.is_quality = row["提取日期"]
-        instance.qua_date = row["质检日期"]
-        instance.note = row["实验异常备注"]
-        instance.save()
-        return instance
-
-
 class QualityTestAdmin(ImportExportActionModelAdmin):
     """质检管理"""
     list_per_page = 50
@@ -396,7 +272,14 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
         'qua_number', "boxes", "ext_times", "qua_times", 'test_number',
         'operator', 'qua_date', "status",
     )
+    autocomplete_fields = ("boxes",)
     resource_class = QualityTestResource
+    readonly_fields = ['boxes', "operator", "qua_date",
+                       "test_number", "instrument",
+                       'template_number', "loop_number",
+                       "background_baseline", "ct",
+                       "amplification_curve",
+                       'note', "noise", ]
     list_display_links = ('qua_number',)
     form = QualityTestForm
     fieldsets = (
@@ -417,12 +300,19 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
     actions = ["a1", "a2"]
 
     def a1(self, request, queryset):
+        q = 0
         n = 0
         for i in queryset:
-            i.status = 0
-            i.save()
-            n += 1
-        self.message_user(request, "已成功提交{0}个盒子样本至实验总监".format(n))
+            if not i.status:
+                i.status = 0
+                i.save()
+                n += 1
+            else:
+                q += 1
+        self.message_user(
+            request,
+            "已成功提交{0}个盒子样本至实验总监,{1}个盒子提交失败".format(n, q)
+        )
 
     a1.short_description = '提交至实验总监'
 
@@ -515,20 +405,20 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         try:
             if obj.submit:
-                self.readonly_fields = ['boxes', "operator", "qua_date",
-                                        "test_number", "instrument",
-                                        'template_number', "loop_number",
-                                        "background_baseline", "ct",
-                                        "amplification_curve", "status",
-                                        'note', "noise", "submit"]
-                return self.readonly_fields
+                return ['boxes', "operator", "qua_date",
+                        "test_number", "instrument",
+                        'template_number', "loop_number",
+                        "background_baseline", "ct",
+                        "amplification_curve", "status",
+                        'note', "noise", "submit"]
         except AttributeError:
-            self.readonly_fields = []
-            return self.readonly_fields
-        self.readonly_fields = []
+            pass
         return self.readonly_fields
 
     def save_model(self, request, obj, form, change):
+        # if form.cleaned_data["boxes"]:
+        #     box = form.cleaned_data["boxes"]
+        # else:
         box = obj.boxes
         query_ext = ExtExecute.objects.filter(boxes=box)
         query_qua = QualityTest.objects.filter(boxes=box)
@@ -586,10 +476,9 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
                     box.status = 2
                     box.save()
             elif obj.status == 2:
-                QualityTest.objects.create(qua_number=obj.ext_number,
+                QualityTest.objects.create(qua_number=obj.qua_number,
                                            boxes=box,
-                                           ext_times=form.cleaned_data[
-                                               "ext_times"],
+                                           ext_times=obj.ext_times,
                                            qua_times=query_qua.count() + 1
                                            )
                 if box.status < 4:
@@ -615,64 +504,6 @@ class QualityTestAdmin(ImportExportActionModelAdmin):
         obj.save()
 
 
-class BsTaskResource(resources.ModelResource):
-    class Meta:
-        model = BsTask
-        skip_unchanged = True
-        import_id_fields = ('bs_number',)
-        fields = ('bs_number', "operator", 'test_number', 'bis_begin',
-                  'bis_template', "bis_elution", 'is_quality', "operator",
-                  'bs_date', 'note')
-        export_order = (
-            'bs_number', "operator", 'test_number', 'bis_begin',
-            'bis_template', "bis_elution", 'is_quality', "operator",
-            'bs_date', 'note')
-
-    def get_export_headers(self):
-        return ["bs_number", "操作人员", "试剂批号", "BIS起始量(ng)", "BIS模板量(ul)",
-                "BIS洗脱体积(ul)",
-                "有无质控", "操作人员",
-                "BS实验日期", "实验异常备注"]
-
-    def get_or_init_instance(self, instance_loader, row):
-        instance = self.get_instance(instance_loader, row)
-        if instance:
-            instance.test_number = row['试剂批号']
-            instance.bis_begin = row['BIS起始量(ng)']
-            instance.bis_template = row['BIS模板量(ul)']
-            instance.bis_elution = row['BIS洗脱体积(ul)']
-            instance.is_quality = row['有无质控']
-            # instance.operator = BmsUser.objects.get(username=row['操作人员'])
-            # instance.bs_date = row['BS实验日期']
-            instance.note = row["实验异常备注"]
-            instance.save()
-            return instance, False
-        else:
-            return self.init_instance(row), True
-
-    def init_instance(self, row=None):
-        if not row:
-            row = {}
-        instance = QualityTest()
-        for attr, value in row.items():
-            setattr(instance, attr, value)
-        if BsTask.objects.all().count() == 0:
-            instance.id = "1"
-        else:
-            instance.id = str(int(BsTask.objects.latest('id').id) + 1)
-        instance.bs_number = row['实验编号']
-        instance.test_number = row['试剂批号']
-        instance.bis_begin = row['BIS起始量(ng)']
-        instance.bis_template = row['BIS模板量(ul)']
-        instance.bis_elution = row['BIS洗脱体积(ul)']
-        instance.is_quality = row['有无质控']
-        # instance.operator = BmsUser.objects.get(username=row['操作人员'])
-        # instance.bs_date = row['BS实验日期']
-        instance.note = row["实验异常备注"]
-        instance.save()
-        return instance
-
-
 class BsTaskAdmin(ImportExportActionModelAdmin):
     """BS管理"""
     list_per_page = 50
@@ -684,6 +515,7 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
     )
     resource_class = BsTaskResource
     list_display_links = ('bs_number',)
+    autocomplete_fields = ("boxes",)
     form = BsTaskForm
     fieldsets = (
         ('实验相关信息', {
@@ -700,12 +532,19 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
     actions = ["a1", "a2"]
 
     def a1(self, request, queryset):
+        q = 0
         n = 0
         for i in queryset:
-            i.status = 0
-            i.save()
-            n += 1
-        self.message_user(request, "已成功提交{0}个盒子样本至实验总监".format(n))
+            if not i.status:
+                i.status = 0
+                i.save()
+                n += 1
+            else:
+                q += 1
+        self.message_user(
+            request,
+            "已成功提交{0}个盒子样本至实验总监,{1}个盒子提交失败".format(n, q)
+        )
 
     a1.short_description = '提交至实验总监'
 
@@ -801,10 +640,15 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
                         "is_quality", "ext_times", "qua_times", "submit"]
         except AttributeError:
             pass
-        return ["ext_times", "qua_times", "bs_times", 'bs_number']
+        return ['boxes', "operator", "bs_times", "bs_date", "test_number",
+                "bis_begin", 'bis_template', "bis_elution", 'note',
+                'bs_number', "is_quality", "ext_times", "qua_times"]
 
     def save_model(self, request, obj, form, change):
-        box = form.cleaned_data["boxes"]
+        # if form.cleaned_data["boxes"]:
+        #     box = form.cleaned_data["boxes"]
+        # else:
+        box = obj.boxes
         query_ext = ExtExecute.objects.filter(boxes=box)
         query_qua = QualityTest.objects.filter(boxes=box)
         query_bs = BsTask.objects.filter(boxes=box)
@@ -824,12 +668,10 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
                     box.status = 2
                     box.save()
             elif obj.status == 2:
-                BsTask.objects.create(bs_number=obj.ext_number,
+                BsTask.objects.create(bs_number=obj.bs_number,
                                       boxes=box,
-                                      ext_times=form.cleaned_data[
-                                          "ext_times"],
-                                      qua_times=form.cleaned_data[
-                                          "ext_times"],
+                                      ext_times=obj.ext_times,
+                                      qua_times=obj.qua_times,
                                       bs_times=query_bs.count() + 1)
                 if box.status < 6:
                     box.status = 6
@@ -855,82 +697,6 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
         obj.save()
 
 
-class FluorescenceQuantificationResource(resources.ModelResource):
-    class Meta:
-        model = FluorescenceQuantification
-        skip_unchanged = True
-        import_id_fields = ('fq_number', )
-        fields = ('fq_number', 'test_number', 'instrument', 'loop_number',
-                  "background", 'actb_noise', "actb_ct", "actb_amp",
-                  "sfrp2_noise", "sfrp2_ct", "sfrp2_amp", 'sdc2_noise',
-                  'sdc2_ct', "sdc2_amp", "is_quality", "operator", "fq_date",
-                  "note")
-        export_order = (
-            'fq_number', 'test_number', 'instrument', 'loop_number',
-            "background", 'actb_noise', "actb_ct", "actb_amp",
-            "sfrp2_noise", "sfrp2_ct", "sfrp2_amp", 'sdc2_noise',
-            'sdc2_ct', "sdc2_amp", "is_quality", "operator", "fq_date",
-            "note")
-
-    def get_export_headers(self):
-        return ["fq_number", "试剂批号", "仪器", "循环数", "background",
-                'actb_noise', "actb_ct", "actb_amp",
-                "sfrp2_noise", "sfrp2_ct", "sfrp2_amp", 'sdc2_noise',
-                'sdc2_ct', "sdc2_amp",
-                "有无质控", "操作人员",
-                "荧光定量日期", "实验异常备注"]
-
-    def get_or_init_instance(self, instance_loader, row):
-        instance = self.get_instance(instance_loader, row)
-        if instance:
-            instance.test_number = row['试剂批号']
-            instance.instrument = row['仪器']
-            instance.loop_number = row['循环数']
-            instance.background = row['background']
-            instance.actb_noise = row['actb_noise']
-            instance.actb_ct = row['actb_ct']
-            instance.actb_amp = row['actb_amp']
-            instance.sfrp2_noise = row['sfrp2_noise']
-            instance.sfrp2_ct = row['sfrp2_ct']
-            instance.sfrp2_amp = row['sfrp2_amp']
-            instance.sdc2_noise = row['sdc2_noise']
-            instance.sdc2_ct = row['sdc2_ct']
-            instance.sdc2_amp = row['sdc2_amp']
-            instance.is_quality = row['有无质控']
-            instance.note = row['实验异常备注']
-
-            # instance.operator = BmsUser.objects.get(username=row['操作人员'])
-            # instance.bs_date = row['BS实验日期']
-            instance.note = row["实验异常备注"]
-            instance.save()
-            return instance, False
-        else:
-            return self.init_instance(row), True
-
-    def init_instance(self, row=None):
-        if not row:
-            row = {}
-        instance = QualityTest()
-        for attr, value in row.items():
-            setattr(instance, attr, value)
-        if FluorescenceQuantification.objects.all().count() == 0:
-            instance.id = "1"
-        else:
-            instance.id = str(
-                int(FluorescenceQuantification.objects.latest('id').id) + 1)
-        instance.fq_number = row['实验编号']
-        instance.test_number = row['试剂批号']
-        instance.bis_begin = row['BIS起始量(ng)']
-        instance.bis_template = row['BIS模板量(ul)']
-        instance.bis_elution = row['BIS洗脱体积(ul)']
-        instance.is_quality = row['有无质控']
-        instance.operator = BmsUser.objects.get(username=row['操作人员'])
-        instance.bs_date = row['BS实验日期']
-        instance.note = row["实验异常备注"]
-        instance.save()
-        return instance
-
-
 class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
     """荧光定量管理"""
     list_per_page = 50
@@ -942,6 +708,7 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
     )
     list_display_links = ('fq_number',)
     form = FluorescenceQuantificationForm
+    autocomplete_fields = ("boxes",)
     resource_class = FluorescenceQuantificationResource
     fieldsets = (
         ('实验相关信息', {
@@ -968,12 +735,19 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
     actions = ["a1", "a2"]
 
     def a1(self, request, queryset):
+        q = 0
         n = 0
         for i in queryset:
-            i.status = 0
-            i.save()
-            n += 1
-        self.message_user(request, "已成功提交{0}个盒子样本至实验总监".format(n))
+            if not i.status:
+                i.status = 0
+                i.save()
+                n += 1
+            else:
+                q += 1
+        self.message_user(
+            request,
+            "已成功提交{0}个盒子样本至实验总监,{1}个盒子提交失败".format(n, q)
+        )
 
     a1.short_description = '提交至实验总监'
 
@@ -1083,7 +857,14 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
                         "bs_times", "flu_times"]
         except AttributeError:
             pass
-        return []
+        return ['boxes', "operator", "fq_date",
+                "test_number", "instrument", "fq_number", "result",
+                "background", "is_quality", "sfrp2_ct",
+                "actb_ct", 'actb_noise', 'sfrp2_noise',
+                "sfrp2_amp", "actb_amp", 'sdc2_noise',
+                "sdc2_ct", "sdc2_amp", 'note',
+                'loop_number', "ext_times", "qua_times",
+                "bs_times", "flu_times"]
 
     # 旧的命名规则
     # def save_model(self, request, obj, form, change):
@@ -1128,11 +909,14 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
     #     obj.save()
 
     def save_model(self, request, obj, form, change):
-        box = form.cleaned_data["boxes"]
+        # if form.cleaned_data["boxes"]:
+        #     box = form.cleaned_data["boxes"]
+        # else:
+        box = obj.boxes
         query_ext = ExtExecute.objects.filter(boxes=box)
         query_qua = QualityTest.objects.filter(boxes=box)
         query_bs = BsTask.objects.filter(boxes=box)
-        query_flu = FluorescenceQuantification.objects.filter(boxes=box)
+        # query_flu = FluorescenceQuantification.objects.filter(boxes=box)
         if not obj.fq_number:
             obj.ext_times = query_ext.count()
             obj.qua_times = query_qua.count()
@@ -1169,9 +953,10 @@ class FluorescenceQuantificationAdmin(ImportExportActionModelAdmin):
                     box.save()
             elif obj.status == 4:
                 ext_ = ExtExecute.objects.filter(boxes=box).count()
-                ext = ExtExecute.objects.filter(Q(boxes=box),Q(ext_times=ext_))
+                ext = ExtExecute.objects.filter(Q(boxes=box),
+                                                Q(ext_times=ext_))
                 ResultJudgement.objects.create(
-                    boxes=obj.boxes, fq=obj, status=0, ext=ext.first())
+                    boxes=obj.boxes, fq=obj, ext=ext.first())
                 if box.status < 10:
                     box.status = 10
                     box.save()
@@ -1190,19 +975,40 @@ class ResultJudgementAdmin(admin.ModelAdmin):
     search_fields = ["boxes", ]
     save_on_top = False
     list_display = (
-        "boxes", 'fq_date', 'fq_operator'
+        "boxes", 'rj_date', 'fq_operator', "status"
     )
     list_display_links = ('boxes',)
+    autocomplete_fields = ("boxes",)
     readonly_fields = ["boxes", "fq_date", "fq_operator", "fq_instrument",
                        "fq_actb_ct", "fq_actb_amp", "fq_sfrp2_ct",
                        "fq_sfrp2_amp", "fq_sdc2_ct", "fq_sdc2_amp",
-                       "fq_is_qualified", "ext_hemoglobin"]
+                       "fq_is_qualified", "ext_hemoglobin", "result", 'judge',
+                       "rj_date"]
+    fieldsets = (
+        ('实验相关信息', {
+            'fields': ('boxes', 'judge', "result", "rj_date")
+        }),
+        ('血红蛋白', {
+            'fields': ('ext_hemoglobin',)
+        }),
+        ('荧光定量', {
+            'fields': (("fq_date", "fq_operator", "fq_instrument"),
+                       ("fq_actb_ct", "fq_actb_amp"), ("fq_sfrp2_ct",
+                                                       "fq_sfrp2_amp"),
+                       ("fq_sdc2_ct", "fq_sdc2_amp"),
+                       "fq_is_qualified",)
+        }),
+        ('结果判定', {
+            'fields': ("status", "submit")
+        }),
+    )
 
     def ext_hemoglobin(self, obj):
         if obj.ext.hemoglobin:
             return obj.ext.hemoglobin
         else:
             return "-"
+
     ext_hemoglobin.short_description = '血红蛋白'
 
     def fq_date(self, obj):
@@ -1210,6 +1016,7 @@ class ResultJudgementAdmin(admin.ModelAdmin):
             return obj.fq.fq_date
         else:
             return "-"
+
     fq_date.short_description = '荧光定量日期'
 
     def fq_operator(self, obj):
@@ -1217,6 +1024,7 @@ class ResultJudgementAdmin(admin.ModelAdmin):
             return obj.fq.operator
         else:
             return "-"
+
     fq_operator.short_description = '荧光定量实验员'
 
     def fq_instrument(self, obj):
@@ -1224,8 +1032,8 @@ class ResultJudgementAdmin(admin.ModelAdmin):
             return obj.fq.instrument
         else:
             return "-"
-    fq_instrument.short_description = '荧光定量仪器'
 
+    fq_instrument.short_description = '荧光定量仪器'
 
     def fq_actb_ct(self, obj):
         if obj.fq.actb_ct:
@@ -1280,4 +1088,58 @@ class ResultJudgementAdmin(admin.ModelAdmin):
             return obj.fq.is_qualified
         else:
             return "-"
+
     fq_is_qualified.short_description = '荧光定量-is_qualified'
+
+    def save_model(self, request, obj, form, change):
+        if obj.result and obj.rj_date and not obj.status:
+            obj.status = 1
+        super().save_model(request, obj, form, change)
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "judge":
+            saler_ = BmsUser.objects.filter(groups__name="实验总监")
+            kwargs["queryset"] = saler_
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        try:
+            if obj.submit:
+                return ["boxes", "fq_date", "fq_operator", "fq_instrument",
+                        "fq_actb_ct", "fq_actb_amp", "fq_sfrp2_ct",
+                        "fq_sfrp2_amp", "fq_sdc2_ct", "fq_sdc2_amp",
+                        "fq_is_qualified", "ext_hemoglobin", "result", 'judge',
+                        "rj_date", "status", "submit"]
+            current_group_set = Group.objects.filter(user=request.user)
+            if len(current_group_set) == 1:
+                if current_group_set[0].name == "技术支持":
+                    return self.readonly_fields
+                elif current_group_set[0].name == "实验总监" and obj.status:
+                    return ["boxes", "fq_date", "fq_operator", "fq_instrument",
+                            "fq_actb_ct", "fq_actb_amp", "fq_sfrp2_ct",
+                            "fq_sfrp2_amp", "fq_sdc2_ct", "fq_sdc2_amp",
+                            "fq_is_qualified", "ext_hemoglobin", 'judge',
+                            "status", "submit", "rj_date", "result"]
+                elif current_group_set[0].name == "实验总监" and not obj.status:
+                    return ["boxes", "fq_date", "fq_operator", "fq_instrument",
+                            "fq_actb_ct", "fq_actb_amp", "fq_sfrp2_ct",
+                            "fq_sfrp2_amp", "fq_sdc2_ct", "fq_sdc2_amp",
+                            "fq_is_qualified", "ext_hemoglobin", 'judge',
+                            "status", "submit"]
+                else:
+                    return self.readonly_fields
+            else:
+                names = [i.name for i in current_group_set]
+                if "技术支持" in names:
+                    return self.readonly_fields
+                elif "实验总监" in names:
+                    return ["boxes", "fq_date", "fq_operator", "fq_instrument",
+                            "fq_actb_ct", "fq_actb_amp", "fq_sfrp2_ct",
+                            "fq_sfrp2_amp", "fq_sdc2_ct", "fq_sdc2_amp",
+                            "fq_is_qualified", "ext_hemoglobin", 'judge',
+                            "status", "submit"]
+                else:
+                    return self.readonly_fields
+        except AttributeError:
+            pass
+        return self.readonly_fields

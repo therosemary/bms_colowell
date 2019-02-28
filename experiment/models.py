@@ -7,7 +7,7 @@ class ExtExecute(models.Model):
     """实验的提取表"""
     EXT_STATUS = (
         (0, '实验总监审核中'),
-        (1, '进行在提取'),
+        (1, '进行再提取'),
         (2, '进行质检'),
         (3, '进行BS'),
         (4, '实验终止'),
@@ -152,7 +152,7 @@ class BsTask(models.Model):
     bs_date = models.DateField("BS实验日期", null=True)
     note = models.TextField(verbose_name="实验异常备注", blank=True, null=True)
     status = models.IntegerField(
-        choices=BS_STATUS, verbose_name="实验流向", null=True)
+        choices=BS_STATUS, verbose_name="实验流向",blank=True, null=True)
     submit = models.BooleanField(
         verbose_name='提交', null=True
     )
@@ -250,10 +250,13 @@ class FluorescenceQuantification(models.Model):
 
 class ResultJudgement(models.Model):
     STATUS = (
-        (0, '实验数据已上传，未核对'),
-        (1, '实验总监结果报告已上传'),
+        (1, '实验总监已确认结果'),
         (2, '技术支持已确认'),
         (3, '技术支持觉得有问题'),
+    )
+    RESULT = (
+        (1, '高风险'),
+        (2, '低风险'),
     )
     boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
                               on_delete=models.SET_NULL, null=True)
@@ -264,9 +267,17 @@ class ResultJudgement(models.Model):
         ExtExecute, verbose_name="抽提信息",
         on_delete=models.SET_NULL, null=True)
     status = models.IntegerField(
-        choices=STATUS, verbose_name="状态", null=True
+        choices=STATUS, verbose_name="状态", blank=True, null=True
     )
-    rj_date = models.DateField(verbose_name="荧光定量日期", null=True)
+    rj_date = models.DateField(verbose_name="结果判定日期", null=True)
+    judge = models.ForeignKey(AUTH_USER_MODEL, verbose_name="判定人",
+                              on_delete=models.SET_NULL, blank=True, null=True)
+    result = models.IntegerField(
+        choices=RESULT, verbose_name="风险性", null=True
+    )
+    submit = models.BooleanField(
+        verbose_name='提交', null=True
+    )
 
     class Meta:
         app_label = "experiment"
