@@ -66,6 +66,7 @@ class Boxes(models.Model):
     picking_interval = models.CharField(max_length=20, verbose_name="采收间隔",
                                         blank=True, null=True)
     report_date = models.DateField("报告日期", null=True, blank=True)
+    istasking = models.BooleanField(verbose_name="是否开始任务",default=False)
 
     class Meta:
         app_label = "tech_support"

@@ -6,6 +6,9 @@ from import_export.admin import ImportExportActionModelAdmin
 from django.contrib.admin import ModelAdmin
 from tech_support.models import *
 from experiment.models import ExtExecute
+from import_export import fields
+
+from tech_support.resources import BoxesResource
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
@@ -26,49 +29,6 @@ class BoxesInline(admin.TabularInline):
         return self.readonly_fields
 
 
-class BoxesResource(resources.ModelResource):
-    class Meta:
-        model = Boxes
-        skip_unchanged = True
-        import_id_fields = ('box_deliver',)
-        fields = ('box_deliver', 'index_number')
-        export_order = ('box_deliver', 'index_number')
-
-    def get_export_headers(self):
-        return ["box_deliver", "盒子编号"]
-
-    # def get_or_init_instance(self, instance_loader, row):
-    #     instance = self.get_instance(instance_loader, row)
-    #     if instance:
-    #         instance.box_deliver = BoxDeliveries.objects.get(
-    #             index_number=row["box_deliver"])
-    #         instance.note = row["盒子编号"]
-    #         instance.save()
-    #         return instance, False
-    #     else:
-    #         return self.init_instance(row), True
-
-    def init_instance(self, row=None):
-        if not row:
-            row = {}
-        instance = ExtExecute()
-        for attr, value in row.items():
-            setattr(instance, attr, value)
-        if Boxes.objects.all().count() == 0:
-            instance.id = "1"
-        else:
-            instance.id = str(int(Boxes.objects.latest('id').id) + 1)
-        instance.box_deliver = BoxDeliveries.objects.get(
-                        index_number=row["box_deliver"])
-        instance.note = row["盒子编号"]
-        instance.save()
-        return instance
-
-    # def export(self, queryset=None, *args, **kwargs):
-    #     queryset_result = SampleInfo.objects.filter(id=None)
-    #     for i in queryset:
-    #         queryset_result |= SampleInfo.objects.filter(sampleinfoform=i)
-    #     return super().export(queryset=queryset_result, *args, **kwargs)
 
 
 class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
@@ -151,10 +111,11 @@ class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
                 formset.save_m2m()
 
 
+@admin.register(Boxes)
 class BoxesAdmin(ImportExportActionModelAdmin):
     """盒子管理"""
     list_per_page = 50
-    search_fields = ("status", "report_date")
+    search_fields = ("id", "index_number", "bar_code")
     save_on_top = False
     list_display = (
         'index_number', "bar_code", 'type', 'status',
@@ -249,6 +210,8 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
         if obj.submit:
             boxes = form.cleaned_data["boxes"]
             for i in boxes:
+                i.istasking = True
+                i.save()
                 sj = datetime.datetime.now()
                 # print(BoxDeliveries.objects.all().count())
                 if ExtExecute.objects.all().count() == 0:
@@ -261,3 +224,8 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
                         ExtExecute.objects.latest('id').id + 1).zfill(5)
                 ExtExecute.objects.create(ext_number=ext_number, boxes=i)
         obj.save()
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "boxes":
+            kwargs["queryset"] = Boxes.objects.filter(istasking=False)
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
