@@ -1,5 +1,7 @@
 from django.db import models
 from bms_colowell.settings import AUTH_USER_MODEL
+from partners.models import Partners
+
 
 
 class BoxDeliveries(models.Model):
@@ -9,11 +11,15 @@ class BoxDeliveries(models.Model):
         AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
         null=True)
     customer = models.CharField(max_length=20, verbose_name="客户")
-    box_number = models.IntegerField(verbose_name="邮寄盒子数")
-    send_number = models.CharField(max_length=200, verbose_name="快递单号信息")
+    # box_number = models.IntegerField(verbose_name="邮寄盒子数")
+    send_number = models.CharField(max_length=200, verbose_name="快递单号")
+    address = models.CharField(max_length=200, verbose_name="地址", default="")
     send_date = models.DateField("邮寄日期", null=True)
     made_date = models.DateField("生产日期", null=True)
     submit = models.BooleanField(verbose_name='提交', default=False)
+    parent = models.ForeignKey(
+                    Partners, verbose_name="合作方", on_delete=models.SET_NULL,
+                    null=True, blank=True)
 
     class Meta:
         app_label = "tech_support"
@@ -29,28 +35,38 @@ class Boxes(models.Model):
         (0, '技术支持已发货'),
         (1, '实验已核对'),
         (2, '待提取'),
-        (3, '提取完成，待质检'),
-        (4, '质检完成，待BS'),
-        (5, 'BS完成，待荧光定量'),
-        (6, '荧光定量完成，结果待审核'),
-        (7, '报告已发送'),
+        (3, '提取中'),
+        (4, '待质检'),
+        (5, '质检中'),
+        (6, '待BS'),
+        (7, 'BS中'),
+        (8, '待荧光定量'),
+        (9, '荧光定量中'),
+        (10, '荧光定量完成，结果待审核'),
+        (11, '报告已发送'),
     )
     index_number = models.CharField(max_length=30, verbose_name="盒子编号")
     sample_photo = models.FileField('样品照片', upload_to='samplephoto/%Y/%m',
                                     null=True, blank=True)
-    box_deliver = models.ForeignKey(BoxDeliveries, verbose_name="盒子发货",
-                                    on_delete=models.SET_NULL, null=True)
+    box_deliver = models.ForeignKey(
+            BoxDeliveries, verbose_name="盒子发货", on_delete=models.SET_NULL,
+            null=True, blank=True)
     status = models.IntegerField(choices=BOX_STATUS, verbose_name="盒子状态",
                                  default=1, blank=True, null=True)
     bar_code = models.CharField(max_length=50, verbose_name="条形码")
-    name = models.CharField(max_length=20, verbose_name="患者姓名")
+    name = models.CharField(max_length=20, verbose_name="患者姓名",
+                            blank=True, null=True)
     type = models.CharField(
-        max_length=20, verbose_name="样本类型", default="粪便"
+        max_length=20, verbose_name="样本类型", default="粪便",
+        blank=True, null=True
     )
-    projec_source = models.CharField(max_length=50, verbose_name="检测项目来源")
-    is_danger = models.BooleanField(verbose_name="是否高危样品")
-    picking_interval = models.CharField(max_length=20, verbose_name="采收间隔")
-    report_date = models.DateField("报告日期", null=True)
+    projec_source = models.CharField(max_length=50, verbose_name="检测项目来源",
+                                     blank=True, null=True)
+    is_danger = models.BooleanField(verbose_name="是否高危样品", default=False)
+    picking_interval = models.CharField(max_length=20, verbose_name="采收间隔",
+                                        blank=True, null=True)
+    report_date = models.DateField("报告日期", null=True, blank=True)
+    istasking = models.BooleanField(verbose_name="是否开始任务",default=False)
 
     class Meta:
         app_label = "tech_support"
@@ -75,8 +91,7 @@ class ExtMethod(models.Model):
 class ExtSubmit(models.Model):
     """提取下单管理"""
     extsubmit_number = models.CharField("提取下单编号", max_length=50)
-    boxes = models.ForeignKey(BoxDeliveries, verbose_name="对应盒子信息",
-                              on_delete=models.SET_NULL, null=True)
+    boxes = models.ManyToManyField(Boxes, verbose_name="对应盒子信息",)
     exp_method = models.ForeignKey(ExtMethod, verbose_name="提取方法",
                                    on_delete=models.SET_NULL, null=True)
     submit = models.BooleanField(verbose_name='提交', default=False)
@@ -87,3 +102,5 @@ class ExtSubmit(models.Model):
 
     def __str__(self):
         return self.extsubmit_number
+
+
