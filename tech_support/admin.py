@@ -1,11 +1,14 @@
 import datetime
-
+from import_export import resources
 from django.contrib import admin
 from django.contrib.auth.models import Group
 from import_export.admin import ImportExportActionModelAdmin
 from django.contrib.admin import ModelAdmin
 from tech_support.models import *
 from experiment.models import ExtExecute
+from import_export import fields
+
+from tech_support.resources import BoxesResource
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
@@ -26,6 +29,8 @@ class BoxesInline(admin.TabularInline):
         return self.readonly_fields
 
 
+
+
 class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
     """盒子发货管理"""
     inlines = [BoxesInline]
@@ -35,20 +40,34 @@ class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
     list_display = ('index_number', "sale_man", "customer",
                     'send_number', 'send_date', 'made_date')
     list_display_links = ('index_number',)
-    exclude = ["index_number", ]
+    resource_class = BoxesResource
+    readonly_fields = ("box_number", "index_number")
+    fieldsets = (
+        ('盒子发货信息', {
+            'fields': ("index_number", 'sale_man', 'customer', 'send_number',
+                       "address", "box_number",
+                       "send_date", "made_date", 'submit')
+        }),
+    )
 
     def get_readonly_fields(self, request, obj=None):
         try:
             if obj.submit:
-                self.readonly_fields = ['sale_man', "customer", "box_number",
-                                        "send_number", "send_date",
-                                        'made_date', "submit"]
-                return self.readonly_fields
+                return ['sale_man', "customer", "box_number",
+                        "send_number", "send_date",
+                        'made_date', "submit", "index_number", "address"]
         except AttributeError:
-            self.readonly_fields = []
-            return self.readonly_fields
-        self.readonly_fields = []
-        return self.readonly_fields
+            pass
+        return ["box_number", "index_number"]
+
+    def box_number(self, obj):
+        if obj:
+            n = 0
+            for i in obj.boxes_set.all():
+                n += 1
+            return n
+        return 0
+    box_number.short_description = '盒子数量'
 
     def save_model(self, request, obj, form, change):
         if not obj.index_number:
@@ -92,10 +111,11 @@ class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
                 formset.save_m2m()
 
 
+@admin.register(Boxes)
 class BoxesAdmin(ImportExportActionModelAdmin):
     """盒子管理"""
     list_per_page = 50
-    search_fields = ("status", "report_date")
+    search_fields = ("id", "index_number", "bar_code")
     save_on_top = False
     list_display = (
         'index_number', "bar_code", 'type', 'status',
@@ -128,7 +148,10 @@ class BoxesAdmin(ImportExportActionModelAdmin):
     def get_actions(self, request):
         actions = super().get_actions(request)
         current_group_set = Group.objects.filter(user=request.user)
+        print("第一步")
         for i in current_group_set:
+            print("***************************")
+            print(i.name)
             if i.name == "技术支持":
                 del actions['accept_box']
         return actions
@@ -157,9 +180,10 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
     """提取下单管理"""
     list_per_page = 50
     save_on_top = False
-    list_display = ("extsubmit_number", 'boxes', "exp_method",)
+    list_display = ("extsubmit_number", "exp_method", "submit")
     list_display_links = ('extsubmit_number',)
     exclude = ["extsubmit_number", ]
+    filter_horizontal = ("boxes",)
 
     def get_readonly_fields(self, request, obj=None):
         try:
@@ -184,16 +208,24 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
                     sj.month] + str(
                     ExtSubmit.objects.latest('id').id + 1)
         if obj.submit:
-            sj = datetime.datetime.now()
-            if ExtExecute.objects.all().count() == 0:
-                ext_number = str(sj.year) + Monthchoose[
-                    sj.month] + "1".zfill(5)
-
-            else:
-                ext_number = str(sj.year) + Monthchoose[
-                    sj.month] + str(
-                    BoxDeliveries.objects.latest('id').id + 1).zfill(5)
-            boxes = form.cleaned_data["boxes"].boxes_set.all()
+            boxes = form.cleaned_data["boxes"]
             for i in boxes:
+                i.istasking = True
+                i.save()
+                sj = datetime.datetime.now()
+                # print(BoxDeliveries.objects.all().count())
+                if ExtExecute.objects.all().count() == 0:
+                    ext_number = str(sj.year) + Monthchoose[
+                        sj.month] + "1".zfill(5)
+
+                else:
+                    ext_number = str(sj.year) + Monthchoose[
+                        sj.month] + str(
+                        ExtExecute.objects.latest('id').id + 1).zfill(5)
                 ExtExecute.objects.create(ext_number=ext_number, boxes=i)
         obj.save()
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "boxes":
+            kwargs["queryset"] = Boxes.objects.filter(istasking=False)
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
