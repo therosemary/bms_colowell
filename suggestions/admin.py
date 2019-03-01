@@ -12,11 +12,12 @@ class CollectionsAdmin(admin.ModelAdmin):
         (None, {'fields': ('product', '_f10', '_f12', '_f08', '_f09', )}),
         ('问卷答案', {
             'fields': (
-                '_f01', '_f02', '_f11', '_f03', '_f04', ('_f05', '_f06', '_f07'),
+                '_f01', '_f02', '_f11', '_f03', '_f04',
+                ('_f05', '_f06', '_f07'),
             )
         }),
         ('健康管理', {
-            'fields': (('t01', 't02'), ('t03', 't04'), ('t05', 't06'), 't07')
+            'fields': (('t01', 't02'), ('t03', 't04', 't05'), ('t06', 't07'),)
         }),
         ('高通量打分', {
             'fields': (
@@ -74,16 +75,16 @@ class CollectionsAdmin(admin.ModelAdmin):
         initial = context["adminform"].form.initial
         
         if obj is not None:
-            # food = random.sample(mapping_suggestions(obj, code="t02"), 4)
-            # life = random.sample(mapping_suggestions(obj, code="t01"), 4)
-            # life = "\n\n".join(mapping_suggestions(obj, code="t02"))
-            initial["t01"] = "\n\n".join(mapping_suggestions(obj, code="t01"))
-            initial["t02"] = "\n\n".join(mapping_suggestions(obj, code="t02"))
-            initial["t03"] = "\n\n".join(mapping_suggestions(obj, code="t03"))
-            initial["t04"] = "\n\n".join(mapping_suggestions(obj, code="t04"))
-            initial["t05"] = "\n\n".join(mapping_suggestions(obj, code="t05"))
-            initial["t06"] = "\n\n".join(mapping_suggestions(obj, code="t06"))
-            initial["t07"] = "\n\n".join(mapping_suggestions(obj, code="t07"))
+            # t02 = random.sample(mapping_suggestions(obj, code="t02"), 4)
+            initial["t01"] = "\n".join(mapping_suggestions(obj, code="t01"))
+            initial["t02"] = "\n".join(mapping_suggestions(obj, code="t02"))
+            initial["t03"] = "\n".join(mapping_suggestions(obj, code="t03"))
+            initial["t04"] = "\n".join(mapping_suggestions(obj, code="t04"))
+            initial["t05"] = "\n".join(mapping_suggestions(obj, code="t05"))
+            initial["t06"] = "\n".join(mapping_suggestions(obj, code="t06"))
+            initial["t07"] = "\n".join(mapping_suggestions(obj, code="t07"))
+            # TODO: the string counts of suggestions
+            
         if obj and obj.f10 and obj.f12:
             mapping = {
                 "f10c01": "LOW_RISK",
