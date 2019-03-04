@@ -6,12 +6,12 @@ from partners.resources import PartnersResources
 class PartnersAdmin(ImportExportActionModelAdmin):
     autocomplete_fields = ("bms_user", )
     fields = (
-        "bms_user", "name", "code", "mode", "region", "materials",
-        "sponsorship", "activities", "propaganda", "note"
+        "bms_user", "name", "code", "reporting_period", "mode", "region",
+        "materials", "sponsorship", "activities", "propaganda", "note"
     )
     list_per_page = 30
     list_display = (
-        "bms_user", "name", "mode", "region", "materials",
+        "bms_user", "name", "reporting_period", "mode", "region", "materials",
         "sponsorship", "activities", "propaganda"
     )
     list_display_links = ('bms_user', 'name')
