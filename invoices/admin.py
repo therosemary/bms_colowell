@@ -50,10 +50,14 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     search_fields = ('invoice_number',)
 
     def receivables(self, obj):
-        if obj.send_flag:
-            money = 0
-        else:
-            money = self.get_invoice_value(obj)
+        """自动计算应收金额"""
+        invoice_value = self.get_invoice_value(obj)
+        receive_value = self.get_receive_value(obj)
+        if invoice_value is None:
+            invoice_value = 0
+        if receive_value is None:
+            receive_value = 0
+        money = invoice_value - receive_value
         return format_html('<span>{}</span>', money)
     receivables.short_description = "应收金额"
 
