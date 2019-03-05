@@ -13,11 +13,11 @@ class CollectionsAdmin(admin.ModelAdmin):
         ('问卷答案', {
             'fields': (
                 '_f01', '_f02', '_f11', '_f03', '_f04',
-                ('_f05', '_f06', '_f07'),
+                '_f05', '_f06', '_f07',
             )
         }),
         ('健康管理', {
-            'fields': (('t01', 't02'), ('t03', 't04', 't05'), ('t06', 't07'),)
+            'fields': ('t01', 't02', 't03', 't04', 't05', 't06', 't07',)
         }),
         ('高通量打分', {
             'fields': (
@@ -57,10 +57,13 @@ class CollectionsAdmin(admin.ModelAdmin):
     
     def get_readonly_fields(self, request, obj=None):
         self.readonly_fields = (
-            'product', '_f01', '_f02', '_f03', '_f04', '_f05', '_f06', '_f07',
-            '_f08', '_f09', '_f10', '_f11', '_f12', 'kras_mutation_rate',
-            'bmp3_mutation_rate', 'ndrg4_mutation_rate', 'hemoglobin_content',
-            'score', 'suggestions', 'is_submit',
+            'product',
+            '_f01', '_f02', '_f03', '_f04', '_f05', '_f06', '_f07', '_f08',
+            '_f09', '_f10', '_f11', '_f12',
+            't01', 't02', 't03', 't04', 't05', 't06', 't07',
+            'kras_mutation_rate', 'bmp3_mutation_rate',
+            'ndrg4_mutation_rate', 'hemoglobin_content', 'score',
+            'is_submit',
         ) if obj and obj.is_submit else ()
         return self.readonly_fields
     
