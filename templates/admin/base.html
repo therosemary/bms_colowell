@@ -7,8 +7,10 @@
 <title>{% block title %}{% endblock %}</title>
 <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+<link rel="icon" href="{% static "favicon.png" %}" type="image/x-icon">
+<link rel="shortcut icon" href="{% static "favicon.png" %}" type="image/x-icon">
 <link rel="stylesheet" type="text/css" href="{% block stylesheet %}{% static "admin/css/base.css" %}{% endblock %}" />
-
+<link rel="stylesheet" type="text/css" href="{% static "admin/css/modal-messages.css" %}" />
 <link rel="stylesheet" type="text/css" href="{% static "jet/css/vendor.css" as url %}{{ url|jet_append_version }}" />
 <link rel="stylesheet" type="text/css" href="{% static "jet/css/icons/style.css" as url %}{{ url|jet_append_version }}" />
 <link rel="stylesheet" type="text/css" href="{% static "jet/css/themes/"|add:THEME|add:"/base.css" as url %}{{ url|jet_append_version }}" class="base-stylesheet" />
@@ -20,7 +22,8 @@
 {% jet_get_date_format as date_format %}
 {% jet_get_time_format as time_format %}
 {% jet_get_datetime_format as datetime_format %}
-
+<script src="{% static "admin/js/vendor/jquery/jquery.min.js" %}" ></script>
+<script src="{% static "jet/js/build/jquery.init.js" as url %}{{ url|jet_append_version }}"></script>
 <script type="text/javascript" charset="utf-8">
     var DATE_FORMAT = "{{ date_format }}";
     var TIME_FORMAT = "{{ time_format }}";
@@ -81,22 +84,43 @@
     </div>
     <!-- END Header -->
 
-    {% block breadcrumbs %}
-    <div class="breadcrumbs">
-    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
-    {% if title %} &rsaquo; {{ title }}{% endif %}
-    </div>
-    {% endblock %}
+        {% block breadcrumbs %}
+        <div class="breadcrumbs">
+            <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>{% if title %} &rsaquo; {{ title }}{% endif %}
+        </div>
+        {% endblock %}
     {% endif %}
 
     {% block messages %}
         {% if messages %}
-        <ul class="messagelist">{% for message in messages %}
-          <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message|capfirst }}</li>
-        {% endfor %}</ul>
+        <ul class="messagelist">
+            {% for message in messages %}
+
+            {# last changed by liy, 10/29/2018, 16:54:00 #}
+            <div class="modal fade" id="message-modal" tabindex="-1" role="dialog" aria-labelledby="message-modal-label" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        {# 弹出框的标题 #}
+                        <div class="modal-header">
+                            <h3 class="modal-title" id="message-modal-label">{{ title }}</h3>
+                        </div>
+
+                        {# 弹出框的内容 #}
+                        <div class="modal-body">
+                            {{ message }}
+                        </div>
+
+                        {# 弹出框的脚注 #}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-dismiss="modal">关闭</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </ul>
         {% endif %}
     {% endblock messages %}
-
     <!-- Content -->
     <div id="content" class="{% block coltype %}colM{% endblock %}">
         {% block pretitle %}{% endblock %}
@@ -384,8 +408,7 @@
                                data-select2-stylesheet="{% static "jet/css/themes/"|add:conf_theme.theme|add:"/select2.theme.css" %}?v={{ JET_VERSION }}"
                                data-jquery-ui-stylesheet="{% static "jet/css/themes/"|add:conf_theme.theme|add:"/jquery-ui.theme.css" %}?v={{ JET_VERSION }}"
                                {% if conf_theme.title %} title="{{ conf_theme.title }}"{% endif %}
-                               style="background-color: {{ conf_theme.color|default:"white" }};"
-                                    ></a>
+                               style="background-color: {{ conf_theme.color|default:"white" }};"></a>
                         {% endif %}
                     {% endfor %}
                 {% endspaceless %}
@@ -394,6 +417,9 @@
     {% endif %}
 </div>
 <!-- END Container -->
-
-</body>
+        <script src="{% static "admin/js/vendor/jquery/jquery.min.js" %}" ></script>
+        <script src="{% static "admin/js/popper.min.js" %}"></script>
+        <script src="{% static "admin/js/bootstrap.min.js" %}"></script>
+        {% if messages %}<script type="text/javascript">$(function(){$("#message-modal").modal({backdrop: 'static', keyboard: true});});</script>{% endif %}
+    </body>
 </html>{% endblock %}
