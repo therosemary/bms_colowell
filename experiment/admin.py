@@ -511,11 +511,7 @@ class BsTaskAdmin(ImportExportActionModelAdmin):
     save_on_top = False
     list_display = (
         'bs_number', "boxes", "ext_times", "qua_times", "bs_times",
-<<<<<<< HEAD
-        'test_number', "bs_times", 'operator', 'bs_date', "status",
-=======
         'test_number', 'operator', 'bs_date', "status",
->>>>>>> 8558f4aa73d10496efae87412a53fc3a5fd80acd
     )
     resource_class = BsTaskResource
     list_display_links = ('bs_number',)
