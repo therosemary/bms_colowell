@@ -1,12 +1,12 @@
-.idea/
 *.pyc
+*.sqlite3
 */__pycache__/
 */migrations/*
-bms_colowell/settings.py
-bms_colowell/admin_bms_colowell.py
-suggestions/utilities.py
+.idea/
 media/
 statics/
 collected_statics/
-*.sqlite3
+bms_colowell/settings.py
+bms_colowell/admin_bms_colowell.py
+suggestions/utilities.py
 debug.log
