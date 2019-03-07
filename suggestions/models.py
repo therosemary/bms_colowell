@@ -43,10 +43,55 @@ class Choices(models.Model):
         return "{}".format(self.name)
 
 
+class Versions(models.Model):
+    code = models.CharField(
+        verbose_name="版本代号", max_length=3, default="V01",
+        help_text="版本号由V+数字组成，V代表Version，后面数字代表具体版本",
+        primary_key=True,
+    )
+    name = models.CharField(
+        verbose_name="版本名称", max_length=64,
+    )
+    t01_length_max = models.SmallIntegerField(
+        verbose_name="饮食建议字数限制",
+    )
+    t02_length_max = models.SmallIntegerField(
+        verbose_name="生活方式字数限制",
+    )
+    t03_length_max = models.SmallIntegerField(
+        verbose_name="体育锻炼字数限制",
+    )
+    t04_length_max = models.SmallIntegerField(
+        verbose_name="健康乐观心态字数限制",
+    )
+    t05_length_max = models.SmallIntegerField(
+        verbose_name="定期筛查字数限制",
+    )
+    t06_length_max = models.SmallIntegerField(
+        verbose_name="确诊和治疗字数限制",
+    )
+    t07_length_max = models.SmallIntegerField(
+        verbose_name="肠镜检查准备字数限制",
+    )
+    create_at = models.DateField(
+        verbose_name="创建于", auto_now_add=True,
+    )
+    
+    class Meta:
+        verbose_name = verbose_name_plural = "建议版本"
+    
+    def __str__(self):
+        return "{}".format(self.name)
+
+
 class Collections(models.Model):
     product = models.OneToOneField(
         Products, verbose_name="样品条码", on_delete=models.CASCADE,
         primary_key=True
+    )
+    version = models.ForeignKey(
+        Versions, verbose_name="建议版本", on_delete=models.CASCADE,
+        default="V01",
     )
     _f01 = models.ForeignKey(
         Choices, verbose_name="吸烟", on_delete=models.SET_NULL,

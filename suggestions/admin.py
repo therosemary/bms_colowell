@@ -13,11 +13,11 @@ class CollectionsAdmin(admin.ModelAdmin):
         ('问卷答案', {
             'fields': (
                 '_f01', '_f02', '_f11', '_f03', '_f04',
-                ('_f05', '_f06', '_f07'),
+                '_f05', '_f06', '_f07',
             )
         }),
         ('健康管理', {
-            'fields': (('t01', 't02'), ('t03', 't04', 't05'), ('t06', 't07'),)
+            'fields': ('t01', 't02', 't03', 't04', 't05', 't06', 't07',)
         }),
         ('高通量打分', {
             'fields': (
@@ -78,7 +78,8 @@ class CollectionsAdmin(admin.ModelAdmin):
         initial = context["adminform"].form.initial
         
         if obj is not None:
-            # t02 = random.sample(mapping_suggestions(obj, code="t02"), 4)
+            t02 = random.sample(mapping_suggestions(obj, code="t02"), 4)
+            print(t02)
             initial["t01"] = "\n".join(mapping_suggestions(obj, code="t01"))
             initial["t02"] = "\n".join(mapping_suggestions(obj, code="t02"))
             initial["t03"] = "\n".join(mapping_suggestions(obj, code="t03"))
@@ -134,6 +135,21 @@ class TypesAdmin(admin.ModelAdmin):
     ordering = ['code']
 
 
+class VersionsAdmin(admin.ModelAdmin):
+    list_display = ('code', 'name', )
+    ordering = ['code']
+    fieldsets = (
+        (None, {'fields': ('code', 'name', )}),
+        ('字数限制', {
+            'fields': (
+                't01_length_max', 't02_length_max', 't03_length_max',
+                't04_length_max', 't05_length_max', 't06_length_max',
+                't07_length_max',
+            )
+        }),
+    )
+
+
 class SuggestionsAdmin(admin.ModelAdmin):
     fields = (
         'code', 'type_name', 'factors', 'available_choices', 'connections',
@@ -143,7 +159,7 @@ class SuggestionsAdmin(admin.ModelAdmin):
         'code', 'type_name', 'related_factors', 'related_choices',
         'expressions',
     )
-    filter_horizontal = ('factors', )
+    # filter_horizontal = ('factors', )
     readonly_fields = ('available_choices', )
     ordering = ['code']
     
