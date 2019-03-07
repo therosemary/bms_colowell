@@ -10,6 +10,9 @@ class ContractsInfo(models.Model):
         ('ZS', u'正式合同'),
         ('YX', u'意向合同'),
     )
+    contract_code = models.CharField(
+        verbose_name="合同编码", max_length=18, unique=True
+    )
     contract_number = models.CharField(
         verbose_name="合同号", max_length=50, unique=True
     )
@@ -30,7 +33,7 @@ class ContractsInfo(models.Model):
         verbose_name="寄出时间", null=True, blank=True
     )
     tracking_number = models.CharField(
-        verbose_name="邮件单号", max_length=8, null=True, blank=True
+        verbose_name="邮件单号", max_length=32, null=True, blank=True
     )
     send_back_date = models.DateField(
         verbose_name="寄回时间", null=True, blank=True

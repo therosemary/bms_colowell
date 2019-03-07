@@ -11,6 +11,9 @@ class ContractInfoResources(resources.ModelResource):
     contract_id = Field(
         column_name="编号", attribute='id', default=None
     )
+    contract_code = Field(
+        column_name="合同编码", attribute='contract_code'
+    )
     contract_number = Field(
         column_name="合同号", attribute='contract_number'
     )
@@ -67,15 +70,15 @@ class ContractInfoResources(resources.ModelResource):
     class Meta:
         model = ContractsInfo
         fields = (
-            'contract_id', 'contract_number', 'client', 'box_price',
-            'detection_price', 'full_set_price', 'contract_money',
+            'contract_id', 'contract_code', 'contract_number', 'client',
+            'box_price', 'detection_price', 'full_set_price', 'contract_money',
             'receive_invoice_value', 'send_date', 'tracking_number',
             'send_back_date', 'contract_type', 'start_date', 'end_date',
             'remark', 'staff_name',
         )
         export_order = (
-            'contract_id', 'contract_number', 'client', 'box_price',
-            'detection_price', 'full_set_price', 'contract_money',
+            'contract_id', 'contract_code', 'contract_number', 'client',
+            'box_price', 'detection_price', 'full_set_price', 'contract_money',
             'receive_invoice_value', 'send_date', 'tracking_number',
             'send_back_date', 'contract_type', 'start_date', 'end_date',
             'remark', 'staff_name',
@@ -84,9 +87,10 @@ class ContractInfoResources(resources.ModelResource):
         skip_unchanged = True
 
     def get_export_headers(self):
-        export_headers = [u'编号', u'合同号', u'客户', u'盒子单价', u'检测单价', u'全套价格',
-                          u'合同金额', u'已到账额', u'寄出时间', u'邮件单号', u'寄回时间',
-                          u'合同类型', u'起始时间', u'截止时间', u'备注', u'业务员', ]
+        export_headers = [u'编号', u'合同编码', u'合同号', u'客户', u'盒子单价',
+                          u'检测单价', u'全套价格', u'合同金额', u'已到账额',
+                          u'寄出时间', u'邮件单号', u'寄回时间', u'合同类型',
+                          u'起始时间', u'截止时间', u'备注', u'业务员', ]
         return export_headers
 
     def dehydrate_full_set_price(self, contractinfo):
