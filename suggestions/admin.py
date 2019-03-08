@@ -1,7 +1,7 @@
-import random
 from django.contrib import admin
 from suggestions.forms import CollectionsForm
-from suggestions.utilities import ScoreEvaluation, mapping_suggestions
+from suggestions.utilities import ScoreEvaluation, mapping_suggestions,\
+    content_produce
 from suggestions.models import Choices
 
 
@@ -9,7 +9,9 @@ class CollectionsAdmin(admin.ModelAdmin):
     """The suggestions mapping and the scoring for sample."""
     
     fieldsets = (
-        (None, {'fields': ('product', '_f10', '_f12', '_f08', '_f09', )}),
+        (None, {
+            'fields': ('product', 'version', '_f10', '_f12', '_f08', '_f09', ),
+        }),
         ('问卷答案', {
             'fields': (
                 '_f01', '_f02', '_f11', '_f03', '_f04',
@@ -67,21 +69,14 @@ class CollectionsAdmin(admin.ModelAdmin):
         ) if obj and obj.is_submit else ()
         return self.readonly_fields
     
-    @staticmethod
-    def zh_string_counts():
-        pass
-    
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
         
         # Setting the initial data for decreasing the times of input
         initial = context["adminform"].form.initial
-        
         if obj is not None:
-            t02 = random.sample(mapping_suggestions(obj, code="t02"), 4)
-            print(t02)
-            initial["t01"] = "\n".join(mapping_suggestions(obj, code="t01"))
-            initial["t02"] = "\n".join(mapping_suggestions(obj, code="t02"))
+            initial["t01"] = content_produce(obj, code="t01")
+            initial["t02"] = content_produce(obj, code="t02")
             initial["t03"] = "\n".join(mapping_suggestions(obj, code="t03"))
             initial["t04"] = "\n".join(mapping_suggestions(obj, code="t04"))
             initial["t05"] = "\n".join(mapping_suggestions(obj, code="t05"))
@@ -142,9 +137,13 @@ class VersionsAdmin(admin.ModelAdmin):
         (None, {'fields': ('code', 'name', )}),
         ('字数限制', {
             'fields': (
-                't01_length_max', 't02_length_max', 't03_length_max',
-                't04_length_max', 't05_length_max', 't06_length_max',
-                't07_length_max',
+                ('t01_length_min', 't01_length_max'),
+                ('t02_length_min', 't02_length_max'),
+                ('t03_length_min', 't03_length_max'),
+                ('t04_length_min', 't04_length_max'),
+                ('t05_length_min', 't05_length_max'),
+                ('t06_length_min', 't06_length_max'),
+                ('t07_length_min', 't07_length_max'),
             )
         }),
     )
