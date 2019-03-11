@@ -1,11 +1,44 @@
+import datetime
 from django.utils.html import format_html
+from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
 from projects.models import InvoiceInfo
-from invoices.models import SendInvoices
+from invoices.models import SendInvoices, PaymentInfo
 from invoices.forms import SendInvoicesForm
 from invoices.resources import SendInvoiceResources
+
+
+class PaymentInline(admin.TabularInline):
+    model = PaymentInfo.send_invoice.through
+    verbose_name = verbose_name_plural = "到账信息"
+    extra = 1
+
+
+class PaymentInfoAdmin(ImportExportActionModelAdmin):
+    """到款信息管理"""
+
+    # inlines = [PaymentInline]
+    # exclude = ('send_invoice',)
+    fields = (
+        'receive_value', 'receive_date', 'send_invoice'
+    )
+    list_display = (
+        'payment_number', 'receive_value', 'receive_date',
+    )
+    list_per_page = 30
+    save_as_continue = False
+    list_display_links = ('payment_number',)
+    search_fields = ('payment_number',)
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+        else:
+            temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+            obj.payment_number = temp
+            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):
@@ -13,6 +46,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
        注：每条记录在发票申请提交后自动被创建
     """
     # change_list_template = 'admin/invoices/change_list_template_invoices.html'
+    inlines = [PaymentInline]
     change_list_template = 'admin/invoices/invoice_change_list.html'
     invoice_info = (
         'get_contract_number', 'get_invoice_type', 'get_invoice_issuing',
@@ -116,11 +150,13 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_invoice_value.short_description = "开票金额"
 
     def get_receive_date(self, obj):
-        return obj.invoice_id.receive_date
+        # return obj.invoice_id.receive_date
+        return 0
     get_receive_date.short_description = "到账时间"
 
     def get_receive_value(self, obj):
-        return obj.invoice_id.receive_value
+        # return obj.invoice_id.receive_value
+        return 34
     get_receive_value.short_description = "到账金额"
 
     def get_invoice_content(self, obj):
