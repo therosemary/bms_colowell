@@ -1,7 +1,6 @@
 from django.contrib import admin
 from suggestions.forms import CollectionsForm
-from suggestions.utilities import ScoreEvaluation, mapping_suggestions,\
-    content_produce
+from suggestions.utils import ScoreEvaluation, get_suggestions
 from suggestions.models import Choices
 
 
@@ -72,17 +71,10 @@ class CollectionsAdmin(admin.ModelAdmin):
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
         
-        # Setting the initial data for decreasing the times of input
         initial = context["adminform"].form.initial
         if obj is not None:
-            initial["t01"] = content_produce(obj, code="t01")
-            initial["t02"] = content_produce(obj, code="t02")
-            initial["t03"] = "\n".join(mapping_suggestions(obj, code="t03"))
-            initial["t04"] = "\n".join(mapping_suggestions(obj, code="t04"))
-            initial["t05"] = "\n".join(mapping_suggestions(obj, code="t05"))
-            initial["t06"] = "\n".join(mapping_suggestions(obj, code="t06"))
-            initial["t07"] = "\n".join(mapping_suggestions(obj, code="t07"))
-            # TODO: the string counts of suggestions
+            for code in ["t01", "t02", "t03", "t04", "t05", "t06", "t07"]:
+                initial[code] = get_suggestions(obj, code=code)
             
         if obj and obj.f10 and obj.f12:
             mapping = {
