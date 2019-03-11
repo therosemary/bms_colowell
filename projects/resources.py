@@ -3,13 +3,16 @@ from import_export.fields import Field
 from import_export.widgets import IntegerWidget, DecimalWidget, \
     ForeignKeyWidget, DateWidget
 from projects.models import ContractsInfo, InvoiceInfo, BoxApplications
-
+from invoices.models import PaymentInfo
 
 class ContractInfoResources(resources.ModelResource):
     """合同信息导入导出resources"""
 
     contract_id = Field(
         column_name="编号", attribute='id', default=None
+    )
+    contract_code = Field(
+        column_name="合同编码", attribute='contract_code'
     )
     contract_number = Field(
         column_name="合同号", attribute='contract_number'
@@ -67,15 +70,15 @@ class ContractInfoResources(resources.ModelResource):
     class Meta:
         model = ContractsInfo
         fields = (
-            'contract_id', 'contract_number', 'client', 'box_price',
-            'detection_price', 'full_set_price', 'contract_money',
+            'contract_id', 'contract_code', 'contract_number', 'client',
+            'box_price', 'detection_price', 'full_set_price', 'contract_money',
             'receive_invoice_value', 'send_date', 'tracking_number',
             'send_back_date', 'contract_type', 'start_date', 'end_date',
             'remark', 'staff_name',
         )
         export_order = (
-            'contract_id', 'contract_number', 'client', 'box_price',
-            'detection_price', 'full_set_price', 'contract_money',
+            'contract_id', 'contract_code', 'contract_number', 'client',
+            'box_price', 'detection_price', 'full_set_price', 'contract_money',
             'receive_invoice_value', 'send_date', 'tracking_number',
             'send_back_date', 'contract_type', 'start_date', 'end_date',
             'remark', 'staff_name',
@@ -84,9 +87,10 @@ class ContractInfoResources(resources.ModelResource):
         skip_unchanged = True
 
     def get_export_headers(self):
-        export_headers = [u'编号', u'合同号', u'客户', u'盒子单价', u'检测单价', u'全套价格',
-                          u'合同金额', u'已到账额', u'寄出时间', u'邮件单号', u'寄回时间',
-                          u'合同类型', u'起始时间', u'截止时间', u'备注', u'业务员', ]
+        export_headers = [u'编号', u'合同编码', u'合同号', u'客户', u'盒子单价',
+                          u'检测单价', u'全套价格', u'合同金额', u'已到账额',
+                          u'寄出时间', u'邮件单号', u'寄回时间', u'合同类型',
+                          u'起始时间', u'截止时间', u'备注', u'业务员', ]
         return export_headers
 
     def dehydrate_full_set_price(self, contractinfo):
@@ -109,11 +113,11 @@ class ContractInfoResources(resources.ModelResource):
     def dehydrate_receive_invoice_value(self, contractinfo):
         """获取已到账总金额"""
         receive_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=contractinfo.id)
-        if invoice_datas:
-            for data in invoice_datas:
-                if data.sendinvoices.send_flag and data.receive_value is not None:
-                    receive_value += data.receive_value
+        payment_datas = PaymentInfo.objects.filter(
+            contract_number=contractinfo.id, receive_value__isnull=False)
+        if payment_datas is not None:
+            for payment in payment_datas:
+                receive_value += payment.receive_value
         return receive_value
 
 
@@ -168,13 +172,6 @@ class InvoiceInfoResources(resources.ModelResource):
     flag = Field(
         column_name="是否提交", attribute='flag'
     )
-    receive_value = Field(
-        column_name="到账金额", attribute='receive_value', default=None
-    )
-    receive_date = Field(
-        column_name="到账时间", attribute='receive_date',
-        widget=DateWidget(format='%Y-%m-%d'),
-    )
     fill_date = Field(
         column_name="填写时间", attribute='fill_date',
         widget=DateWidget(format='%Y-%m-%d'),
@@ -187,7 +184,7 @@ class InvoiceInfoResources(resources.ModelResource):
             'invoice_issuing', 'invoice_title', 'tariff_item',
             'send_address', 'address_phone', 'opening_bank',
             'bank_account_number', 'invoice_value', 'invoice_content', 'remark',
-            'apply_name', 'flag', 'receive_value', 'receive_date', 'fill_date',
+            'apply_name', 'flag', 'fill_date',
         )
         export_order = fields
         skip_unchanged = True
@@ -197,7 +194,7 @@ class InvoiceInfoResources(resources.ModelResource):
         export_headers = [u'编号', u'合同号', u'业务员', u'开票类型', u'开票单位',
                           u'发票抬头', u'税号', u'对方地址', u'号码', u'开户行',
                           u'账号', u'开票金额', u'开票内容', u'备注', u'申请人',
-                          u'是否提交', u'到账金额', u'到账时间', u'填写时间']
+                          u'是否提交', u'填写时间']
         return export_headers
 
 

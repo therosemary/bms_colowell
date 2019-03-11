@@ -31,6 +31,9 @@ class Partners(models.Model):
     code = models.CharField(
         verbose_name="合同编号", max_length=32, primary_key=True,
     )
+    reporting_period = models.CharField(
+        verbose_name="出报告周期", max_length=100, null=True, blank=True
+    )
     mode = models.CharField(
         verbose_name="性质", max_length=1, null=True, blank=True,
         choices=MODE_CHOICES,

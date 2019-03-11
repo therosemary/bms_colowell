@@ -22,14 +22,8 @@ class IntentionSource(resources.ModelResource):
     contact_number = Field(
         column_name="电话(或微信)", attribute='contact_number'
     )
-    follow_situations = Field(
-        column_name="跟进情况", attribute='follow_situations'
-    )
-    material_situations = Field(
-        column_name="物料情况", attribute='material_situations'
-    )
-    other_situations = Field(
-        column_name="其他情况", attribute='other_situations'
+    intention_progress = Field(
+        column_name="意向进展", attribute='follow_situations'
     )
     remark = Field(
         column_name="备注", attribute='remark'
@@ -43,8 +37,7 @@ class IntentionSource(resources.ModelResource):
         model = Intentions
         fields = (
             'id', 'salesman', 'intention_client', 'contact_name',
-            'contact_number', 'follow_situations', 'material_situations',
-            'other_situations', 'remark', 'fill_date'
+            'contact_number', 'intention_progress', 'remark', 'fill_date'
         )
         export_order = fields
         skip_unchanged = True
@@ -52,5 +45,5 @@ class IntentionSource(resources.ModelResource):
 
     def get_export_headers(self):
         export_headers = [u'编号', u'销售', u'意向客户', u'合同号', u'电话(或微信)',
-                          u'跟进情况', u'物料情况', u'其他情况', u'备注', u'填写日期']
+                          u'意向进展', u'备注', u'填写日期']
         return export_headers

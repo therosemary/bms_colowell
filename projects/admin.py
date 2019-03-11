@@ -4,12 +4,12 @@ from django.utils.html import format_html
 # import json
 from import_export.admin import ImportExportActionModelAdmin
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
-from invoices.models import SendInvoices
+from invoices.models import SendInvoices, PaymentInfo
 from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
 from projects.resources import ContractInfoResources, InvoiceInfoResources, \
     BoxApplicationsResources
 # from projects import views
-
+import  datetime
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""
@@ -21,16 +21,16 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
         'staff_name', 'remark',
     )
     list_display = (
-        'staff_name', 'contract_number', 'contract_type', 'client', 'box_price',
-        'detection_price', 'full_set_price', 'contract_money',
-        'receive_invoice_value', 'send_date', 'tracking_number',
-        'send_back_date', 'start_date', 'end_date',
+        'contract_code', 'staff_name', 'contract_number', 'contract_type',
+        'client', 'box_price', 'detection_price', 'full_set_price',
+        'contract_money', 'receive_invoice_value', 'send_date',
+        'tracking_number', 'send_back_date', 'start_date', 'end_date',
     )
     list_per_page = 40
     save_as_continue = False
     form = ContractInfoForm
     resource_class = ContractInfoResources
-    list_display_links = ('staff_name', 'contract_number')
+    list_display_links = ('staff_name', 'contract_number', 'contract_code')
 
     def full_set_price(self, obj):
         """自定义列表字段：单套总价"""
@@ -60,13 +60,12 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
 
     def receive_invoice_value(self, obj):
         """自定义列表字段：已到账金额"""
-        # TODO: 修改开票信息后改
         receive_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=obj.id)
-        if invoice_datas:
-            for data in invoice_datas:
-                if data.sendinvoices.send_flag and data.receive_value is not None:
-                    receive_value += data.receive_value
+        payment_datas = PaymentInfo.objects.filter(contract_number=obj.id,
+                                                   receive_value__isnull=False)
+        if payment_datas is not None:
+            for payment in payment_datas:
+                receive_value += payment.receive_value
         return format_html(
             '<span>{}</span>', receive_value
         )
@@ -92,26 +91,29 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
             request, object_id, form_url, extra_context=extra_context
         )
 
+    def save_model(self, request, obj, form, change):
+        if change:
+            super(ContractsInfoAdmin, self).save_model(request, obj, form, change)
+        else:
+            print(datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
+            contract_code = datetime.datetime.now().strftime('%Y%m%d') + \
+                            'RYS-' + datetime.datetime.now().strftime('%H%M%S')
+            obj.contract_code = contract_code
+            super().save_model(request, obj, form, change)
+
 
 class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     """开票信息管理"""
 
-    # change_form_template = 'admin/projects/projects_invoices_change_form.html'
-    fieldsets = (
-        (u'开票信息', {
-            'fields': ('contract_id', 'salesman', 'invoice_type',
-                       'invoice_issuing', 'invoice_title', 'tariff_item',
-                       'send_address', 'address_phone', 'opening_bank',
-                       'bank_account_number', 'invoice_value', 'invoice_content',
-                       'remark', 'apply_name', 'flag',)
-        }),
-        (u'到账信息', {
-            'fields': ('receive_value', 'receive_date',)
-        })
-    )
+    change_form_template = 'admin/projects/projects_invoices_change_form.html'
+    fields = ('contract_id', 'salesman', 'invoice_type', 'invoice_issuing',
+              'invoice_title', 'tariff_item', 'send_address',
+              'address_phone', 'opening_bank', 'bank_account_number',
+              'invoice_value', 'invoice_content', 'remark', 'apply_name',
+              'flag',)
     list_display = (
         'salesman', 'invoice_title', 'invoice_value', 'invoice_type',
-        'invoice_content', 'receive_value', 'receive_date',
+        'invoice_content',
     )
     list_per_page = 40
     save_as_continue = False
