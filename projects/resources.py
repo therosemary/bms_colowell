@@ -3,7 +3,7 @@ from import_export.fields import Field
 from import_export.widgets import IntegerWidget, DecimalWidget, \
     ForeignKeyWidget, DateWidget
 from projects.models import ContractsInfo, InvoiceInfo, BoxApplications
-
+from invoices.models import PaymentInfo
 
 class ContractInfoResources(resources.ModelResource):
     """合同信息导入导出resources"""
@@ -113,11 +113,11 @@ class ContractInfoResources(resources.ModelResource):
     def dehydrate_receive_invoice_value(self, contractinfo):
         """获取已到账总金额"""
         receive_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=contractinfo.id)
-        if invoice_datas:
-            for data in invoice_datas:
-                if data.sendinvoices.send_flag and data.receive_value is not None:
-                    receive_value += data.receive_value
+        payment_datas = PaymentInfo.objects.filter(
+            contract_number=contractinfo.id, receive_value__isnull=False)
+        if payment_datas is not None:
+            for payment in payment_datas:
+                receive_value += payment.receive_value
         return receive_value
 
 
