@@ -1,6 +1,6 @@
 from django.contrib import admin
 from suggestions.forms import CollectionsForm
-from suggestions.utils import ScoreEvaluation, get_suggestions
+from suggestions.utils import ScoreEvaluation, limit_suggestions
 from suggestions.models import Choices
 
 
@@ -74,7 +74,7 @@ class CollectionsAdmin(admin.ModelAdmin):
         initial = context["adminform"].form.initial
         if obj is not None:
             for code in ["t01", "t02", "t03", "t04", "t05", "t06", "t07"]:
-                initial[code] = get_suggestions(obj, code=code)
+                initial[code] = limit_suggestions(obj, code=code)
             
         if obj and obj.f10 and obj.f12:
             mapping = {
