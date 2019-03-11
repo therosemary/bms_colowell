@@ -155,8 +155,12 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_receive_date.short_description = "到账时间"
 
     def get_receive_value(self, obj):
-        # return obj.invoice_id.receive_value
-        return 34
+        payment_sum = 0
+        receive_data = obj.paymentinfo_set.exclude(receive_value__exact=None)
+        if receive_data is not None:
+            for payment in receive_data:
+                payment_sum += payment.receive_value
+        return payment_sum
     get_receive_value.short_description = "到账金额"
 
     def get_invoice_content(self, obj):
@@ -177,8 +181,10 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
                 invoice_data = InvoiceInfo.objects.get(id=data.invoice_id.id)
                 if invoice_data.invoice_value is not None:
                     invoice_values += invoice_data.invoice_value
-                if invoice_data.receive_value is not None:
-                    receive_values += invoice_data.receive_value
+                payment_data = data.paymentinfo_set.exclude(receive_value__exact=None)
+                if payment_data is not None:
+                    for payment in payment_data:
+                        receive_values += payment.receive_value
         return invoice_values, receive_values
 
     def get_readonly_fields(self, request, obj=None):
