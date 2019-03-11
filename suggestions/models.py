@@ -52,26 +52,48 @@ class Versions(models.Model):
     name = models.CharField(
         verbose_name="版本名称", max_length=64,
     )
+    t01_length_min = models.SmallIntegerField(
+        verbose_name="饮食建议字数最少", default=0,
+    )
+    t02_length_min = models.SmallIntegerField(
+        verbose_name="生活方式字数最少", default=0,
+    )
+    t03_length_min = models.SmallIntegerField(
+        verbose_name="体育锻炼字数最少", default=0,
+    )
+    t04_length_min = models.SmallIntegerField(
+        verbose_name="健康乐观心态字数最少", default=0,
+    )
+    t05_length_min = models.SmallIntegerField(
+        verbose_name="定期筛查字数最少", default=0,
+    )
+    t06_length_min = models.SmallIntegerField(
+        verbose_name="确诊和治疗字数最少", default=0,
+    )
+    t07_length_min = models.SmallIntegerField(
+        verbose_name="肠镜检查准备字数最少", default=0,
+    )
+
     t01_length_max = models.SmallIntegerField(
-        verbose_name="饮食建议字数限制",
+        verbose_name="饮食建议字数最多", default=100,
     )
     t02_length_max = models.SmallIntegerField(
-        verbose_name="生活方式字数限制",
+        verbose_name="生活方式字数最多", default=100,
     )
     t03_length_max = models.SmallIntegerField(
-        verbose_name="体育锻炼字数限制",
+        verbose_name="体育锻炼字数最多", default=100,
     )
     t04_length_max = models.SmallIntegerField(
-        verbose_name="健康乐观心态字数限制",
+        verbose_name="健康乐观心态字数最多", default=100,
     )
     t05_length_max = models.SmallIntegerField(
-        verbose_name="定期筛查字数限制",
+        verbose_name="定期筛查字数最多", default=100,
     )
     t06_length_max = models.SmallIntegerField(
-        verbose_name="确诊和治疗字数限制",
+        verbose_name="确诊和治疗字数最多", default=100,
     )
     t07_length_max = models.SmallIntegerField(
-        verbose_name="肠镜检查准备字数限制",
+        verbose_name="肠镜检查准备字数最多", default=100,
     )
     create_at = models.DateField(
         verbose_name="创建于", auto_now_add=True,
