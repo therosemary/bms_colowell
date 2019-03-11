@@ -7,5 +7,5 @@ bms_colowell/
 media/
 statics/
 collected_statics/
-suggestions/utilities.py
+suggestions/utils.py
 debug.log
