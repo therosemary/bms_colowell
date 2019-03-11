@@ -4,7 +4,7 @@ from django.utils.html import format_html
 # import json
 from import_export.admin import ImportExportActionModelAdmin
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
-from invoices.models import SendInvoices
+from invoices.models import SendInvoices, PaymentInfo
 from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
 from projects.resources import ContractInfoResources, InvoiceInfoResources, \
     BoxApplicationsResources
@@ -60,13 +60,12 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
 
     def receive_invoice_value(self, obj):
         """自定义列表字段：已到账金额"""
-        # TODO: 修改开票信息后改
         receive_value = 0
-        invoice_datas = InvoiceInfo.objects.filter(contract_id=obj.id)
-        if invoice_datas:
-            for data in invoice_datas:
-                if data.sendinvoices.send_flag and data.receive_value is not None:
-                    receive_value += data.receive_value
+        payment_datas = PaymentInfo.objects.filter(contract_number=obj.id,
+                                                   receive_value__isnull=False)
+        if payment_datas is not None:
+            for payment in payment_datas:
+                receive_value += payment.receive_value
         return format_html(
             '<span>{}</span>', receive_value
         )
