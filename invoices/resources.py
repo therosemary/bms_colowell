@@ -122,3 +122,19 @@ class SendInvoiceResources(resources.ModelResource):
         issuing_entities = {'shry': '上海锐翌', 'hzth': '杭州拓宏', 'hzry': '杭州锐翌',
                             'sdry': '山东锐翌'}
         return issuing_entities[sendinvoices.invoice_id.invoice_issuing]
+
+
+class PaymentInfoResource(resources.ModelResource):
+    id = Field(
+        column_name="编号", attribute='id', default=None
+    )
+    payment_number = Field(
+        column_name="到账编号", attribute='payment_number', default=None
+    )
+    receive_value = Field(
+        column_name="到账金额", attribute='receive_value', default=None
+    )
+    receive_date = Field(
+        column_name="到账时间", attribute='receive_date',
+        widget=DateWidget(format='%Y-%m-%d'),
+    )
