@@ -3,10 +3,9 @@
 */__pycache__/
 */migrations/*
 .idea/
+bms_colowell/
 media/
 statics/
 collected_statics/
-bms_colowell/settings.py
-bms_colowell/admin_bms_colowell.py
-suggestions/utilities.py
+suggestions/utils.py
 debug.log

@@ -1,4 +1,21 @@
 # 项目开发规范
+
+###### 关于代码提交的一些建议（Update by liy, 03/11/2019, 11:30:22）
+
+请尽量`每天commit代码`：
+1. 有利于避免代码conflict  
+2. 方便追踪更新记录和工作进度  
+3. 节约代码审核人的时间  
+4. 符合持续部署(CI)的模式   
+
+请`避免`提交无意义的更新  
+请`避免`代码长时间积累在自己的repo，再一次性堆过来  
+
+希望开发组成员能明白`开发规范的意义`，这是这份规范存在的基础
+
+给各位一个long-lasting的作业，为何`Python是一门优雅的语言`？
+
+
 ### 0 总体规范
 --------------------
 绝大多数情况下，开发请遵守[PEP8 code style](https://www.python.org/dev/peps/pep-0008/)       
@@ -28,8 +45,8 @@ from dingtalk_sdk_gmdzy2010.authority_request import AccessTokenRequest
 
 
 # 下面的函数参数过多，超过79个字符的参数折行到下一行
-def test(argument_1, argument_1, argument_1, argument_1, argument_1, argument_1,
-         argument_1,):
+def test(argument_1, argument_2, argument_3, argument_4, argument_5,
+         argument_6, argument_7):
     pass
 ```
 代码缩进最好不要超过四层
@@ -158,12 +175,3 @@ v0.1.0
 v1.0.2
 ```
 具体而言，正式发布整个项目为主版本，增加一个Django app视为一个子版本，某个app内部功能更新为孙版本
-
-### 6 项目分工
---------------------
-liy：用户，微信/钉钉/顺丰接入，报告在线生成服务      
-
-zhangjh：技术支持，售后，实验    
-
-wangl：商务，销售，财务，代理商    
-
