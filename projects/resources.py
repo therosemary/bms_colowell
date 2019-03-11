@@ -172,13 +172,6 @@ class InvoiceInfoResources(resources.ModelResource):
     flag = Field(
         column_name="是否提交", attribute='flag'
     )
-    receive_value = Field(
-        column_name="到账金额", attribute='receive_value', default=None
-    )
-    receive_date = Field(
-        column_name="到账时间", attribute='receive_date',
-        widget=DateWidget(format='%Y-%m-%d'),
-    )
     fill_date = Field(
         column_name="填写时间", attribute='fill_date',
         widget=DateWidget(format='%Y-%m-%d'),
@@ -191,7 +184,7 @@ class InvoiceInfoResources(resources.ModelResource):
             'invoice_issuing', 'invoice_title', 'tariff_item',
             'send_address', 'address_phone', 'opening_bank',
             'bank_account_number', 'invoice_value', 'invoice_content', 'remark',
-            'apply_name', 'flag', 'receive_value', 'receive_date', 'fill_date',
+            'apply_name', 'flag', 'fill_date',
         )
         export_order = fields
         skip_unchanged = True
@@ -201,7 +194,7 @@ class InvoiceInfoResources(resources.ModelResource):
         export_headers = [u'编号', u'合同号', u'业务员', u'开票类型', u'开票单位',
                           u'发票抬头', u'税号', u'对方地址', u'号码', u'开户行',
                           u'账号', u'开票金额', u'开票内容', u'备注', u'申请人',
-                          u'是否提交', u'到账金额', u'到账时间', u'填写时间']
+                          u'是否提交', u'填写时间']
         return export_headers
 
 

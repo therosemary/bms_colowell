@@ -206,12 +206,6 @@ class InvoiceInfo(models.Model):
     flag = models.BooleanField(
         verbose_name="提交开票", default=False
     )
-    receive_value = models.FloatField(
-        verbose_name="到账金额", null=True, blank=True
-    )
-    receive_date = models.DateField(
-        verbose_name="到账时间", null=True, blank=True
-    )
     fill_date = models.DateField(
         verbose_name="填写日期", auto_now_add=True
     )

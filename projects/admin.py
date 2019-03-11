@@ -107,21 +107,14 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     """开票信息管理"""
 
     change_form_template = 'admin/projects/projects_invoices_change_form.html'
-    fieldsets = (
-        (u'开票信息', {
-            'fields': ('contract_id', 'salesman', 'invoice_type',
-                       'invoice_issuing', 'invoice_title', 'tariff_item',
-                       'send_address', 'address_phone', 'opening_bank',
-                       'bank_account_number', 'invoice_value', 'invoice_content',
-                       'remark', 'apply_name', 'flag',)
-        }),
-        (u'到账信息', {
-            'fields': ('receive_value', 'receive_date',)
-        })
-    )
+    fields = ('contract_id', 'salesman', 'invoice_type', 'invoice_issuing',
+              'invoice_title', 'tariff_item', 'send_address',
+              'address_phone', 'opening_bank', 'bank_account_number',
+              'invoice_value', 'invoice_content', 'remark', 'apply_name',
+              'flag',)
     list_display = (
         'salesman', 'invoice_title', 'invoice_value', 'invoice_type',
-        'invoice_content', 'receive_value', 'receive_date',
+        'invoice_content',
     )
     list_per_page = 40
     save_as_continue = False
