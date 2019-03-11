@@ -7,7 +7,7 @@ from daterange_filter.filter import DateRangeFilter
 from projects.models import InvoiceInfo
 from invoices.models import SendInvoices, PaymentInfo
 from invoices.forms import SendInvoicesForm
-from invoices.resources import SendInvoiceResources
+from invoices.resources import SendInvoiceResources, PaymentInfoResource
 
 
 class PaymentInline(admin.TabularInline):
@@ -25,12 +25,13 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         'receive_value', 'receive_date', 'contract_number', 'send_invoice'
     )
     list_display = (
-        'payment_number', 'receive_value', 'contract_number', 'receive_date',
+        'payment_number', 'contract_number', 'receive_value', 'receive_date',
     )
     list_per_page = 30
     save_as_continue = False
     list_display_links = ('payment_number',)
     search_fields = ('payment_number',)
+    resource_class = PaymentInfoResource
 
     def save_model(self, request, obj, form, change):
         if change:
