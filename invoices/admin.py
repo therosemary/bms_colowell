@@ -69,8 +69,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     list_display = (
         'get_salesman', 'get_contract_number', 'billing_date',
         'invoice_number', 'get_invoice_value', 'get_receive_value',
-        'receivables', 'get_invoice_title', 'get_invoice_content',
-        'tracking_number', 'get_remark',
+        'receivables', 'get_receive_date', 'get_invoice_title',
+        'get_invoice_content', 'tracking_number', 'get_remark',
     )
     list_per_page = 40
     save_as_continue = False
@@ -150,8 +150,12 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_invoice_value.short_description = "开票金额"
 
     def get_receive_date(self, obj):
-        # return obj.invoice_id.receive_date
-        return 0
+        payment_date = None
+        payment = obj.paymentinfo_set.exclude(receive_date__exact=None)
+        payment_order = payment.order_by('-receive_date')
+        if len(payment_order) > 0:
+            payment_date = payment_order[0].receive_date
+        return payment_date
     get_receive_date.short_description = "到账时间"
 
     def get_receive_value(self, obj):
