@@ -22,10 +22,10 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     # inlines = [PaymentInline]
     # exclude = ('send_invoice',)
     fields = (
-        'receive_value', 'receive_date', 'send_invoice'
+        'receive_value', 'receive_date', 'contract_number', 'send_invoice'
     )
     list_display = (
-        'payment_number', 'receive_value', 'receive_date',
+        'payment_number', 'receive_value', 'contract_number', 'receive_date',
     )
     list_per_page = 30
     save_as_continue = False

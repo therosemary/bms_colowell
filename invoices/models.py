@@ -1,6 +1,6 @@
 from django.db import models
 from bms_colowell.settings import AUTH_USER_MODEL
-from projects.models import InvoiceInfo
+from projects.models import InvoiceInfo, ContractsInfo
 
 
 class SendInvoices(models.Model):
@@ -56,6 +56,10 @@ class PaymentInfo(models.Model):
     )
     send_invoice = models.ManyToManyField(
         SendInvoices, verbose_name="发票编号", blank=True
+    )
+    contract_number = models.ForeignKey(
+        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
+        null=True, blank=True,
     )
 
     class Meta:
