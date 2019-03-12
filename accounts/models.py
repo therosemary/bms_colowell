@@ -8,7 +8,6 @@ class BmsUser(AbstractUser):
     )
 
     class Meta:
-        app_label = "accounts"
         verbose_name = verbose_name_plural = "用户"
     
     def __str__(self):
@@ -25,7 +24,7 @@ class WechatInfo(models.Model):
         BmsUser, verbose_name="用户", on_delete=models.CASCADE
     )
     openid = models.CharField(
-        verbose_name="微信唯一ID", max_length=64, primary_key=True,
+        verbose_name="唯一ID", max_length=64, primary_key=True,
     )
     nickname = models.CharField(
         verbose_name="昵称", max_length=32, null=True, blank=True,
@@ -50,7 +49,6 @@ class WechatInfo(models.Model):
     )
     
     class Meta:
-        app_label = "accounts"
         verbose_name = verbose_name_plural = "用户微信信息"
 
     def __str__(self):
@@ -58,11 +56,15 @@ class WechatInfo(models.Model):
 
 
 class DingtalkInfo(models.Model):
+    SEX_CHOICES = (
+        (0, "男"),
+        (1, "女"),
+    )
     bms_user = models.OneToOneField(
         BmsUser, verbose_name="用户", on_delete=models.CASCADE
     )
     userid = models.CharField(
-        verbose_name="钉钉唯一ID", max_length=64, primary_key=True,
+        verbose_name="唯一ID", max_length=64, primary_key=True,
     )
     name = models.CharField(
         verbose_name="昵称", max_length=32, null=True, blank=True,
@@ -74,7 +76,7 @@ class DingtalkInfo(models.Model):
         verbose_name="工号", max_length=32, null=True, blank=True,
     )
     sex = models.PositiveSmallIntegerField(
-        verbose_name="性别", null=True, blank=True
+        verbose_name="性别", null=True, blank=True, choices=SEX_CHOICES,
     )
     avatar = models.CharField(
         verbose_name="头像", max_length=512, null=True, blank=True,
@@ -84,8 +86,74 @@ class DingtalkInfo(models.Model):
     )
     
     class Meta:
-        app_label = "accounts"
         verbose_name = verbose_name_plural = "用户钉钉信息"
 
     def __str__(self):
         return "【{}】-【{}】".format(self.name, self.userid)
+
+
+class DingtalkChat(models.Model):
+    chat_id = models.CharField(
+        verbose_name="群聊编号", primary_key=True, max_length=64,
+    )
+    name = models.CharField(
+        verbose_name="群聊名称", max_length=32, null=True, blank=True,
+        default="内部群聊",
+    )
+    owner = models.ForeignKey(
+        DingtalkInfo, verbose_name="群主", related_name="chat_owner",
+        limit_choices_to={"is_staff": True, "is_superuser": False},
+        on_delete=models.SET_NULL, null=True,
+    )
+    members = models.ManyToManyField(
+        DingtalkInfo, verbose_name="群聊成员", related_name="chat_members",
+        limit_choices_to={"is_staff": True, "is_superuser": False},
+    )
+    create_at = models.DateField(
+        verbose_name="创建时间", auto_now_add=True,
+    )
+    is_valid = models.BooleanField(
+        verbose_name="是否有效", default=True,
+    )
+    
+    class Meta:
+        verbose_name_plural = verbose_name = "钉钉群组"
+    
+    def __str__(self):
+        return '%s' % self.name
+
+
+class ChatTemplates(models.Model):
+    TEMPLATE_KIND = (
+        "msg", u"文本消息"
+        "2", u"msg"
+        "3", u"msg"
+    )
+    name = models.CharField(
+        verbose_name="名称", max_length=32, null=True, blank=True,
+    )
+    sign = models.CharField(
+        verbose_name="签名", max_length=32, null=True, blank=True,
+    )
+    text = models.TextField(
+        verbose_name="内容", null=True, blank=True,
+    )
+    link = models.CharField(
+        verbose_name="链接", max_length=256, null=True, blank=True,
+    )
+    create_at = models.DateField(
+        verbose_name="创建时间", auto_now_add=True
+    )
+    is_valid = models.BooleanField(
+        verbose_name="是否有效", default=True
+    )
+    
+    @property
+    def msg_text(self):
+        return self.sign + self.text
+    
+    class Meta:
+        verbose_name_plural = verbose_name = "消息模板"
+    
+    def __str__(self):
+        return '%s' % self.name
