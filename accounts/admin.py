@@ -39,7 +39,6 @@ class BmsUserAdmin(UserAdmin):
 
 
 class WechatInfoAdmin(admin.ModelAdmin):
-    autocomplete_fields = ("bms_user", )
     fields = (
         "bms_user", "openid", "nickname", "sex", "city", "province", "country",
         "headimgurl", "unionid",
@@ -56,7 +55,6 @@ class WechatInfoAdmin(admin.ModelAdmin):
 
 
 class DingtalkInfoAdmin(admin.ModelAdmin):
-    autocomplete_fields = ("bms_user", )
     fields = (
         "bms_user", "userid", "name", "position", "jobnumber", "sex", "avatar",
         "unionid",
@@ -70,3 +68,39 @@ class DingtalkInfoAdmin(admin.ModelAdmin):
     list_filter = ("sex", )
     save_as_continue = False
     search_fields = ("bms_user__username", )
+
+
+class DingtalkChatAdmin(admin.ModelAdmin):
+    list_per_page = 30
+    list_display = (
+        "name", "chat_id", "owner", "create_at", "is_valid"
+    )
+    list_display_links = ("name", )
+    search_fields = ("chat_id", "name", )
+    list_filter = ("is_valid", )
+    fields = (
+        "name", "chat_id", "owner", "members", "is_valid",
+    )
+
+    def get_readonly_fields(self, request, obj=None):
+        self.readonly_fields = (
+            "name", "chat_id", "owner", "create_at", "is_valid"
+        ) if not request.user.is_superuser else ()
+        return self.readonly_fields
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial["owner"] = request.user.id
+        initial["chat_id"] = "12345678"
+        initial["members"] = [request.user.id, ]
+        return initial
+
+
+class ChatTemplatesAdmin(admin.ModelAdmin):
+    list_per_page = 30
+    list_display = (
+        "name", "sign", "text", "link", "create_at", "is_valid"
+    )
+    list_display_links = ("name", )
+    search_fields = ("name", "sign", "text", )
+    list_filter = ("is_valid", "sign")
