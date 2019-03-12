@@ -26,10 +26,10 @@ class WechatInfo(models.Model):
     }
     bms_user = models.OneToOneField(
         BmsUser, verbose_name="用户", on_delete=models.CASCADE,
-        limit_choices_to=LIMIT_CHOICES_TO,
+        limit_choices_to=LIMIT_CHOICES_TO, primary_key=True,
     )
     openid = models.CharField(
-        verbose_name="唯一ID", max_length=64, primary_key=True,
+        verbose_name="唯一ID", max_length=64, null=True, blank=True,
     )
     nickname = models.CharField(
         verbose_name="昵称", max_length=32, null=True, blank=True,
@@ -71,10 +71,10 @@ class DingtalkInfo(models.Model):
     }
     bms_user = models.OneToOneField(
         BmsUser, verbose_name="用户", on_delete=models.CASCADE,
-        limit_choices_to=LIMIT_CHOICES_TO,
+        limit_choices_to=LIMIT_CHOICES_TO, primary_key=True,
     )
     userid = models.CharField(
-        verbose_name="唯一ID", max_length=64, primary_key=True,
+        verbose_name="唯一ID", max_length=64, null=True, blank=True,
     )
     name = models.CharField(
         verbose_name="昵称", max_length=32, null=True, blank=True,
@@ -103,10 +103,6 @@ class DingtalkInfo(models.Model):
 
 
 class DingtalkChat(models.Model):
-    LIMIT_CHOICES_TO = {
-        "bms_user__is_staff": True,
-        "bms_user__is_superuser": False
-    }
     chat_id = models.CharField(
         verbose_name="群聊编号", primary_key=True, max_length=64,
     )
@@ -116,12 +112,10 @@ class DingtalkChat(models.Model):
     )
     owner = models.ForeignKey(
         DingtalkInfo, verbose_name="群主", related_name="chat_owner",
-        limit_choices_to=LIMIT_CHOICES_TO, on_delete=models.SET_NULL,
-        null=True,
+        on_delete=models.SET_NULL, null=True,
     )
     members = models.ManyToManyField(
         DingtalkInfo, verbose_name="群聊成员", related_name="chat_members",
-        limit_choices_to=LIMIT_CHOICES_TO,
     )
     create_at = models.DateField(
         verbose_name="创建时间", auto_now_add=True,
