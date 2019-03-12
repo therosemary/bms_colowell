@@ -14,6 +14,9 @@ class PartnersResources(resources.ModelResource):
     code = Field(
         column_name="合同编号", attribute='code'
     )
+    reporting_period = Field(
+        column_name="出报告周期", attribute='reporting_period'
+    )
     mode = Field(
         column_name="性质", attribute='mode'
     )
@@ -45,16 +48,16 @@ class PartnersResources(resources.ModelResource):
     class Meta:
         model = Partners
         fields = (
-            'bms_user', 'name', 'code', 'mode', 'region', 'created_at',
-            'altered_at', 'materials', 'sponsorship', 'activities', 'propaganda',
-            'note',
+            'bms_user', 'name', 'code', 'reporting_period', 'mode', 'region',
+            'created_at', 'altered_at', 'materials', 'sponsorship',
+            'activities', 'propaganda', 'note',
         )
         export_order = fields
         skip_unchanged = True
         import_id_fields = ['code']
 
     def get_export_headers(self):
-        export_headers = [u'业务员', u'合作方名称', u'合同编号', u'性质', u'区域',
-                          u'始建于', u'修改于', u'物料支持', u'会议赞助支持',
-                          u'策划活动支持', u'宣讲', u'备注信息']
+        export_headers = [u'业务员', u'合作方名称', u'合同编号', u'出报告周期',
+                          u'性质', u'区域', u'始建于', u'修改于', u'物料支持',
+                          u'会议赞助支持', u'策划活动支持', u'宣讲', u'备注信息']
         return export_headers

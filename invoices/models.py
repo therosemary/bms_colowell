@@ -1,6 +1,6 @@
 from django.db import models
 from bms_colowell.settings import AUTH_USER_MODEL
-from projects.models import InvoiceInfo
+from projects.models import InvoiceInfo, ContractsInfo
 
 
 class SendInvoices(models.Model):
@@ -41,3 +41,29 @@ class SendInvoices(models.Model):
     def __str__(self):
         return '发票编号{}'.format(self.invoice_id)
 
+
+class PaymentInfo(models.Model):
+    """到款信息"""
+
+    payment_number = models.CharField(
+        verbose_name="到款编号", max_length=14, unique=True, null=True, blank=True
+    )
+    receive_value = models.FloatField(
+        verbose_name="到账金额", null=True, blank=True
+    )
+    receive_date = models.DateField(
+        verbose_name="到账时间", null=True, blank=True
+    )
+    send_invoice = models.ManyToManyField(
+        SendInvoices, verbose_name="发票编号", blank=True
+    )
+    contract_number = models.ForeignKey(
+        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
+        null=True, blank=True,
+    )
+
+    class Meta:
+        verbose_name = verbose_name_plural = "到款信息"
+
+    def __str__(self):
+        return self.payment_number

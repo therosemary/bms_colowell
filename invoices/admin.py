@@ -1,11 +1,45 @@
+import datetime
 from django.utils.html import format_html
+from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
 from projects.models import InvoiceInfo
-from invoices.models import SendInvoices
+from invoices.models import SendInvoices, PaymentInfo
 from invoices.forms import SendInvoicesForm
-from invoices.resources import SendInvoiceResources
+from invoices.resources import SendInvoiceResources, PaymentInfoResource
+
+
+class PaymentInline(admin.TabularInline):
+    model = PaymentInfo.send_invoice.through
+    verbose_name = verbose_name_plural = "到账信息"
+    extra = 1
+
+
+class PaymentInfoAdmin(ImportExportActionModelAdmin):
+    """到款信息管理"""
+
+    # inlines = [PaymentInline]
+    # exclude = ('send_invoice',)
+    fields = (
+        'receive_value', 'receive_date', 'contract_number', 'send_invoice'
+    )
+    list_display = (
+        'payment_number', 'contract_number', 'receive_value', 'receive_date',
+    )
+    list_per_page = 30
+    save_as_continue = False
+    list_display_links = ('payment_number',)
+    search_fields = ('payment_number',)
+    resource_class = PaymentInfoResource
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+        else:
+            temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+            obj.payment_number = temp
+            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):
@@ -13,6 +47,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
        注：每条记录在发票申请提交后自动被创建
     """
     # change_list_template = 'admin/invoices/change_list_template_invoices.html'
+    inlines = [PaymentInline]
     change_list_template = 'admin/invoices/invoice_change_list.html'
     invoice_info = (
         'get_contract_number', 'get_invoice_type', 'get_invoice_issuing',
@@ -35,8 +70,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     list_display = (
         'get_salesman', 'get_contract_number', 'billing_date',
         'invoice_number', 'get_invoice_value', 'get_receive_value',
-        'receivables', 'get_invoice_title', 'get_invoice_content',
-        'tracking_number', 'get_remark',
+        'receivables', 'get_receive_date', 'get_invoice_title',
+        'get_invoice_content', 'tracking_number', 'get_remark',
     )
     list_per_page = 40
     save_as_continue = False
@@ -50,10 +85,14 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     search_fields = ('invoice_number',)
 
     def receivables(self, obj):
-        if obj.send_flag:
-            money = 0
-        else:
-            money = self.get_invoice_value(obj)
+        """自动计算应收金额"""
+        invoice_value = self.get_invoice_value(obj)
+        receive_value = self.get_receive_value(obj)
+        if invoice_value is None:
+            invoice_value = 0
+        if receive_value is None:
+            receive_value = 0
+        money = invoice_value - receive_value
         return format_html('<span>{}</span>', money)
     receivables.short_description = "应收金额"
 
@@ -112,11 +151,21 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_invoice_value.short_description = "开票金额"
 
     def get_receive_date(self, obj):
-        return obj.invoice_id.receive_date
+        payment_date = None
+        payment = obj.paymentinfo_set.exclude(receive_date__exact=None)
+        payment_order = payment.order_by('-receive_date')
+        if len(payment_order) > 0:
+            payment_date = payment_order[0].receive_date
+        return payment_date
     get_receive_date.short_description = "到账时间"
 
     def get_receive_value(self, obj):
-        return obj.invoice_id.receive_value
+        payment_sum = 0
+        receive_data = obj.paymentinfo_set.exclude(receive_value__exact=None)
+        if receive_data is not None:
+            for payment in receive_data:
+                payment_sum += payment.receive_value
+        return payment_sum
     get_receive_value.short_description = "到账金额"
 
     def get_invoice_content(self, obj):
@@ -137,8 +186,10 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
                 invoice_data = InvoiceInfo.objects.get(id=data.invoice_id.id)
                 if invoice_data.invoice_value is not None:
                     invoice_values += invoice_data.invoice_value
-                if invoice_data.receive_value is not None:
-                    receive_values += invoice_data.receive_value
+                payment_data = data.paymentinfo_set.exclude(receive_value__exact=None)
+                if payment_data is not None:
+                    for payment in payment_data:
+                        receive_values += payment.receive_value
         return invoice_values, receive_values
 
     def get_readonly_fields(self, request, obj=None):

@@ -8,7 +8,8 @@ class Intentions(models.Model):
         null=True, blank=True
     )
     intention_client = models.CharField(
-        verbose_name="意向名称", max_length=100, null=True, blank=True
+        verbose_name="意向名称", max_length=100, null=True, blank=True,
+        help_text="需填写信息：意向单位、代理区域、代理产品及代理级别"
     )
     contact_name = models.CharField(
         verbose_name="联系人姓名", max_length=50, null=True, blank=True
@@ -16,14 +17,8 @@ class Intentions(models.Model):
     contact_number = models.CharField(
         verbose_name="电话（或微信）", max_length=50, null=True, blank=True
     )
-    follow_situations = models.TextField(
-        verbose_name="跟进情况", null=True, blank=True
-    )
-    material_situations = models.TextField(
-        verbose_name="物料情况", null=True, blank=True
-    )
-    other_situations = models.TextField(
-        verbose_name="其他情况", null=True, blank=True, help_text="填写宣讲等信息"
+    intention_progress = models.TextField(
+        verbose_name="意向进展", null=True, blank=True
     )
     remark = models.TextField(
         verbose_name="备注", null=True, blank=True
