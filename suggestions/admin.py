@@ -72,11 +72,11 @@ class CollectionsAdmin(admin.ModelAdmin):
                            form_url='', obj=None):
         
         initial = context["adminform"].form.initial
-        if obj is not None:
+        if obj is not None and not obj.is_submit:
             for code in ["t01", "t02", "t03", "t04", "t05", "t06", "t07"]:
                 initial[code] = limit_suggestions(obj, code=code)
             
-        if obj and obj.f10 and obj.f12:
+        if obj and obj.f10 and obj.f12 and not obj.is_submit:
             mapping = {
                 "f10c01": "LOW_RISK",
                 "f10c02": "HIGH_RISK",
