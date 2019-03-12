@@ -9,13 +9,11 @@ class IntentionAdmin(ImportExportActionModelAdmin):
     # change_list_template = 'admin/intentions/intentions_change_list.html'
     fields = (
         'salesman', 'intention_client', 'contact_name', 'contact_number',
-        'follow_situations', 'material_situations', 'other_situations',
-        'remark',
+        'intention_progress', 'remark',
     )
     list_display = (
         'salesman', 'intention_client', 'contact_name', 'contact_number',
-        'follow_situations', 'material_situations', 'other_situations',
-        'remark',
+        'intention_progress', 'remark',
     )
     list_per_page = 40
     save_as_continue = False
@@ -23,7 +21,7 @@ class IntentionAdmin(ImportExportActionModelAdmin):
     list_display_links = ('salesman', 'intention_client')
     resource_class = IntentionSource
 
-    # def get_changeform_initial_data(self, request):
-    #     initial = super(IntentionAdmin, self).get_changeform_initial_data(request)
-    #     initial['fill_name'] = request.user
-    #     return initial
+    def get_changeform_initial_data(self, request):
+        initial = super(IntentionAdmin, self).get_changeform_initial_data(request)
+        initial['salesman'] = request.user
+        return initial
