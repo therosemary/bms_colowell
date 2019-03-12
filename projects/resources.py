@@ -127,6 +127,9 @@ class InvoiceInfoResources(resources.ModelResource):
     id = Field(
         column_name="编号", attribute='id', default=None
     )
+    invoice_number = Field(
+        column_name="发票编号", attribute='invoice_number', default=None
+    )
     contract_number = Field(
         column_name="合同号", attribute='contract_id', default=None
     )
@@ -172,6 +175,9 @@ class InvoiceInfoResources(resources.ModelResource):
     flag = Field(
         column_name="是否提交", attribute='flag'
     )
+    approve_flag = Field(
+        column_name="审批状态", attribute='approve_flag'
+    )
     fill_date = Field(
         column_name="填写时间", attribute='fill_date',
         widget=DateWidget(format='%Y-%m-%d'),
@@ -180,21 +186,21 @@ class InvoiceInfoResources(resources.ModelResource):
     class Meta:
         model = InvoiceInfo
         fields = (
-            'id', 'contract_number', 'salesman', 'invoice_type',
-            'invoice_issuing', 'invoice_title', 'tariff_item',
+            'id', 'invoice_number', 'contract_number', 'salesman',
+            'invoice_type', 'invoice_issuing', 'invoice_title', 'tariff_item',
             'send_address', 'address_phone', 'opening_bank',
             'bank_account_number', 'invoice_value', 'invoice_content', 'remark',
-            'apply_name', 'flag', 'fill_date',
+            'apply_name', 'flag', 'approve_flag', 'fill_date',
         )
         export_order = fields
         skip_unchanged = True
         import_id_fields = ['id']
 
     def get_export_headers(self):
-        export_headers = [u'编号', u'合同号', u'业务员', u'开票类型', u'开票单位',
-                          u'发票抬头', u'税号', u'对方地址', u'号码', u'开户行',
-                          u'账号', u'开票金额', u'开票内容', u'备注', u'申请人',
-                          u'是否提交', u'填写时间']
+        export_headers = [u'编号', u'发票编号', u'合同号', u'业务员', u'开票类型',
+                          u'开票单位', u'发票抬头', u'税号', u'对方地址', u'号码',
+                          u'开户行', u'账号', u'开票金额', u'开票内容', u'备注',
+                          u'申请人', u'是否提交', u'审批状态', u'填写时间']
         return export_headers
 
 

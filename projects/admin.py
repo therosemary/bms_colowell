@@ -110,10 +110,10 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
               'invoice_title', 'tariff_item', 'send_address',
               'address_phone', 'opening_bank', 'bank_account_number',
               'invoice_value', 'invoice_content', 'remark', 'apply_name',
-              'flag',)
+              'flag', 'approve_flag',)
     list_display = (
         'salesman', 'invoice_title', 'invoice_value', 'invoice_type',
-        'invoice_content',
+        'invoice_content', 'flag', 'approve_flag',
     )
     list_per_page = 40
     save_as_continue = False
@@ -145,6 +145,7 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
 
     def get_readonly_fields(self, request, obj=None):
         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
+        # TODO: 由发票状态和用户权限确定只读字段
         self.readonly_fields = ()
         if hasattr(obj, 'flag'):
             if obj.flag:
@@ -169,13 +170,14 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
         if change:
             send_invoices = SendInvoices.objects.filter(invoice_id=obj)
             if not send_invoices.exists():
-                if request.POST.get('flag'):
+                if request.POST.get('approve_flag') == 'tg':
                     SendInvoices.objects.create(invoice_id=obj)
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
         else:
             #新建发票信息
+            obj.invoice_number = 'fpxxxxxxx' + datetime.datetime.now().strftime('%H%M%S')
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
-            if request.POST.get('flag'):
+            if request.POST.get('approve_flag') == 'tg':
                 SendInvoices.objects.create(invoice_id=obj)
 
 
