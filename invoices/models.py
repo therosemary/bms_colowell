@@ -33,6 +33,9 @@ class SendInvoices(models.Model):
     send_flag = models.BooleanField(
         verbose_name="是否提交", default=False
     )
+    wait_payment = models.FloatField(
+        verbose_name="应收金额", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = "发票信息"
@@ -53,6 +56,9 @@ class PaymentInfo(models.Model):
     )
     receive_date = models.DateField(
         verbose_name="到账时间", null=True, blank=True
+    )
+    wait_invoices = models.FloatField(
+        verbose_name="待开票额", null=True, blank=True
     )
     send_invoice = models.ManyToManyField(
         SendInvoices, verbose_name="发票编号", blank=True
