@@ -41,14 +41,23 @@ def _get_sub_dept_users(dept_ids=None, access_token=None):
         return dept_users
 
 
-def get_sub_department_users(access_token=None, dept_name=None):
-    params = {"access_token": access_token, "id": 1, "fetch_child": False}
-    get_level_2_depts = DeptsRequest(params=params)
-    get_level_2_depts.get_json_response()
-    level_2_depts = get_level_2_depts.get_depts(dept_name=dept_name)
-    sub_dept_ids = _recruit_dept_ids(init_ids=[level_2_depts["id"]],
-                                     total_ids=[level_2_depts["id"]],
-                                     access_token=access_token)
-    sub_dept_users = _get_sub_dept_users(dept_ids=sub_dept_ids,
-                                         access_token=access_token)
-    return sub_dept_users
+def get_department_users(access_token=None, department_name=None, root=1):
+    """
+    Method to collect all of the members for specified department are not
+    supplied officially, the only way to make it is to the recursion as below.
+    """
+    if access_token is None or department_name is None:
+        raise ValueError("No access_token or department name, return nothing!")
+    
+    params = {"access_token": access_token, "id": root, "fetch_child": False}
+    depts_request = DeptsRequest(params=params)
+    depts_request.get_json_response()
+    level_2_depts = depts_request.get_depts(dept_name=department_name)
+    
+    # the recursion function to collect members.
+    department_user_ids = _recruit_dept_ids(init_ids=[level_2_depts["id"]],
+                                            total_ids=[level_2_depts["id"]],
+                                            access_token=access_token)
+    department_users = _get_sub_dept_users(dept_ids=department_user_ids,
+                                           access_token=access_token)
+    return department_users
