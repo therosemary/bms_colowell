@@ -26,6 +26,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     )
     list_display = (
         'payment_number', 'contract_number', 'receive_value', 'receive_date',
+        'wait_invoices',
     )
     list_per_page = 30
     save_as_continue = False
@@ -71,7 +72,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     list_display = (
         'get_salesman', 'get_contract_number', 'billing_date',
         'invoice_number', 'get_invoice_value', 'get_receive_value',
-        'receivables', 'get_receive_date', 'get_invoice_title',
+        'wait_payment', 'get_receive_date', 'get_invoice_title',
         'get_invoice_content', 'tracking_number', 'get_remark',
     )
     list_per_page = 40
@@ -161,11 +162,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_receive_date.short_description = "到账时间"
 
     def get_receive_value(self, obj):
-        payment_sum = 0
-        receive_data = obj.paymentinfo_set.exclude(receive_value__exact=None)
-        if receive_data is not None:
-            for payment in receive_data:
-                payment_sum += payment.receive_value
+        payment_sum = obj.invoice_id.invoice_value - obj.wait_payment
         return payment_sum
     get_receive_value.short_description = "到账金额"
 
