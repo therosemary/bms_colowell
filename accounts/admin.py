@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
-    DINGTALK_AGENT_ID
+
+from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET
 from bms_colowell.notice_mixin import NotificationMixin
-from accounts.utils import get_token, get_sub_department_users
+from accounts.utils import get_token, get_department_users
+
 from dingtalk_sdk_gmdzy2010.user_request import DeptUserRequest
 
 
@@ -76,11 +77,19 @@ class DingtalkInfoAdmin(admin.ModelAdmin, NotificationMixin):
     save_as_continue = False
     search_fields = ("bms_user__username", )
     
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if not request.user.is_superuser and "delete_selected" in actions:
+            actions.pop("delete_selected")
+            actions.pop('get_dingtalk_id')
+            actions.pop('sync_dingtalk_info')
+        return actions
+
     def get_dingtalk_id(self, request, queryset):
         params = {"appkey": self.appkey, "appsecret": self.appsecret}
         access_token = get_token(**params)
-        users = get_sub_department_users(access_token=access_token,
-                                         dept_name="医学事业部")
+        users = get_department_users(access_token=access_token,
+                                     department_name="医学事业部")
         for obj in queryset:
             for user in users:
                 if obj.bms_user.username == user["name"]:
@@ -132,7 +141,6 @@ class DingtalkChatAdmin(admin.ModelAdmin):
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
         initial["owner"] = request.user.id
-        initial["chat_id"] = "12345678"
         initial["members"] = [request.user.id, ]
         return initial
 
