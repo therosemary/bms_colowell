@@ -158,6 +158,14 @@ class InvoiceInfo(models.Model):
         ('pp', u'普票'),
         ('zp', u'专票'),
         )
+    APPROVE_CHOICE = (
+        ('tg', u'审核通过'),
+        ('ds', u'待审核'),
+        ('btg', u'不通过'),
+    )
+    invoice_number = models.CharField(
+        verbose_name="发票编号", max_length=18, unique=True,
+    )
     contract_id = models.ForeignKey(
         ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
         null=True, blank=True
@@ -209,9 +217,13 @@ class InvoiceInfo(models.Model):
     fill_date = models.DateField(
         verbose_name="填写日期", auto_now_add=True
     )
+    approve_flag = models.CharField(
+        verbose_name="审核状态", max_length=3, choices=APPROVE_CHOICE, null=True,
+        blank=True, default='ds'
+    )
 
     def __str__(self):
-        return "{}".format(self.id)
+        return "{}".format(self.invoice_number)
 
     class Meta:
         verbose_name = verbose_name_plural = "开票信息"

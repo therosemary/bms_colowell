@@ -6,6 +6,9 @@ class BmsUser(AbstractUser):
     mobile_phone = models.CharField(
         verbose_name="手机号", max_length=11, null=True, blank=True
     )
+    is_bound = models.BooleanField(
+        verbose_name="是否绑定", default=False,
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = "用户"
@@ -20,11 +23,16 @@ class WechatInfo(models.Model):
         ("1", u"男"),
         ("2", u"女"),
     )
+    LIMIT_CHOICES_TO = {
+        "is_staff": True,
+        "is_superuser": False
+    }
     bms_user = models.OneToOneField(
-        BmsUser, verbose_name="用户", on_delete=models.CASCADE
+        BmsUser, verbose_name="用户", on_delete=models.CASCADE,
+        limit_choices_to=LIMIT_CHOICES_TO, primary_key=True,
     )
     openid = models.CharField(
-        verbose_name="唯一ID", max_length=64, primary_key=True,
+        verbose_name="唯一ID", max_length=64, null=True, blank=True,
     )
     nickname = models.CharField(
         verbose_name="昵称", max_length=32, null=True, blank=True,
@@ -60,11 +68,16 @@ class DingtalkInfo(models.Model):
         (0, "男"),
         (1, "女"),
     )
+    LIMIT_CHOICES_TO = {
+        "is_staff": True,
+        "is_superuser": False,
+    }
     bms_user = models.OneToOneField(
-        BmsUser, verbose_name="用户", on_delete=models.CASCADE
+        BmsUser, verbose_name="用户", on_delete=models.CASCADE,
+        limit_choices_to=LIMIT_CHOICES_TO, primary_key=True,
     )
     userid = models.CharField(
-        verbose_name="唯一ID", max_length=64, primary_key=True,
+        verbose_name="唯一ID", max_length=64, null=True, blank=True,
     )
     name = models.CharField(
         verbose_name="昵称", max_length=32, null=True, blank=True,
@@ -102,12 +115,10 @@ class DingtalkChat(models.Model):
     )
     owner = models.ForeignKey(
         DingtalkInfo, verbose_name="群主", related_name="chat_owner",
-        limit_choices_to={"is_staff": True, "is_superuser": False},
         on_delete=models.SET_NULL, null=True,
     )
     members = models.ManyToManyField(
         DingtalkInfo, verbose_name="群聊成员", related_name="chat_members",
-        limit_choices_to={"is_staff": True, "is_superuser": False},
     )
     create_at = models.DateField(
         verbose_name="创建时间", auto_now_add=True,
