@@ -4,7 +4,6 @@ from partners.resources import PartnersResources
 
 
 class PartnersAdmin(ImportExportActionModelAdmin):
-    autocomplete_fields = ("bms_user", )
     fields = (
         "bms_user", "name", "code", "reporting_period", "mode", "region",
         "materials", "sponsorship", "activities", "propaganda", "note"
