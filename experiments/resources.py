@@ -1,6 +1,5 @@
 from import_export import resources
-
-from bms_colowell.settings import AUTH_USER_MODEL
+from accounts.models import BmsUser
 from experiments.models import Experiments
 from import_export.fields import Field
 from import_export.widgets import ForeignKeyWidget, DateWidget
@@ -10,7 +9,7 @@ from tech_support.models import Boxes
 
 class ExperimentsResource(resources.ModelResource):
     id = Field(
-        column_name='数据库ID', attribute='id', default=None
+        column_name='id', attribute='id', default=None
     )
     index_number = Field(
         column_name='实验编号', attribute='index_number', default=None
@@ -54,7 +53,7 @@ class ExperimentsResource(resources.ModelResource):
     )
     ext_operator = Field(
         column_name='提取-操作人员', attribute='ext_operator',
-        widget=ForeignKeyWidget(AUTH_USER_MODEL, "username"),
+        widget=ForeignKeyWidget(BmsUser, "username"),
         default=None
     )
     ext_date = Field(
@@ -62,7 +61,7 @@ class ExperimentsResource(resources.ModelResource):
         widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     ext_note = Field(
-        column_name='提取-实验备注', attribute='ext_date',
+        column_name='提取-实验备注', attribute='ext_note',
         default=None
     )
     qua_test_number = Field(
@@ -104,16 +103,17 @@ class ExperimentsResource(resources.ModelResource):
     )
     qua_operator = Field(
         column_name='质检-操作人员', attribute='qua_operator',
-        widget=ForeignKeyWidget(AUTH_USER_MODEL, "username"),
+        widget=ForeignKeyWidget(BmsUser, "username"),
         default=None
     )
     qua_date = Field(
         column_name='质检-日期', attribute='qua_date',
+        widget=DateWidget(format='%Y-%m-%d'),
         default=None
     )
     qua_note = Field(
         column_name='质检-实验备注', attribute='qua_note',
-        widget=DateWidget(format='%Y-%m-%d'), default=None
+        default=None
     )
     bis_test_number = Field(
         column_name='BIS-试剂批次', attribute='bis_test_number',
@@ -141,7 +141,7 @@ class ExperimentsResource(resources.ModelResource):
     )
     bis_operator = Field(
         column_name='BIS-操作人员', attribute='bis_operator',
-        widget=ForeignKeyWidget(AUTH_USER_MODEL, "username"),
+        widget=ForeignKeyWidget(BmsUser, "username"),
         default=None
     )
     bis_note = Field(
@@ -209,7 +209,7 @@ class ExperimentsResource(resources.ModelResource):
     )
     fq_operator = Field(
         column_name='荧光定量-操作人员', attribute='fq_operator',
-        widget=ForeignKeyWidget(AUTH_USER_MODEL, "username"),
+        widget=ForeignKeyWidget(BmsUser, "username"),
         default=None
     )
     fq_date = Field(
@@ -241,7 +241,7 @@ class ExperimentsResource(resources.ModelResource):
                   'fq_test_number', "fq_instrument", "fq_loop_number",
                   "fq_background", "fq_actb_noise", 'fq_actb_ct',
                   "fq_actb_amp", "fq_sfrp2_noise", 'fq_sfrp2_ct',
-                  "fq_sfrp2_amp","fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
+                  "fq_sfrp2_amp", "fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
                   "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
         export_order = (
                   "id",
@@ -259,7 +259,7 @@ class ExperimentsResource(resources.ModelResource):
                   'fq_test_number', "fq_instrument", "fq_loop_number",
                   "fq_background", "fq_actb_noise", 'fq_actb_ct',
                   "fq_actb_amp", "fq_sfrp2_noise", 'fq_sfrp2_ct',
-                  "fq_sfrp2_amp","fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
+                  "fq_sfrp2_amp", "fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
                   "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
 
     def get_export_headers(self):
@@ -272,7 +272,7 @@ class ExperimentsResource(resources.ModelResource):
                 "质检-非甲基化内参ACTB_CT值", "质检-非甲基化内参ACTB_扩增曲线",
                 "质检-有无质控", "质检-操作人员", "质检-日期", "质检-实验备注",
                 "BIS-试剂批次", "BIS-起始量(ng)", "BIS-模板量(ul)",
-                "BIS-洗脱体积(ul)", "BIS-有无质控", "BIS-日期", "BIS-操作人员",
+                "BIS-洗脱体积(ul)", "BIS-有无质控", "BIS-操作人员", "BIS-日期",
                 "BIS-实验备注", "荧光定量-试剂批次", "荧光定量-仪器",
                 "荧光定量-循环数", "荧光定量-Background",
                 "荧光定量-ACTB_NoiseBand/STDMultiplier", "荧光定量-ACTB_CT值",
