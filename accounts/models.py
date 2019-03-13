@@ -6,6 +6,9 @@ class BmsUser(AbstractUser):
     mobile_phone = models.CharField(
         verbose_name="手机号", max_length=11, null=True, blank=True
     )
+    is_bound = models.BooleanField(
+        verbose_name="是否绑定", default=False,
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = "用户"
@@ -67,7 +70,7 @@ class DingtalkInfo(models.Model):
     )
     LIMIT_CHOICES_TO = {
         "is_staff": True,
-        "is_superuser": False
+        "is_superuser": False,
     }
     bms_user = models.OneToOneField(
         BmsUser, verbose_name="用户", on_delete=models.CASCADE,
