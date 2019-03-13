@@ -2,11 +2,15 @@ from django.contrib import admin
 from suggestions.forms import CollectionsForm
 from suggestions.utils import ScoreEvaluation, limit_suggestions
 from suggestions.models import Choices
+from bms_colowell.notice_mixin import NotificationMixin
+from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
+    DINGTALK_AGENT_ID
 
 
-class CollectionsAdmin(admin.ModelAdmin):
+class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     """The suggestions mapping and the scoring for sample."""
-    
+    appkey = DINGTALK_APPKEY
+    appsecret = DINGTALK_SECRET
     fieldsets = (
         (None, {
             'fields': ('product', 'version', '_f10', '_f12', '_f08', '_f09', ),
@@ -100,6 +104,21 @@ class CollectionsAdmin(admin.ModelAdmin):
             request, context, add=add, change=change, form_url=form_url,
             obj=obj
         )
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        if obj and obj.is_submit:
+            content = "{}已提交样本{}的健康管理数据".format(
+                request.user.username, obj.product.barcode,
+            )
+            # recipients = ",".join(["091104142937895458", "06291639227812"])
+            recipients = ",".join(["06291639227812"])
+            self.send_work_notice(content, DINGTALK_AGENT_ID, recipients)
+            call_back = self.send_dingtalk_result
+            message = "已钉钉通知测试管理员" if call_back else "钉钉通知失败"
+            self.message_user(request, message)
+        else:
+            self.message_user(request, "记录已保存，请及时跟进")
 
 
 class ChoicesInline(admin.TabularInline):
