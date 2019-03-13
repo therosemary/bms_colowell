@@ -1,6 +1,7 @@
 import datetime
 from django.utils.html import format_html
 from django.contrib import admin
+from django.db.models import Sum, Q
 from import_export.admin import ImportExportActionModelAdmin
 from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
@@ -26,6 +27,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     )
     list_display = (
         'payment_number', 'contract_number', 'receive_value', 'receive_date',
+        'wait_invoices',
     )
     list_per_page = 30
     save_as_continue = False
@@ -34,12 +36,57 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     resource_class = PaymentInfoResource
 
     def save_model(self, request, obj, form, change):
+        receive_value = int(request.POST.get('receive_value'), 0)
         if change:
+            #修改
             super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
         else:
-            temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-            obj.payment_number = temp
-            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+            #新增
+            if len(request.POST.getlist('send_invoice')):
+                #从request中获取关联的发票id并转为int类型
+                send_invoice_id = [int(x) for x in request.POST.getlist('send_invoice')]
+                print(send_invoice_id)
+                #从发票信息表中获取被选择中且应收额大于0的记录
+                invoice_data = SendInvoices.objects.filter(
+                    Q(id__in=send_invoice_id) & Q(wait_payment__gt=-1))
+                #按时间排序
+                invoice_data_order = invoice_data.order_by('fill_date')
+                print(invoice_data)
+                pay = invoice_data_order.aggregate(sum_payment=Sum('wait_payment'))
+                pay_sum = pay.get('sum_payment', 0)
+                print(pay_sum)
+                temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+                obj.payment_number = temp
+                if receive_value >= pay_sum:
+                    # 到款额大于等于应收额
+                    obj.wait_invoices = receive_value - pay_sum
+                    try:
+                        super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+                        invoice_data.update(wait_payment=0)
+                    except Exception:
+                        pass
+                else:
+                    #到款额小于应收额，需确定最后一张发票的应收额
+                    obj.wait_invoices = 0
+                    super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+                    # 判断是否多选发票，多选无任何意义
+                    if pay_sum - invoice_data[-1].wait_payment < receive_value:
+                        invoice_data[0:len(invoice_data)-1].update(wait_payment=0)
+                        final_receive_value = pay_sum - receive_value
+                        invoice_data[-1].update(wait_payment=final_receive_value)
+                    else:
+                        # TODO:提示错误信息:发票多选，无意义
+                        pass
+            else:
+                #新增时不选择发票的情况
+                obj.wait_invoices = receive_value
+                if change:
+                    super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+                else:
+                    temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+                    obj.payment_number = temp
+                    super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):
@@ -71,7 +118,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     list_display = (
         'get_salesman', 'get_contract_number', 'billing_date',
         'invoice_number', 'get_invoice_value', 'get_receive_value',
-        'receivables', 'get_receive_date', 'get_invoice_title',
+        'wait_payment', 'get_receive_date', 'get_invoice_title',
         'get_invoice_content', 'tracking_number', 'get_remark',
     )
     list_per_page = 40
@@ -161,11 +208,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_receive_date.short_description = "到账时间"
 
     def get_receive_value(self, obj):
-        payment_sum = 0
-        receive_data = obj.paymentinfo_set.exclude(receive_value__exact=None)
-        if receive_data is not None:
-            for payment in receive_data:
-                payment_sum += payment.receive_value
+        payment_sum = obj.invoice_id.invoice_value - obj.wait_payment
         return payment_sum
     get_receive_value.short_description = "到账金额"
 
