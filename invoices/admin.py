@@ -43,8 +43,9 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):
-    """发票寄送信息管理
-       注：每条记录在发票申请提交后自动被创建
+    """
+    发票寄送信息管理
+    注：每条记录在发票申请提交后自动被创建
     """
     # change_list_template = 'admin/invoices/change_list_template_invoices.html'
     inlines = [PaymentInline]
