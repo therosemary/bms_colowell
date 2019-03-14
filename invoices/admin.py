@@ -36,9 +36,18 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     resource_class = PaymentInfoResource
 
     def save_model(self, request, obj, form, change):
-        receive_value = int(request.POST.get('receive_value'), 0)
+        receive_value = float(request.POST.get('receive_value', 0))
         if change:
-            #修改
+            #修改分两种情况，修改或及不修改发票信息
+            send_invoice_id = [int(x) for x in request.POST.getlist('send_invoice')]
+            before_send_invoice_data = obj.send_invoice.all()
+            before_send_invoice_id = []
+            if before_send_invoice_data is not None:
+                for data in before_send_invoice_data:
+                    before_send_invoice_id.append(data.id)
+            if before_send_invoice_id != send_invoice_id:
+                #发票信息修改的情况
+                pass
             super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
         else:
             #新增
