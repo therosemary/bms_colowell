@@ -4,11 +4,14 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 from import_export.admin import ImportExportActionModelAdmin
 from django.contrib.admin import ModelAdmin
+
+# from tech_support.forms import BoxApplicationsForm
 from tech_support.models import *
 from experiment.models import ExtExecute
 from import_export import fields
 
-from tech_support.resources import BoxesResource
+from tech_support.resources import BoxesResource\
+    # , BoxApplicationsResources
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
@@ -229,3 +232,48 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
         if db_field.name == "boxes":
             kwargs["queryset"] = Boxes.objects.filter(istasking=False)
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+# class BoxApplicationsAdmin(ImportExportActionModelAdmin):
+#     """申请盒子信息管理"""
+#
+#     fields = (
+#         'contract_number', 'amount', 'classification', 'intention_client',
+#         'address_name', 'address_phone', 'send_address', 'box_price',
+#         'detection_price', 'use', 'proposer', 'box_submit_flag'
+#     )
+#     list_display = (
+#         'colored_contract_number', 'amount', 'classification',
+#         'intention_client', 'address_name', 'address_phone', 'send_address',
+#         'proposer', 'box_price', 'detection_price', 'use', 'submit_time',
+#         'approval_status', 'box_submit_flag'
+#     )
+#     list_per_page = 40
+#     save_as_continue = False
+#     resource_class = BoxApplicationsResources
+#     form = BoxApplicationsForm
+#
+#     def get_readonly_fields(self, request, obj=None):
+#         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
+#         self.readonly_fields = ()
+#         if hasattr(obj, 'box_submit_flag'):
+#             if obj.box_submit_flag:
+#                 self.readonly_fields = (
+#                     'contract_number', 'amount', 'classification',
+#                     'intention_client', 'address_name', 'address_phone',
+#                     'send_address', 'box_price', 'detection_price', 'use',
+#                     'box_submit_flag'
+#                 )
+#         return self.readonly_fields
+#
+#     def change_view(self, request, object_id, form_url='', extra_context=None):
+#         contract_data = BoxApplications.objects.filter(id=object_id)
+#         self.get_readonly_fields(request, obj=contract_data)
+#         return super(BoxApplicationsAdmin, self).change_view(
+#             request, object_id, form_url, extra_context=extra_context
+#         )
+#
+#     def get_changeform_initial_data(self, request):
+#         initial = super().get_changeform_initial_data(request)
+#         initial['proposer'] = request.user
+#         return initial
