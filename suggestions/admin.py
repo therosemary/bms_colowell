@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from suggestions.forms import CollectionsForm
 from suggestions.utils import ScoreEvaluation, limit_suggestions
 from suggestions.models import Choices
@@ -9,6 +10,8 @@ from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
 
 class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     """The suggestions mapping and the scoring for sample."""
+    
+    actions = ["generate_pdf"]
     appkey = DINGTALK_APPKEY
     appsecret = DINGTALK_SECRET
     fieldsets = (

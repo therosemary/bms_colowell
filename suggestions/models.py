@@ -99,7 +99,7 @@ class Versions(models.Model):
         verbose_name="创建于", auto_now_add=True,
     )
     reviewer_img = models.ImageField(
-        verbose_name="复核人",
+        verbose_name="复核人", upload_to="report/",
     )
     
     class Meta:
