@@ -38,30 +38,81 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     def save_model(self, request, obj, form, change):
         receive_value = float(request.POST.get('receive_value', 0))
         if change:
-            #修改分两种情况，修改或及不修改发票信息
-            send_invoice_id = [int(x) for x in request.POST.getlist('send_invoice')]
-            before_send_invoice_data = obj.send_invoice.all()
+            # 修改分两种情况，修改或及不修改发票信息
+            send_invoice_id = [int(x) for x in
+                               request.POST.getlist('send_invoice')]
+            send_invoice_id.sort()
+            before_send_invoice_data = obj.send_invoice.all().order_by('id')
             before_send_invoice_id = []
             if before_send_invoice_data is not None:
                 for data in before_send_invoice_data:
                     before_send_invoice_id.append(data.id)
-            if before_send_invoice_id != send_invoice_id:
-                #发票信息修改的情况
+            # 求发票信息修改前后的差集
+            diff_set = list(set(send_invoice_id) ^ set(before_send_invoice_id))
+            if len(diff_set):
+                # 发票信息有修改的情况，分为“”“”‘只新增’、‘只删除’、‘新增及删除’
+                new_set = set(diff_set) ^ set(send_invoice_id)
+                before_set = set(diff_set) ^ set(before_send_invoice_id)
+                new_set_len = len(new_set)
+                old_set_len = len(before_set)
+                if new_set_len == 0 and old_set_len != 0:
+                    # 只新增,获取新增开票信息
+                    invoice_data = SendInvoices.objects.filter(id__in=diff_set)
+                    invoice_data_order = invoice_data.order_by('fill_date')
+                    print(invoice_data_order)
+                    # 计算总应收金额
+                    pay = invoice_data_order.aggregate(Sum('wait_payment'))
+                    pay_sum = pay.get('wait_payment', 0)
+                    print(pay_sum)
+                    # 判断待到款额与总应收金额的大小
+                    if receive_value >= pay_sum:
+                        obj.wait_invoices = receive_value - pay_sum
+                        try:
+                            super(PaymentInfoAdmin, self).save_model(request,
+                                                                     obj, form,
+                                                                     change)
+                            invoice_data.update(wait_payment=0)
+                        except Exception:
+                            pass
+                    else:
+                        obj.wait_payment = 0
+                        super(PaymentInfoAdmin, self).save_model(request,
+                                                                 obj, form,
+                                                                 change)
+                        if pay_sum - invoice_data[
+                            -1].wait_payment < receive_value:
+                            invoice_data[0:len(invoice_data) - 1].update(
+                                wait_payment=0)
+                            final_receive_value = pay_sum - receive_value
+                            invoice_data[-1].update(
+                                wait_payment=final_receive_value)
+                        else:
+                            pass
+                elif new_set_len != 0 and old_set_len == 0:
+                    # 只删除
+                    pass
+                elif new_set_len != 0 and old_set_len != 0:
+                    # 新增及删除
+                    pass
                 pass
-            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+            else:
+                super(PaymentInfoAdmin, self).save_model(request, obj, form,
+                                                         change)
         else:
-            #新增
+            # 新增
             if len(request.POST.getlist('send_invoice')):
-                #从request中获取关联的发票id并转为int类型
-                send_invoice_id = [int(x) for x in request.POST.getlist('send_invoice')]
+                # 从request中获取关联的发票id并转为int类型
+                send_invoice_id = [int(x) for x in
+                                   request.POST.getlist('send_invoice')]
                 print(send_invoice_id)
-                #从发票信息表中获取被选择中且应收额大于0的记录
+                # 从发票信息表中获取被选择中且应收额大于0的记录
                 invoice_data = SendInvoices.objects.filter(
                     Q(id__in=send_invoice_id) & Q(wait_payment__gt=-1))
-                #按时间排序
+                # 按时间排序
                 invoice_data_order = invoice_data.order_by('fill_date')
                 print(invoice_data)
-                pay = invoice_data_order.aggregate(sum_payment=Sum('wait_payment'))
+                pay = invoice_data_order.aggregate(
+                    sum_payment=Sum('wait_payment'))
                 pay_sum = pay.get('sum_payment', 0)
                 print(pay_sum)
                 temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -95,7 +146,6 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                     temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
                     obj.payment_number = temp
                     super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):
