@@ -31,7 +31,7 @@ class Products(models.Model):
         verbose_name="是否绑定", default=False,
     )
     add_date = models.DateTimeField(
-        verbose_name="增加日期", null=True, blank=True,
+        verbose_name="增加日期", auto_now_add=True
     )
     sold_date = models.DateTimeField(
         verbose_name="售出日期", null=True, blank=True,

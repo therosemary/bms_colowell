@@ -7,9 +7,9 @@ class BmsUser(AbstractUser):
         verbose_name="手机号", max_length=11, null=True, blank=True
     )
     is_bound = models.BooleanField(
-        verbose_name="是否绑定", default=False,
+        verbose_name="绑定钉钉", default=False,
     )
-
+    
     class Meta:
         verbose_name = verbose_name_plural = "用户"
     
