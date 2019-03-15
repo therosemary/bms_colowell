@@ -62,7 +62,7 @@ class DingtalkInfoAdmin(admin.ModelAdmin, NotificationMixin):
     appkey = DINGTALK_APPKEY
     appsecret = DINGTALK_SECRET
     actions = [
-        'get_dingtalk_id', 'sync_dingtalk_info', 'test_work_notice',
+        'bind_dingtalk_id', 'sync_dingtalk_info', 'test_work_notice',
     ]
     fields = (
         "bms_user", "userid", "name", "position", "jobnumber", "sex", "avatar",
@@ -87,7 +87,7 @@ class DingtalkInfoAdmin(admin.ModelAdmin, NotificationMixin):
             actions.pop('test_work_notice')
         return actions
 
-    def get_dingtalk_id(self, request, queryset):
+    def bind_dingtalk_id(self, request, queryset):
         params = {"appkey": self.appkey, "appsecret": self.appsecret}
         access_token = get_token(**params)
         users = get_department_users(access_token=access_token,
@@ -99,8 +99,9 @@ class DingtalkInfoAdmin(admin.ModelAdmin, NotificationMixin):
                     obj.bms_user.is_bound = True
                     obj.bms_user.save()
                     obj.save()
+                    break
         self.message_user(request, "已成功绑定钉钉帐户")
-    get_dingtalk_id.short_description = "【钉钉】绑定钉钉帐户"
+    bind_dingtalk_id.short_description = "【钉钉】绑定钉钉帐户"
 
     def sync_dingtalk_info(self, request, queryset):
         params = {"appkey": self.appkey, "appsecret": self.appsecret}
@@ -129,9 +130,9 @@ class DingtalkInfoAdmin(admin.ModelAdmin, NotificationMixin):
             "【医学BMS系统】测试消息", DINGTALK_AGENT_ID, recipients
         )
         call_back = self.send_dingtalk_result
-        message = "已钉钉通知测试管理员" if call_back else "钉钉通知失败"
+        message = "已钉钉通知" if call_back else "钉钉通知失败"
         self.message_user(request, message)
-    test_work_notice.short_description = "【钉钉】工作通知从测试"
+    test_work_notice.short_description = "【钉钉】工作通知测试"
 
 
 class DingtalkChatAdmin(admin.ModelAdmin):

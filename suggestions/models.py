@@ -98,6 +98,9 @@ class Versions(models.Model):
     create_at = models.DateField(
         verbose_name="创建于", auto_now_add=True,
     )
+    reviewer_img = models.ImageField(
+        verbose_name="复核人",
+    )
     
     class Meta:
         verbose_name = verbose_name_plural = "建议版本"
