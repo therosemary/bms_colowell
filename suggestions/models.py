@@ -207,15 +207,15 @@ class Collections(models.Model):
         default="f12c01", related_name="collections_f12",
     )
     kras_mutation_rate = models.DecimalField(
-        verbose_name="KRAS突变率", max_digits=5, decimal_places=4,
+        verbose_name="KRAS突变率", max_digits=5, decimal_places=2,
         null=True, blank=True,
     )
     bmp3_mutation_rate = models.DecimalField(
-        verbose_name="BMP3突变率", max_digits=5, decimal_places=4,
+        verbose_name="BMP3突变率", max_digits=5, decimal_places=2,
         null=True, blank=True,
     )
     ndrg4_mutation_rate = models.DecimalField(
-        verbose_name="NDRG4突变率", max_digits=5, decimal_places=4,
+        verbose_name="NDRG4突变率", max_digits=5, decimal_places=2,
         null=True, blank=True,
     )
     hemoglobin_content = models.DecimalField(
