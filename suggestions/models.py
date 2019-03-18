@@ -1,12 +1,18 @@
 import os
 import re
 from django.db import models
+from django.utils.html import format_html
+
 from products.models import Products
 
 
 def upload_to(obj, filename):
     code = obj.code if obj else "V00"
     return os.path.join("suggestions", code, filename)
+
+
+def upload_to_report(obj, filename):
+    return os.path.join("reports", filename)
 
 
 class Factors(models.Model):
@@ -247,7 +253,8 @@ class Collections(models.Model):
         verbose_name="是否提交", default=False
     )
     pdf_upload = models.FileField(
-        verbose_name="报告上传", null=True, blank=True, upload_to="report/",
+        verbose_name="报告上传", null=True, blank=True,
+        upload_to=upload_to_report,
     )
     download_url = models.URLField(
         verbose_name="报告下载", null=True, blank=True,
@@ -306,6 +313,15 @@ class Collections(models.Model):
     @property
     def f12(self):
         return self._f12.code
+
+    def report_download(self):
+        if self.pdf_upload and hasattr(self.pdf_upload, 'url'):
+            return format_html(
+                '<a href="{}"><b>下载</b></a>', self.pdf_upload.url
+            )
+        else:
+            return "-"
+    report_download.short_description = "报告下载"
 
     class Meta:
         verbose_name = verbose_name_plural = "健康建议与打分"

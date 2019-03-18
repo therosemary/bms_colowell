@@ -6,12 +6,13 @@ from django.contrib import admin
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import path, reverse
 
+from pystrich.code128 import Code128Encoder
 from suggestions.forms import CollectionsForm
 from suggestions.utils import ScoreEvaluation, limit_suggestions
 from suggestions.models import Choices
 from bms_colowell.notice_mixin import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
-    DINGTALK_AGENT_ID
+    DINGTALK_AGENT_ID, MEDIA_ROOT, BARCODE_IMAGE_OPTIONS
 
 
 class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
@@ -44,7 +45,7 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     form = CollectionsForm
     list_display = (
         'product', '_f01', '_f02', '_f03', '_f04', 'f05_string', 'f06_string',
-        'f07_string', '_f08', '_f09', '_f10', 'is_submit',
+        'f07_string', '_f08', '_f09', '_f10', 'is_submit', 'report_download'
     )
     list_filter = ('is_submit', )
     ordering = ('product__barcode', )
@@ -68,29 +69,41 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     def f07_string(self, obj):
         return "；".join([f07.name for f07 in obj._f07.all()])
     f07_string.short_description = "慢性病史"
-    
-    def get_report(self, request, barcode, token):
+
+    def get_report(self, request, obj, token):
+        """Method to generate pdf file."""
+        
+        # Generate pdf file by execute command line using wkhtmltopdf
+        barcode = obj.product.barcode
         kwargs = {
             "barcode": barcode, "token": token, "user_id": request.user.id,
         }
-        report_url = reverse("suggestions:report", kwargs=kwargs)
-        input = "{}://{}{}".format(
-            request.scheme, request.get_host(), report_url
-        )
-        output = "{}.pdf".format(barcode)
+        url = reverse("suggestions:report", kwargs=kwargs)
+        input = "{}://{}{}".format(request.scheme, request.get_host(), url)
+        output = os.path.join(MEDIA_ROOT, "reports/{}.pdf".format(barcode))
         command = [
             "wkhtmltopdf", "-q", "--disable-smart-shrinking",
             "-L", "0mm", "-R", "0mm", "-T", "0mm", "-B", "0mm"
         ]
         command.extend([input, output])
+
+        # TODO: to update such a TERRIBLE version to task queue Celery
         get_pdf = subprocess.Popen(command)
         get_pdf.wait()
-    
+        
+        # save pdf report to the corresponding model instance
+        obj.download_url = input
+        obj.pdf_upload = "reports/{}.pdf".format(barcode)
+        obj.save()
+
     def generate_pdf(self, request, queryset):
         token = default_token_generator.make_token(request.user)
+        import time
+        start = time.time()
         for obj in queryset:
-            self.get_report(request, obj.product, token)
-        self.message_user(request, "已成功生成报告")
+            self.get_report(request, obj, token)
+        delta = time.time() - start
+        self.message_user(request, "已成功生成报告，耗时{}".format(delta))
     generate_pdf.short_description = "生成PDF报告"
     
     def get_readonly_fields(self, request, obj=None):
