@@ -171,14 +171,16 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
             send_invoices = SendInvoices.objects.filter(invoice_id=obj)
             if not send_invoices.exists():
                 if request.POST.get('approve_flag') == 'tg':
-                    SendInvoices.objects.create(invoice_id=obj)
+                    value = float(request.POST.get('invoice_value'))
+                    SendInvoices.objects.create(invoice_id=obj, wait_payment=value)
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
         else:
             #新建发票信息
             obj.invoice_number = 'FPID' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
             if request.POST.get('approve_flag') == 'tg':
-                SendInvoices.objects.create(invoice_id=obj)
+                value = float(request.POST.get('invoice_value'))
+                SendInvoices.objects.create(invoice_id=obj, wait_payment=value)
 
 
 class BoxApplicationsAdmin(ImportExportActionModelAdmin):
