@@ -6,7 +6,7 @@ from import_export.admin import ImportExportActionModelAdmin
 from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
 from projects.models import InvoiceInfo
-from invoices.models import SendInvoices, PaymentInfo
+from invoices.models import SendInvoices, PaymentInfo, TradingRecord
 from invoices.forms import SendInvoicesForm
 from invoices.resources import SendInvoiceResources, PaymentInfoResource
 
@@ -35,67 +35,156 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     search_fields = ('payment_number',)
     resource_class = PaymentInfoResource
 
+    @staticmethod
+    def handle_relation_id(request, obj):
+        """处理当前所选发票和已选发票的id"""
+        send_invoice_id = []
+        before_send_invoice_id = []
+        send_invoice = request.POST.get('send_invoice')
+        if send_invoice is not None:
+            send_invoice_id = [int(x) for x in send_invoice]
+            send_invoice_id.sort()
+        before_send_invoice_data = obj.send_invoice.all().order_by('id')
+        if before_send_invoice_data is not None:
+            for data in before_send_invoice_data:
+                before_send_invoice_id.append(data.id)
+        return send_invoice_id, before_send_invoice_id
+
+    @staticmethod
+    def create_middle(payment_id, invoices_data, final_receive_value=None):
+        """新增中间表记录"""
+        if final_receive_value is None:
+            for data in invoices_data:
+                TradingRecord.objects.create(send_invoices_id_id=payment_id,
+                                             payment_info_id=data,
+                                             transaction_amount=data.wait_payment)
+        else:
+            for data in invoices_data[0:len(invoices_data) - 1]:
+                TradingRecord.objects.create(send_invoices_id_id=payment_id,
+                                             payment_info_id=data,
+                                             transaction_amount=data.wait_payment)
+            TradingRecord.objects.create(send_invoices_id_id=payment_id,
+                                         payment_info_id=invoices_data[-1],
+                                         transaction_amount=final_receive_value)
+
+    @staticmethod
+    def update_new_invoice(model_name, invoices_id, wait_invoice, payment_id):
+        """修改新增发票信息"""
+        invoices_data = model_name.objects.filter(id__in=invoices_id)
+        invoice_data_order = invoices_data.order_by('fill_date')
+        print(invoice_data_order)
+        # 计算总应收金额
+        pay = invoice_data_order.aggregate(Sum('wait_payment'))
+        pay_sum = pay.get('wait_payment', 0)
+        print(pay_sum)
+        # 判断待开票额与总应收金额的大小
+        if wait_invoice >= pay_sum:
+            new_wait_invoices = wait_invoice - pay_sum
+            invoices_data.update(wait_payment=0)
+            # 新增中间表记录
+            PaymentInfoAdmin.create_middle(payment_id, invoices_data)
+        else:
+            new_wait_invoices = 0
+            if pay_sum - invoices_data[-1].wait_payment < wait_invoice:
+                invoices_data[0:len(invoices_data) - 1].update(wait_payment=0)
+                # 最后一张发票的本次到款额
+                final_receive_value = pay_sum - wait_invoice
+                # 计算最后一张发票的应收额
+                new_wait_payment = invoices_data[-1].wait_payment - final_receive_value
+                invoices_data[-1].update(wait_payment=new_wait_payment)
+                # 新增中间表记录
+                PaymentInfoAdmin.create_middle(payment_id, invoices_data, final_receive_value)
+            else:
+                # 所选发票无意义，结束当次更改，弹出提示信息
+                pass
+        return new_wait_invoices, invoices_data
+
+    @staticmethod
+    def delete_invoice(payment_id, delete_invoice_id):
+        """修改新增发票信息"""
+        #查找中间表信息
+        trading_record_data = TradingRecord.objects.filter(
+            Q(send_invoices_id_id=payment_id) &
+            Q(payment_info_id_id__in=delete_invoice_id))
+        print(trading_record_data)
+        #查找被移除的发票信息
+        update_invoices = InvoiceInfo.objects.filter(id__in=delete_invoice_id)
+        add_wait_invoice = 0
+        if update_invoices is not None:
+            for data in update_invoices:
+                trading_record = trading_record_data.get(payment_info_id_id=data.id)
+                #计算当前发票的应收额
+                wait_payment = data.wait_payment + trading_record.transaction_amount
+                data.update(wait_payment=wait_payment)
+                #计算当前到款记录对应增加的待开票额
+                add_wait_invoice += trading_record.transaction_amount
+                #删除中间表记录
+                trading_record.delete()
+        return add_wait_invoice
+
     def save_model(self, request, obj, form, change):
         receive_value = float(request.POST.get('receive_value', 0))
         if change:
-            #修改分两种情况，修改或及不修改发票信息
-            send_invoice_id = [int(x) for x in request.POST.getlist('send_invoice')]
-            before_send_invoice_data = obj.send_invoice.all()
-            before_send_invoice_id = []
-            if before_send_invoice_data is not None:
-                for data in before_send_invoice_data:
-                    before_send_invoice_id.append(data.id)
-            if before_send_invoice_id != send_invoice_id:
-                #发票信息修改的情况
-                pass
-            super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-        else:
-            #新增
-            if len(request.POST.getlist('send_invoice')):
-                #从request中获取关联的发票id并转为int类型
-                send_invoice_id = [int(x) for x in request.POST.getlist('send_invoice')]
-                print(send_invoice_id)
-                #从发票信息表中获取被选择中且应收额大于0的记录
-                invoice_data = SendInvoices.objects.filter(
-                    Q(id__in=send_invoice_id) & Q(wait_payment__gt=-1))
-                #按时间排序
-                invoice_data_order = invoice_data.order_by('fill_date')
-                print(invoice_data)
-                pay = invoice_data_order.aggregate(sum_payment=Sum('wait_payment'))
-                pay_sum = pay.get('sum_payment', 0)
-                print(pay_sum)
-                temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-                obj.payment_number = temp
-                if receive_value >= pay_sum:
-                    # 到款额大于等于应收额
-                    obj.wait_invoices = receive_value - pay_sum
+            # 修改分两种情况，修改或及不修改发票信息
+            send_invoice_id, before_send_invoice_id = \
+                self.handle_relation_id(request, obj)
+            # 求发票信息修改前后的差集
+            diff_set = list(set(send_invoice_id) ^ set(before_send_invoice_id))
+            if len(diff_set):
+                # 发票信息有修改的情况，分为“”“”‘只新增’、‘只删除’、‘新增及删除’
+                new_set = set(diff_set) & set(send_invoice_id)
+                before_set = set(diff_set) & set(before_send_invoice_id)
+                new_set_len = len(new_set)
+                old_set_len = len(before_set)
+                if new_set_len == 0 and old_set_len != 0:
+                    # 只新增,获取新增发票总应收额,更新数据库信息
                     try:
-                        super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-                        invoice_data.update(wait_payment=0)
+                        obj.wait_invoices = self.update_new_invoice(
+                            SendInvoices, new_set, obj.wait_invoices, obj.id)
+                        super(PaymentInfoAdmin, self).save_model(request,
+                                                                 obj, form,
+                                                                 change)
                     except Exception:
                         pass
-                else:
-                    #到款额小于应收额，需确定最后一张发票的应收额
-                    obj.wait_invoices = 0
-                    super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-                    # 判断是否多选发票，多选无任何意义
-                    if pay_sum - invoice_data[-1].wait_payment < receive_value:
-                        invoice_data[0:len(invoice_data)-1].update(wait_payment=0)
-                        final_receive_value = pay_sum - receive_value
-                        invoice_data[-1].update(wait_payment=final_receive_value)
-                    else:
-                        # TODO:提示错误信息:发票多选，无意义
-                        pass
+                elif new_set_len != 0 and old_set_len == 0:
+                    # 只删除
+                    obj.wait_invoice += self.delete_invoice(obj.id, before_set)
+                    # TODO:增加到款金额改动时的情况
+                elif new_set_len != 0 and old_set_len != 0:
+                    # 新增及删除，先删除，再新增
+                    new_wait_invoices = obj.wait_invoices + self.delete_invoice(
+                        obj.id, before_set)
+                    obj.wait_invoices = self.update_new_invoice(SendInvoices,
+                                                                new_set,
+                                                                new_wait_invoices, obj.id)
+            else:
+                # TODO:增加到款金额改动时的情况
+                super(PaymentInfoAdmin, self).save_model(request, obj, form,
+                                                         change)
+        else:
+            # 新增
+            if len(request.POST.getlist('send_invoice')):
+                # 从request中获取关联的发票id并转为int类型
+                send_invoice_id = [int(x) for x in
+                                   request.POST.getlist('send_invoice')]
+                print(send_invoice_id)
+                temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+                obj.payment_number = temp
+                try:
+                    # TODO:新建数据后需更新待开票额
+                    super(PaymentInfoAdmin, self).save_model(request, obj,
+                                                             form, change)
+                    obj.wait_invoices = self.update_new_invoice(SendInvoices,
+                                                                  send_invoice_id,
+                                                                  receive_value, obj.id)
+                except Exception:
+                    pass
             else:
                 #新增时不选择发票的情况
                 obj.wait_invoices = receive_value
-                if change:
-                    super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-                else:
-                    temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
-                    obj.payment_number = temp
-                    super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-
+                temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
+                obj.payment_number = temp
+                super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):

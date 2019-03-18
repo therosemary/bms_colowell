@@ -73,3 +73,27 @@ class PaymentInfo(models.Model):
 
     def __str__(self):
         return self.payment_number
+
+
+class TradingRecord(models.Model):
+    send_invoices_id = models.ForeignKey(
+        SendInvoices, verbose_name="发票编号", on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    payment_info_id = models.ForeignKey(
+        PaymentInfo, verbose_name="到款编号", on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    transaction_amount = models.FloatField(
+        verbose_name="交易金额", null=True, blank=True, default=0
+    )
+    transaction_date = models.DateField(
+        verbose_name="交易时间", auto_now=True
+
+    )
+
+    class Meta:
+        verbose_name = verbose_name_plural = "交易记录"
+
+    def __str__(self):
+        return '交易编号{}'.format(self.id)
