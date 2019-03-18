@@ -27,9 +27,9 @@ def report_view(request, user_id=None, barcode=None, token=None):
         
         # TODO: get userinfo from tech_support models
         report_context["gender"] = "男"
-        report_context["birthday"] = "男"
-        report_context["mobile_phone"] = "男"
-        report_context["send_date"] = "男"
+        report_context["birthday"] = "1990年5月1日"
+        report_context["mobile_phone"] = "13000000000"
+        report_context["send_date"] = "2019年3月18日"
         
         # experiment data for this product
         mapping = {"f10c01": "低风险", "f10c02": "高风险"}
