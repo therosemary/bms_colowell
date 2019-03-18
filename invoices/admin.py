@@ -55,6 +55,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         """新增中间表记录"""
         if final_receive_value is None:
             for data in invoices_data:
+                print('22222%s' % data)
                 TradingRecord.objects.create(send_invoices_id_id=payment_id,
                                              payment_info_id=data,
                                              transaction_amount=data.wait_payment)
@@ -70,10 +71,10 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     @staticmethod
     def total_wait_payment(send_invoice_id):
         """合计当前所选发票的待到款总额"""
-        wait_payment_invoices = InvoiceInfo.objects.filter(
+        wait_payment_invoices = SendInvoices.objects.filter(
             Q(id__in=send_invoice_id) & Q(wait_payment__gt=0))
         payment = wait_payment_invoices.aggregate(value=Sum('wait_payment'))
-        wait_payment_value = payment.get('payment', 0)
+        wait_payment_value = payment.get('value', 0)
         return wait_payment_invoices, wait_payment_value
 
     @staticmethod
@@ -85,10 +86,15 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         print(new_wait_invoices_order, wait_payment_value)
         # 判断待开票额与总应收金额的大小
         if now_wait_invoices >= wait_payment_value:
+            print('111111%f' % wait_payment_value)
             new_wait_invoices = now_wait_invoices - wait_payment_value
+            print(new_wait_invoices_order, wait_payment_value)
+            middle_wait_invoices = new_wait_invoices_order
             new_wait_invoices_order.update(wait_payment=0)
             # 新增中间表记录
-            PaymentInfoAdmin.create_middle(payment_id, new_wait_invoices_order)
+            # TODO: new_wait_invoices_order执行更新操作后会被清空？
+            print(middle_wait_invoices)
+            PaymentInfoAdmin.create_middle(payment_id, middle_wait_invoices)
         else:
             new_wait_invoices = 0
             if wait_payment_value - new_wait_invoices_order[-1].wait_payment < now_wait_invoices:
@@ -131,6 +137,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         trading_records = TradingRecord.objects.filter(Q(
             send_invoices_id_id=payment_id) &
         Q(send_invoices_id_id__in=intersect_set))
+        print(trading_records)
         trading = trading_records.aggregate(trading_value=(
             'transaction_amount'))
         trading_value = trading.get('trading_value', 0)
@@ -175,14 +182,16 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                 print(send_invoice_id)
                 temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
                 obj.payment_number = temp
-                try:
+                print(obj)
+                # try:
                     # TODO:新建数据后需更新待开票额
-                    super(PaymentInfoAdmin, self).save_model(request, obj,
+                super(PaymentInfoAdmin, self).save_model(request, obj,
                                                              form, change)
-                    obj.wait_invoices = self.update_invoice(send_invoice_id,
-                                                                  receive_value, obj.id)
-                except Exception:
-                    pass
+                obj.wait_invoices, invoices = self.update_invoice(
+                    send_invoice_id, receive_value, obj.id)
+                obj.save()
+                # except Exception:
+                #     pass
             else:
                 #新增时不选择发票的情况
                 obj.wait_invoices = receive_value
@@ -382,6 +391,4 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     def save_model(self, request, obj, form, change):
         if change:
             obj.fill_name = request.user
-            if obj.send_flag:
-                obj.wait_payment = self.get_invoice_value(obj)
         super(SendInvoiceAdmin, self).save_model(request, obj, form, change)
