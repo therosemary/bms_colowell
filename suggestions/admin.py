@@ -80,7 +80,7 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
         output = "{}.pdf".format(barcode)
         command = [
             "wkhtmltopdf", "-q", "--disable-smart-shrinking",
-            "-L", "0mm", "-R", "0mm", "-T", "20mm", "-B", "20mm"
+            "-L", "0mm", "-R", "0mm", "-T", "0mm", "-B", "0mm"
         ]
         command.extend([input, output])
         get_pdf = subprocess.Popen(command)

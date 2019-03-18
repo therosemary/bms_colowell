@@ -6,7 +6,7 @@ from products.models import Products
 
 def upload_to(obj, filename):
     code = obj.code if obj else "V00"
-    return os.path.join("products", code, filename)
+    return os.path.join("suggestions", code, filename)
 
 
 class Factors(models.Model):
@@ -245,6 +245,12 @@ class Collections(models.Model):
     )
     is_submit = models.BooleanField(
         verbose_name="是否提交", default=False
+    )
+    pdf_upload = models.FileField(
+        verbose_name="报告上传", null=True, blank=True, upload_to="report/",
+    )
+    download_url = models.URLField(
+        verbose_name="报告下载", null=True, blank=True,
     )
     submitted_at = models.DateField(
         verbose_name="提交日期", auto_now=True
