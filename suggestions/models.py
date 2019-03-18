@@ -1,6 +1,12 @@
+import os
 import re
 from django.db import models
 from products.models import Products
+
+
+def upload_to(obj, filename):
+    code = obj.code if obj else "V00"
+    return os.path.join("products", code, filename)
 
 
 class Factors(models.Model):
@@ -73,7 +79,6 @@ class Versions(models.Model):
     t07_length_min = models.SmallIntegerField(
         verbose_name="肠镜检查准备字数最少", default=0,
     )
-
     t01_length_max = models.SmallIntegerField(
         verbose_name="饮食建议字数最多", default=100,
     )
@@ -95,15 +100,32 @@ class Versions(models.Model):
     t07_length_max = models.SmallIntegerField(
         verbose_name="肠镜检查准备字数最多", default=100,
     )
+    reviewer = models.ImageField(
+        verbose_name="复核人", upload_to=upload_to,
+        default="suggestions/reviewer.png",
+    )
+    auditor = models.ImageField(
+        verbose_name="批准人", upload_to=upload_to,
+        default="suggestions/auditor.png",
+    )
+    tester = models.ImageField(
+        verbose_name="检测人", upload_to=upload_to,
+        default="suggestions/tester.png",
+    )
+    disclaimer = models.ImageField(
+        verbose_name="声明方", upload_to=upload_to,
+        default="suggestions/disclaimer.png",
+    )
+    signature = models.ImageField(
+        verbose_name="盖章", upload_to=upload_to,
+        default="suggestions/signature.png",
+    )
     create_at = models.DateField(
         verbose_name="创建于", auto_now_add=True,
     )
-    reviewer_img = models.ImageField(
-        verbose_name="复核人", upload_to="report/",
-    )
-    
+
     class Meta:
-        verbose_name = verbose_name_plural = "建议版本"
+        verbose_name = verbose_name_plural = "报告版本"
     
     def __str__(self):
         return "{}".format(self.name)
@@ -115,7 +137,7 @@ class Collections(models.Model):
         primary_key=True
     )
     version = models.ForeignKey(
-        Versions, verbose_name="建议版本", on_delete=models.CASCADE,
+        Versions, verbose_name="报告版本", on_delete=models.CASCADE,
         default="V01",
     )
     _f01 = models.ForeignKey(
