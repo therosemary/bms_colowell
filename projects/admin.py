@@ -175,7 +175,7 @@ class InvoiceInfoAdmin(ImportExportActionModelAdmin):
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
         else:
             #新建发票信息
-            obj.invoice_number = 'fpxxxxxxx' + datetime.datetime.now().strftime('%H%M%S')
+            obj.invoice_number = 'FPID' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
             if request.POST.get('approve_flag') == 'tg':
                 SendInvoices.objects.create(invoice_id=obj)
