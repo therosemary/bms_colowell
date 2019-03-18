@@ -137,10 +137,10 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
             result = ScoreEvaluation(
                 risk_state=mapping[obj.f10], hemoglobin_state=mapping[obj.f12]
             )
-            initial["kras_mutation_rate"] = result.kras_mutation_rate
-            initial["bmp3_mutation_rate"] = result.bmp3_mutation_rate
-            initial["ndrg4_mutation_rate"] = result.ndrg4_mutation_rate
-            initial["hemoglobin_content"] = result.hemoglobin_content
+            initial["kras_mutation_rate"] = result.kras_mutation_rate * 100
+            initial["bmp3_mutation_rate"] = result.bmp3_mutation_rate * 100
+            initial["ndrg4_mutation_rate"] = result.ndrg4_mutation_rate * 100
+            initial["hemoglobin_content"] = result.hemoglobin_content * 100
             initial["score"] = result.score
         if obj and obj.is_submit:
             context['show_save'] = False
