@@ -1,11 +1,15 @@
+from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
 from experiments.resources import ExperimentsResource
+from rangefilter.filter import DateRangeFilter
 
 
 class ExperimentsAdmin(ImportExportActionModelAdmin):
-    list_display = ("index_number", "receive_date", "ext_method")
+    list_display = ("index_number", "receive_date", "ext_method", "submit_ext",
+                    "submit_qua", "submit_bis", "submit_fq")
     list_display_links = ("index_number", "ext_method")
     resource_class = ExperimentsResource
+    search_fields = ["index_number", "barcode"]
     fieldsets = (
         ('实验相关信息', {
             'fields': (
@@ -49,6 +53,10 @@ class ExperimentsAdmin(ImportExportActionModelAdmin):
         }),
     )
     # readonly_fields = ["produce_", "qualified_", "ext_qualified"]
+
+    def get_list_filter(self, request):
+        return ['submit_ext', "submit_qua", "submit_bis", "submit_fq",
+                ('receive_date', DateRangeFilter)]
 
     def produce_(self, obj):
         if obj:
