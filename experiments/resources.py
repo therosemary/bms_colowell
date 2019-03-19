@@ -3,8 +3,7 @@ from accounts.models import BmsUser
 from experiments.models import Experiments
 from import_export.fields import Field
 from import_export.widgets import ForeignKeyWidget, DateWidget
-
-from tech_support.models import Boxes
+from tech_support.models import Techsupport
 
 
 class ExperimentsResource(resources.ModelResource):
@@ -16,7 +15,7 @@ class ExperimentsResource(resources.ModelResource):
     )
     boxes = Field(
         column_name='盒子条形码', attribute='boxes',
-        widget=ForeignKeyWidget(Boxes, "index_number"), default=None
+        widget=ForeignKeyWidget(Techsupport, "index_number"), default=None
     )
     receive_date = Field(
         column_name='收样日期', attribute='receive_date',

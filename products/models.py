@@ -1,3 +1,4 @@
+import os
 import re
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -10,6 +11,10 @@ def barcode_validators(value):
         )
 
 
+def upload_to(obj, filename):
+    return os.path.join("products", filename)
+
+
 class Products(models.Model):
     WAY_CHOICES = (
         ('SAL', u'售出'),
@@ -20,6 +25,10 @@ class Products(models.Model):
         verbose_name="产品条码", max_length=18, primary_key=True,
         validators=[barcode_validators],
         help_text="产品条形码为CYS前缀，后面接9~10位数字，其余皆为非法条形码",
+    )
+    barcode_img = models.ImageField(
+        verbose_name="条码图片", upload_to=upload_to,
+        default="products/CYS000000000.png"
     )
     is_approved = models.BooleanField(
         verbose_name="是否有效", default=True,
