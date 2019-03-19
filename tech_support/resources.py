@@ -22,7 +22,7 @@ class BoxDeliveriesResource(resources.ModelResource):
     class Meta:
         model = BoxDeliveries
         skip_unchanged = True
-        # import_id_fields = ('bar_code',)
+        import_id_fields = ('bar_code',)
         fields = ('id', 'deliver_number', 'bar_code')
         export_order = ('id', 'deliver_number', 'bar_code')
 
@@ -42,20 +42,20 @@ class BoxDeliveriesResource(resources.ModelResource):
         sj = datetime.datetime.now()
         if not row:
             row = {}
-        instance = Boxes()
+        instance = Techsupport()
         for attr, value in row.items():
             setattr(instance, attr, value)
-        if Boxes.objects.all().count() == 0:
+        if Techsupport.objects.all().count() == 0:
             instance.id = "1"
             instance.index_number = "HZ" + str(sj.year) + \
                                     Monthchoose[
                                         sj.month] + "1"
         else:
-            instance.id = str(int(Boxes.objects.latest('id').id) + 1)
+            instance.id = str(int(Techsupport.objects.latest('id').id) + 1)
             instance.index_number = "HZ" + str(sj.year) + \
                                     Monthchoose[
                                         sj.month] + str(
-                Boxes.objects.latest('id').id + 1)
+                Techsupport.objects.latest('id').id + 1)
         instance.box_deliver = BoxDeliveries.objects.get(
             index_number=row["盒子发货编号"])
 
