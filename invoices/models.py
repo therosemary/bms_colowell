@@ -67,6 +67,9 @@ class PaymentInfo(models.Model):
         ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
         null=True, blank=True,
     )
+    flag = models.BooleanField(
+        verbose_name="是否提交", default=False
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = "到款信息"
