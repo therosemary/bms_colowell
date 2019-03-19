@@ -1,21 +1,17 @@
 from import_export import resources
 from import_export.fields import Field
 from import_export.widgets import ForeignKeyWidget, DateWidget
-from tech_support.models import Boxes, BoxDeliveries\
-    # , BoxApplications
+from tech_support.models import BoxDeliveries
 import datetime
-from projects.models import ContractsInfo
-from import_export.widgets import IntegerWidget
-
-from tech_support.models_new import Techsupport
+from tech_support.models import Techsupport
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
 
 
-class BoxesResource(resources.ModelResource):
-    id = Field(
-        column_name='盒子编号', attribute='id', default=None
+class BoxDeliveriesResource(resources.ModelResource):
+    boxes = Field(
+        column_name="对应盒子条形码", attribute="boxes"
     )
     deliver_number = Field(
         column_name="盒子发货编号", attribute="box_deliver__index_number")
@@ -24,16 +20,16 @@ class BoxesResource(resources.ModelResource):
     )
 
     class Meta:
-        model = Boxes
+        model = BoxDeliveries
         skip_unchanged = True
         # import_id_fields = ('bar_code',)
         fields = ('id', 'deliver_number', 'bar_code')
         export_order = ('id', 'deliver_number', 'bar_code')
 
     def export(self, queryset=None, *args, **kwargs):
-        queryset_result = Boxes.objects.filter(id=None)
+        queryset_result = Techsupport.objects.filter(id=None)
         for i in queryset:
-            queryset_result |= Boxes.objects.filter(box_deliver=i)
+            queryset_result |= Techsupport.objects.filter(box_deliver=i)
         return super().export(queryset=queryset_result, *args, **kwargs)
 
     def get_export_headers(self):
@@ -68,9 +64,9 @@ class BoxesResource(resources.ModelResource):
 
 
 class TechsupportResources(resources.ModelResource):
-    id = Field(
-        column_name='id', attribute='id', default=None
-    )
+    # id = Field(
+    #     column_name='id', attribute='id', default=None
+    # )
     receive_date = Field(
         column_name='收样日期', attribute='receive_date',
         widget=DateWidget(format='%Y-%m-%d'), default=None
@@ -99,8 +95,8 @@ class TechsupportResources(resources.ModelResource):
     pe_number = Field(
         column_name='体检号', attribute='pe_number', default=None
     )
-    bar_code = Field(
-        column_name='条形码', attribute='bar_code', default=None
+    barcode = Field(
+        column_name='条形码', attribute='barcode', default=None
     )
     name = Field(
         column_name='姓名', attribute='name', default=None
@@ -187,13 +183,13 @@ class TechsupportResources(resources.ModelResource):
     class Meta:
         model = Techsupport
         skip_unchanged = True
-        import_id_fields = ('index_number',)
+        import_id_fields = ('barcode',)
         fields = (
             "id",
             'receive_date', 'sampling_date', "report_end_date",
             "project_source",
             "send_number", 'index_number', "report_date",
-            "pe_number", "bar_code", 'name', "gender", "age",
+            "pe_number", "barcode", 'name', "gender", "age",
             'contact',
             "id_number", 'email', "occupation",
             "bmi", "height", "weight",
@@ -208,7 +204,7 @@ class TechsupportResources(resources.ModelResource):
             'receive_date', 'sampling_date', "report_end_date",
             "project_source",
             "send_number", 'index_number', "report_date",
-            "pe_number", "bar_code", 'name', "gender", "age",
+            "pe_number", "barcode", 'name', "gender", "age",
             'contact',
             "id_number", 'email', "occupation",
             "bmi", "height", "weight",

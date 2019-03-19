@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group
 from django.db.models import Q
 from import_export.admin import ImportExportActionModelAdmin
-from tech_support.models import Boxes
+from tech_support.models import Techsupport
 from django.contrib import admin
 from accounts.models import BmsUser
 from experiment.forms import ExtExecuteForm, QualityTestForm, BsTaskForm, \
