@@ -7,6 +7,6 @@ bms_colowell/
 media/
 statics/
 collected_statics/
-ralbio_prag/
 suggestions/utils.py
+templates/report/
 debug.log
