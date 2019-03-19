@@ -1,15 +1,16 @@
 from django.db import models
 from bms_colowell.settings import AUTH_USER_MODEL
-from tech_support.models import Boxes
+from tech_support.models import Techsupport
 
 
 class Experiments(models.Model):
     """实验管理"""
     index_number = models.CharField(
-        verbose_name="实验编号", max_length=50, blank=True, null=True
+        verbose_name="实验编号", max_length=50, blank=True, null=False,
+        primary_key=True
     )
     boxes = models.ForeignKey(
-        Boxes, verbose_name="对应盒子信息",
+        Techsupport, verbose_name="对应盒子信息",
         on_delete=models.SET_NULL, null=True
     )
     receive_date = models.DateField(verbose_name="收样日期", null=True)

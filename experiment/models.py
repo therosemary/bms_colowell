@@ -16,7 +16,7 @@ class ExtExecute(models.Model):
         "提取编号", max_length=50, blank=True, null=True
     )
     boxes = models.ForeignKey(
-        Boxes, verbose_name="对应盒子信息",
+        Techsupport, verbose_name="对应盒子信息",
         on_delete=models.SET_NULL, null=True
     )
     exp_method = models.ForeignKey(ExtMethod, verbose_name="实验方法",
@@ -74,7 +74,7 @@ class QualityTest(models.Model):
         (4, '实验终止'),
     )
     qua_number = models.CharField("质检编号", max_length=50, null=True)
-    boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
+    boxes = models.ForeignKey(Techsupport, verbose_name="对应盒子信息",
                               on_delete=models.SET_NULL, null=True)
     extexecute = models.ForeignKey(ExtExecute, verbose_name="提取信息",
                                    on_delete=models.SET_NULL, null=True)
@@ -127,7 +127,7 @@ class BsTask(models.Model):
         (4, '实验终止'),
     )
     bs_number = models.CharField("BS编号", max_length=50, null=True)
-    boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
+    boxes = models.ForeignKey(Techsupport, verbose_name="对应盒子信息",
                               on_delete=models.SET_NULL, null=True)
     quality_Test = models.ForeignKey(QualityTest, verbose_name="质检信息",
                                      on_delete=models.SET_NULL, null=True)
@@ -180,7 +180,7 @@ class FluorescenceQuantification(models.Model):
         (1, '否'),
         (2, '污染'),
     )
-    boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
+    boxes = models.ForeignKey(Techsupport, verbose_name="对应盒子信息",
                               on_delete=models.SET_NULL, null=True)
     fq_number = models.CharField("荧光定量编号", max_length=50)
     bs_task = models.ForeignKey(BsTask, verbose_name="BS信息",
@@ -258,7 +258,7 @@ class ResultJudgement(models.Model):
         (1, '高风险'),
         (2, '低风险'),
     )
-    boxes = models.ForeignKey(Boxes, verbose_name="对应盒子信息",
+    boxes = models.ForeignKey(Techsupport, verbose_name="对应盒子信息",
                               on_delete=models.SET_NULL, null=True)
     fq = models.ForeignKey(
         FluorescenceQuantification, verbose_name="荧光定量信息",
