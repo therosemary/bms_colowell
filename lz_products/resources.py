@@ -11,6 +11,9 @@ class LzProductsResource(resources.ModelResource):
     sample_code = fields.Field(
         attribute="sample_code", column_name="样本编号",
     )
+    risk_state = fields.Field(
+        attribute="risk_state", column_name="风险水平",
+    )
     received_date = fields.Field(
         attribute="received_date", column_name="收样日期",
         widget=DateWidget(format='%Y-%m-%d')
@@ -27,18 +30,18 @@ class LzProductsResource(resources.ModelResource):
     class Meta:
         model = LzProducts
         fields = (
-            'sample_code', 'barcode', 'received_date', 'test_date',
-            'report_date',
+            'sample_code', 'barcode', 'risk_state', 'received_date',
+            'test_date', 'report_date',
         )
         export_order = (
-            'sample_code', 'barcode', 'received_date', 'test_date',
-            'report_date',
+            'sample_code', 'barcode', 'risk_state', 'received_date',
+            'test_date', 'report_date',
         )
         import_id_fields = ['barcode']
         skip_unchanged = True
 
     def get_export_headers(self):
         export_headers = [
-            '样品编号', '常易舒编号', '收样日期', '检测日期', '报告日期',
+            '样品编号', '常易舒编号', '风险水平', '收样日期', '检测日期', '报告日期',
         ]
         return export_headers

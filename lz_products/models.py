@@ -1,6 +1,8 @@
 import os
+
 from django.db import models
 from django.utils import timezone
+from django.utils.html import format_html
 
 
 def upload_to_report(obj, filename):
@@ -13,6 +15,10 @@ class LzProducts(models.Model):
     )
     sample_code = models.CharField(
         verbose_name="样本编号", max_length=18, null=True, blank=True,
+    )
+    risk_state = models.CharField(
+        verbose_name="风险水平", max_length=18, null=True, blank=True,
+        help_text="请填写【高风险】或者【低风险】",
     )
     received_date = models.DateField(
         verbose_name="收样日期", null=True, blank=True, default=timezone.now
@@ -37,3 +43,12 @@ class LzProducts(models.Model):
     
     def __str__(self):
         return "%s" % self.barcode
+
+    def report_download(self):
+        if self.pdf_upload and hasattr(self.pdf_upload, 'url'):
+            return format_html(
+                '<a href="{}"><b>下载</b></a>', self.pdf_upload.url
+            )
+        else:
+            return "-"
+    report_download.short_description = "报告下载"
