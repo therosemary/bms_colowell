@@ -1,14 +1,24 @@
+import os
+import subprocess
+# import pdfkit
+
 from django.contrib import admin
+from django.contrib.auth.tokens import default_token_generator
+from django.urls import path, reverse
+
+from pystrich.code128 import Code128Encoder
 from suggestions.forms import CollectionsForm
 from suggestions.utils import ScoreEvaluation, limit_suggestions
 from suggestions.models import Choices
 from bms_colowell.notice_mixin import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
-    DINGTALK_AGENT_ID
+    DINGTALK_AGENT_ID, MEDIA_ROOT, BARCODE_IMAGE_OPTIONS
 
 
 class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     """The suggestions mapping and the scoring for sample."""
+    
+    actions = ["generate_pdf"]
     appkey = DINGTALK_APPKEY
     appsecret = DINGTALK_SECRET
     fieldsets = (
@@ -35,7 +45,7 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     form = CollectionsForm
     list_display = (
         'product', '_f01', '_f02', '_f03', '_f04', 'f05_string', 'f06_string',
-        'f07_string', '_f08', '_f09', '_f10', 'is_submit',
+        'f07_string', '_f08', '_f09', '_f10', 'is_submit', 'report_download'
     )
     list_filter = ('is_submit', )
     ordering = ('product__barcode', )
@@ -59,6 +69,42 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     def f07_string(self, obj):
         return "；".join([f07.name for f07 in obj._f07.all()])
     f07_string.short_description = "慢性病史"
+
+    def get_report(self, request, obj, token):
+        """Method to generate pdf file."""
+        
+        # Generate pdf file by execute command line using wkhtmltopdf
+        barcode = obj.product.barcode
+        kwargs = {
+            "barcode": barcode, "token": token, "user_id": request.user.id,
+        }
+        url = reverse("suggestions:report", kwargs=kwargs)
+        input = "{}://{}{}".format(request.scheme, request.get_host(), url)
+        output = os.path.join(MEDIA_ROOT, "reports/{}.pdf".format(barcode))
+        command = [
+            "wkhtmltopdf", "-q", "--disable-smart-shrinking",
+            "-L", "0mm", "-R", "0mm", "-T", "0mm", "-B", "0mm"
+        ]
+        command.extend([input, output])
+
+        # TODO: to update such a TERRIBLE version to task queue Celery
+        get_pdf = subprocess.Popen(command)
+        get_pdf.wait()
+        
+        # save pdf report to the corresponding model instance
+        obj.download_url = input
+        obj.pdf_upload = "reports/{}.pdf".format(barcode)
+        obj.save()
+
+    def generate_pdf(self, request, queryset):
+        token = default_token_generator.make_token(request.user)
+        import time
+        start = time.time()
+        for obj in queryset:
+            self.get_report(request, obj, token)
+        delta = time.time() - start
+        self.message_user(request, "已成功生成报告，耗时{}".format(delta))
+    generate_pdf.short_description = "生成PDF报告"
     
     def get_readonly_fields(self, request, obj=None):
         self.readonly_fields = (
@@ -91,10 +137,14 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
             result = ScoreEvaluation(
                 risk_state=mapping[obj.f10], hemoglobin_state=mapping[obj.f12]
             )
-            initial["kras_mutation_rate"] = result.kras_mutation_rate
-            initial["bmp3_mutation_rate"] = result.bmp3_mutation_rate
-            initial["ndrg4_mutation_rate"] = result.ndrg4_mutation_rate
-            initial["hemoglobin_content"] = result.hemoglobin_content
+            kras_mutation_rate = round(result.kras_mutation_rate * 100, 2)
+            bmp3_mutation_rate = round(result.bmp3_mutation_rate * 100, 2)
+            ndrg4_mutation_rate = round(result.ndrg4_mutation_rate * 100, 2)
+            hemoglobin_content = round(result.hemoglobin_content, 2)
+            initial["kras_mutation_rate"] = kras_mutation_rate
+            initial["bmp3_mutation_rate"] = bmp3_mutation_rate
+            initial["ndrg4_mutation_rate"] = ndrg4_mutation_rate
+            initial["hemoglobin_content"] = hemoglobin_content
             initial["score"] = result.score
         if obj and obj.is_submit:
             context['show_save'] = False
@@ -155,6 +205,10 @@ class VersionsAdmin(admin.ModelAdmin):
                 ('t05_length_min', 't05_length_max'),
                 ('t06_length_min', 't06_length_max'),
                 ('t07_length_min', 't07_length_max'),
+            )
+        }), ('图片上传', {
+            'fields': (
+                'reviewer', 'auditor', 'tester', 'disclaimer', 'signature',
             )
         }),
     )

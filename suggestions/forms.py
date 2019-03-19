@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from suggestions.models import Collections, Choices
 
@@ -50,3 +52,21 @@ class CollectionsForm(forms.ModelForm):
     class Meta:
         model = Collections
         fields = '__all__'
+
+    def _decimalization(self, field_name):
+        original = self.cleaned_data.get(field_name)
+        if original:
+            original = Decimal(original).quantize(Decimal('0.00'))
+        return original
+
+    def clean_kras_mutation_rate(self):
+        return self._decimalization("kras_mutation_rate")
+
+    def clean_bmp3_mutation_rate(self):
+        return self._decimalization("bmp3_mutation_rate")
+
+    def clean_ndrg4_mutation_rate(self):
+        return self._decimalization("ndrg4_mutation_rate")
+
+    def clean_hemoglobin_content(self):
+        return self._decimalization("hemoglobin_content")

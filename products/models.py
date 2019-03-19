@@ -1,3 +1,4 @@
+import os
 import re
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -8,6 +9,10 @@ def barcode_validators(value):
         raise ValidationError(
             '%(value)s不符合编码规则', params={'value': value},
         )
+
+
+def upload_to(obj, filename):
+    return os.path.join("products", filename)
 
 
 class Products(models.Model):
@@ -21,6 +26,10 @@ class Products(models.Model):
         validators=[barcode_validators],
         help_text="产品条形码为CYS前缀，后面接9~10位数字，其余皆为非法条形码",
     )
+    barcode_img = models.ImageField(
+        verbose_name="条码图片", upload_to=upload_to,
+        default="products/CYS000000000.png"
+    )
     is_approved = models.BooleanField(
         verbose_name="是否有效", default=True,
     )
@@ -31,7 +40,7 @@ class Products(models.Model):
         verbose_name="是否绑定", default=False,
     )
     add_date = models.DateTimeField(
-        verbose_name="增加日期", null=True, blank=True,
+        verbose_name="增加日期", auto_now_add=True
     )
     sold_date = models.DateTimeField(
         verbose_name="售出日期", null=True, blank=True,

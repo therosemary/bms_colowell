@@ -1,6 +1,18 @@
+import os
 import re
 from django.db import models
+from django.utils.html import format_html
+
 from products.models import Products
+
+
+def upload_to(obj, filename):
+    code = obj.code if obj else "V00"
+    return os.path.join("suggestions", code, filename)
+
+
+def upload_to_report(obj, filename):
+    return os.path.join("reports", filename)
 
 
 class Factors(models.Model):
@@ -73,7 +85,6 @@ class Versions(models.Model):
     t07_length_min = models.SmallIntegerField(
         verbose_name="肠镜检查准备字数最少", default=0,
     )
-
     t01_length_max = models.SmallIntegerField(
         verbose_name="饮食建议字数最多", default=100,
     )
@@ -95,12 +106,32 @@ class Versions(models.Model):
     t07_length_max = models.SmallIntegerField(
         verbose_name="肠镜检查准备字数最多", default=100,
     )
+    reviewer = models.ImageField(
+        verbose_name="复核人", upload_to=upload_to,
+        default="suggestions/reviewer.png",
+    )
+    auditor = models.ImageField(
+        verbose_name="批准人", upload_to=upload_to,
+        default="suggestions/auditor.png",
+    )
+    tester = models.ImageField(
+        verbose_name="检测人", upload_to=upload_to,
+        default="suggestions/tester.png",
+    )
+    disclaimer = models.ImageField(
+        verbose_name="声明方", upload_to=upload_to,
+        default="suggestions/disclaimer.png",
+    )
+    signature = models.ImageField(
+        verbose_name="盖章", upload_to=upload_to,
+        default="suggestions/signature.png",
+    )
     create_at = models.DateField(
         verbose_name="创建于", auto_now_add=True,
     )
-    
+
     class Meta:
-        verbose_name = verbose_name_plural = "建议版本"
+        verbose_name = verbose_name_plural = "报告版本"
     
     def __str__(self):
         return "{}".format(self.name)
@@ -112,7 +143,7 @@ class Collections(models.Model):
         primary_key=True
     )
     version = models.ForeignKey(
-        Versions, verbose_name="建议版本", on_delete=models.CASCADE,
+        Versions, verbose_name="报告版本", on_delete=models.CASCADE,
         default="V01",
     )
     _f01 = models.ForeignKey(
@@ -176,15 +207,15 @@ class Collections(models.Model):
         default="f12c01", related_name="collections_f12",
     )
     kras_mutation_rate = models.DecimalField(
-        verbose_name="KRAS突变率", max_digits=5, decimal_places=4,
+        verbose_name="KRAS突变率", max_digits=5, decimal_places=2,
         null=True, blank=True,
     )
     bmp3_mutation_rate = models.DecimalField(
-        verbose_name="BMP3突变率", max_digits=5, decimal_places=4,
+        verbose_name="BMP3突变率", max_digits=5, decimal_places=2,
         null=True, blank=True,
     )
     ndrg4_mutation_rate = models.DecimalField(
-        verbose_name="NDRG4突变率", max_digits=5, decimal_places=4,
+        verbose_name="NDRG4突变率", max_digits=5, decimal_places=2,
         null=True, blank=True,
     )
     hemoglobin_content = models.DecimalField(
@@ -220,6 +251,13 @@ class Collections(models.Model):
     )
     is_submit = models.BooleanField(
         verbose_name="是否提交", default=False
+    )
+    pdf_upload = models.FileField(
+        verbose_name="报告上传", null=True, blank=True,
+        upload_to=upload_to_report,
+    )
+    download_url = models.URLField(
+        verbose_name="报告下载", null=True, blank=True,
     )
     submitted_at = models.DateField(
         verbose_name="提交日期", auto_now=True
@@ -275,6 +313,15 @@ class Collections(models.Model):
     @property
     def f12(self):
         return self._f12.code
+
+    def report_download(self):
+        if self.pdf_upload and hasattr(self.pdf_upload, 'url'):
+            return format_html(
+                '<a href="{}"><b>下载</b></a>', self.pdf_upload.url
+            )
+        else:
+            return "-"
+    report_download.short_description = "报告下载"
 
     class Meta:
         verbose_name = verbose_name_plural = "健康建议与打分"

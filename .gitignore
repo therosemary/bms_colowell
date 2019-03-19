@@ -8,4 +8,5 @@ media/
 statics/
 collected_statics/
 suggestions/utils.py
+templates/report/
 debug.log
