@@ -47,7 +47,7 @@ class Techsupport(models.Model):
         (11, '报告已发送'),
     )
     status = models.IntegerField(choices=BOX_STATUS, verbose_name="盒子状态",
-                                 default=1, blank=True, null=True)
+                                 default=0, blank=True, null=True)
     receive_date = models.DateField(
         verbose_name="收样日期", blank=True, null=True)
     sampling_date = models.DateField(
@@ -125,6 +125,9 @@ class Techsupport(models.Model):
     boxdeliveries = models.ForeignKey(
         to=BoxDeliveries, verbose_name="盒子发货编号", on_delete=models.SET_NULL,
         blank=True, null=True
+    )
+    insure_receive = models.BooleanField(
+        verbose_name="收货确认", default=False
     )
 
     class Meta:

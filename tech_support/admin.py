@@ -119,33 +119,32 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
     list_display_links = ('barcode',)
     actions = ["accept_box", ]
 
-    # def accept_box(self, request, queryset):
-    #     n = 0
-    #     for obj in queryset:
-    #         if obj.status == 0:
-    #             obj.status = 1
-    #             n += 1
-    #             sj = datetime.datetime.now()
-    #             if ExtSubmit.objects.all().count() == 0:
-    #                 extnumber = str(sj.year) + Monthchoose[
-    #                     sj.month] + "1"
-    #             else:
-    #                 extnumber = str(sj.year) + Monthchoose[
-    #                     sj.month] + str(
-    #                     ExtSubmit.objects.latest('id').id + 1)
-    #             ExtExecute.objects.create(ext_number=extnumber, boxes=obj)
-    #         else:
-    #             pass
-    #     self.message_user(request, "已成功核对{0}个盒子样本".format(n))
+    def accept_box(self, request, queryset):
+        n = 0
+        for obj in queryset:
+            if obj.status == 0:
+                obj.status = 1
+                n += 1
+                # sj = datetime.datetime.now()
+                # if ExtSubmit.objects.all().count() == 0:
+                #     extnumber = str(sj.year) + Monthchoose[
+                #         sj.month] + "1"
+                # else:
+                #     extnumber = str(sj.year) + Monthchoose[
+                #         sj.month] + str(
+                #         ExtSubmit.objects.latest('id').id + 1)
+                # ExtExecute.objects.create(ext_number=extnumber, boxes=obj)
+            else:
+                pass
+        self.message_user(request, "已成功核对{0}个盒子样本".format(n))
 
-    # accept_box.short_description = '核对所
-    # 选盒子'
+    accept_box.short_description = '核对所选盒子'
 
     def get_actions(self, request):
         actions = super().get_actions(request)
         current_group_set = Group.objects.filter(user=request.user)
         for i in current_group_set:
-            if i.name == "技术支持":
+            if i.name != "技术支持":
                 del actions['accept_box']
         return actions
         # try:
@@ -163,6 +162,18 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
         # except:
         #     return actions
 
+    def get_exclude(self, request, obj=None):
+        current_group_set = Group.objects.filter(user=request.user)
+        for i in current_group_set:
+            if i.name != "技术支持":
+                return ['accept_box']
+
+    def save_model(self, request, obj, form, change):
+        if obj.insure_receive and obj.status==0:
+            obj.status = 1
+        obj.save()
+
+
 
 class ExtMethodAdmin(ModelAdmin):
     """提取方法管理"""
@@ -175,17 +186,14 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
     save_on_top = False
     list_display = ("ext_date", "exp_method", "submit")
     list_display_links = ("exp_method",)
-    exclude = ["extsubmit_number", ]
     filter_horizontal = ("boxes",)
 
     def get_readonly_fields(self, request, obj=None):
         try:
             if obj.submit:
-                self.readonly_fields = ["extsubmit_number", 'boxes',
-                                        "exp_method", "submit"]
-                return self.readonly_fields
+                return ['boxes', "exp_method", "submit"]
         except AttributeError:
-            return []
+            pass
         return []
 
     def save_model(self, request, obj, form, change):
