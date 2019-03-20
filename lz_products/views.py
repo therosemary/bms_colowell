@@ -24,7 +24,7 @@ def lz_report_view(request, user_id=None, barcode=None, token=None):
         report_context["test_date"] = lz_product.test_date
         report_context["report_date"] = lz_product.report_date
         
-        template = "lz_report/lz_report.html"
+        template = "report/lz_report.html"
         return TemplateResponse(request, template, report_context)
     else:
         return HttpResponse("授权失败")
