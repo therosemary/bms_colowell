@@ -47,13 +47,13 @@ def report_view(request, user_id=None, barcode=None, token=None):
         report_context["signature"] = collection.version.signature.url
         
         # images of reviewers group under current version
-        report_context["t01"] = collection.t01
-        report_context["t02"] = collection.t02
-        report_context["t03"] = collection.t03
-        report_context["t04"] = collection.t04
-        report_context["t05"] = collection.t05
-        report_context["t06"] = collection.t06
-        report_context["t07"] = collection.t07
+        report_context["t01"] = collection.t01.split("\r\n")
+        report_context["t02"] = collection.t02.split("\r\n")
+        report_context["t03"] = collection.t03.split("\r\n")
+        report_context["t04"] = collection.t04.split("\r\n")
+        report_context["t05"] = collection.t05.split("\r\n")
+        report_context["t06"] = collection.t06.split("\r\n")
+        report_context["t07"] = collection.t07.split("\r\n")
         
         template = "report/{}.html".format(report_version)
         return TemplateResponse(request, template, report_context)

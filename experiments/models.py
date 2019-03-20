@@ -48,7 +48,7 @@ class Experiments(models.Model):
     ext_date = models.DateField(verbose_name="提取-日期", blank=True, null=True)
     ext_note = models.TextField(
         verbose_name="提取-实验备注", blank=True, null=True)
-    submit_ext = models.BooleanField(verbose_name="提交", default=False)
+    submit_ext = models.BooleanField(verbose_name="提取-提交", default=False)
     # 质检环节
     qua_test_number = models.CharField(
         verbose_name="质检-试剂批次", max_length=50, blank=True, null=True)
@@ -77,7 +77,7 @@ class Experiments(models.Model):
     qua_date = models.DateField(verbose_name="质检-日期", blank=True, null=True)
     qua_note = models.TextField(
         verbose_name="质检-实验备注", blank=True, null=True)
-    submit_qua = models.BooleanField(verbose_name="提交", default=False)
+    submit_qua = models.BooleanField(verbose_name="质检-提交", default=False)
     # BS环节
     bis_test_number = models.CharField(
         verbose_name="BIS-试剂批次", max_length=50, blank=True, null=True
@@ -99,7 +99,7 @@ class Experiments(models.Model):
     bis_date = models.DateField(verbose_name="BIS-日期", blank=True, null=True)
     bis_note = models.TextField(
         verbose_name="BIS-实验备注", blank=True, null=True)
-    submit_bis = models.BooleanField(verbose_name="提交", default=False)
+    submit_bis = models.BooleanField(verbose_name="BIS-提交", default=False)
     # 荧光定量
     fq_test_number = models.CharField(
         verbose_name="荧光定量-试剂批次", max_length=50, blank=True, null=True
@@ -148,7 +148,7 @@ class Experiments(models.Model):
         verbose_name="荧光定量-日期", blank=True, null=True)
     fq_suggest = models.CharField(
         verbose_name="荧光定量-建议", max_length=300, blank=True, null=True)
-    submit_fq = models.BooleanField(verbose_name="提交", default=False)
+    submit_fq = models.BooleanField(verbose_name="荧光定量-提交", default=False)
 
     class Meta:
         app_label = "experiments"
