@@ -22,9 +22,9 @@ class Products(models.Model):
         ('OTH', u'其它'),
     )
     barcode = models.CharField(
-        verbose_name="产品条码", max_length=18, primary_key=True,
+        verbose_name="盒子条码", max_length=18, primary_key=True,
         validators=[barcode_validators],
-        help_text="产品条形码为CYS前缀，后面接9~10位数字，其余皆为非法条形码",
+        help_text="盒子条码为CYS前缀，后面接9~10位数字，其余皆为非法条形码",
     )
     barcode_img = models.ImageField(
         verbose_name="条码图片", upload_to=upload_to,
@@ -43,7 +43,7 @@ class Products(models.Model):
         verbose_name="增加日期", auto_now_add=True
     )
     sold_date = models.DateTimeField(
-        verbose_name="售出日期", null=True, blank=True,
+        verbose_name="出库日期", null=True, blank=True,
     )
     sold_to = models.CharField(
         verbose_name="售出至？", max_length=128, null=True, blank=True,
@@ -58,7 +58,7 @@ class Products(models.Model):
     
     class Meta:
         ordering = ["-add_date"]
-        verbose_name = verbose_name_plural = "产品库存"
+        verbose_name = verbose_name_plural = "盒子"
     
     def __str__(self):
         return "%s" % self.barcode
