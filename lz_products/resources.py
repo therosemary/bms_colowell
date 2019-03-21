@@ -16,15 +16,15 @@ class LzProductsResource(resources.ModelResource):
     )
     received_date = fields.Field(
         attribute="received_date", column_name=u"收样日期",
-        widget=DateWidget(format='%Y-%m-%d')
+        widget=DateWidget(format='%Y/%m/%d')
     )
     test_date = fields.Field(
         attribute="test_date", column_name=u"检测日期",
-        widget=DateWidget(format='%Y-%m-%d')
+        widget=DateWidget(format='%Y/%m/%d')
     )
     report_date = fields.Field(
         attribute="report_date", column_name=u"报告日期",
-        widget=DateWidget(format='%Y-%m-%d')
+        widget=DateWidget(format='%Y/%m/%d')
     )
 
     class Meta:

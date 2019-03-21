@@ -107,7 +107,7 @@
 
                         {# 弹出框的内容 #}
                         <div class="modal-body">
-                            {{ message }}
+                            {% autoescape off %}{{ message }}{% endautoescape %}
                         </div>
 
                         {# 弹出框的脚注 #}
