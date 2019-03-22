@@ -228,3 +228,7 @@ class InvoiceInfo(models.Model):
     class Meta:
         verbose_name = verbose_name_plural = "开票信息"
         ordering = ['fill_date']
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'salesman',

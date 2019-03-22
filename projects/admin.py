@@ -2,7 +2,7 @@
 # from django.http import JsonResponse, HttpResponse
 from django.utils.html import format_html
 # import json
-from import_export.admin import ImportExportActionModelAdmin
+from import_export.admin import ImportExportActionModelAdmin, ImportExportModelAdmin
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
 from invoices.models import SendInvoices, PaymentInfo
 from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
@@ -102,7 +102,7 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
             super().save_model(request, obj, form, change)
 
 
-class InvoiceInfoAdmin(ImportExportActionModelAdmin):
+class InvoiceInfoAdmin(ImportExportModelAdmin):
     """开票信息管理"""
 
     change_form_template = 'admin/projects/projects_invoices_change_form.html'
