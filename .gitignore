@@ -5,10 +5,7 @@
 
 .idea/
 bms_colowell/
+collected_statics/
 media/
 statics/
-collected_statics/
 templates/report/
-
-debug.log
-suggestions/utils.py
