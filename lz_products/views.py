@@ -1,15 +1,19 @@
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
+from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.response import HttpResponse, TemplateResponse
 
-from accounts.models import BmsUser
-from lz_products.models import LzProducts
+from bms_colowell.utils import file_iterator
+from lz_products.models import LzProducts, BatchDownloadRecords
+
+
+BmsUserModel = get_user_model()
 
 
 def lz_report_view(request, user_id=None, barcode=None, token=None):
     """View to generate specified report."""
     
-    user = get_object_or_404(BmsUser, pk=user_id)
+    user = get_object_or_404(BmsUserModel, pk=user_id)
     if authenticate(request, user=user, token=token):
         report_context = {}
         try:
@@ -24,7 +28,24 @@ def lz_report_view(request, user_id=None, barcode=None, token=None):
         report_context["test_date"] = lz_product.test_date
         report_context["report_date"] = lz_product.report_date
         
-        template = "lz_report/lz_report.html"
+        template = "report/lz_report.html"
         return TemplateResponse(request, template, report_context)
+    else:
+        return HttpResponse("授权失败")
+
+
+def batch_download(request, user_id=None, serial_number=None, token=None):
+    """View to response zipped files."""
+    
+    user = get_object_or_404(BmsUserModel, pk=user_id)
+    if authenticate(request, user=user, token=token):
+        record = get_object_or_404(BatchDownloadRecords, pk=serial_number)
+        file_path = record.zipped_file.path
+        file, content_type = file_iterator(file_path), 'application/zip'
+        response = StreamingHttpResponse(file, content_type=content_type)
+        response['Content-Disposition'] = 'attachment;filename="{0}"'.format(
+            "{}.zip".format(serial_number)
+        )
+        return response
     else:
         return HttpResponse("授权失败")

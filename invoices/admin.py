@@ -36,6 +36,20 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     search_fields = ('payment_number',)
     resource_class = PaymentInfoResource
 
+    def get_readonly_fields(self, request, obj=None):
+        self.readonly_fields = ()
+        if hasattr(obj, 'flag'):
+            if obj.flag:
+                self.readonly_fields = ('receive_value', 'flag')
+        return self.readonly_fields
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        payment_data = PaymentInfo.objects.get(id=object_id)
+        self.get_readonly_fields(request, obj=payment_data)
+        return super(PaymentInfoAdmin, self).change_view(request, object_id,
+                                                         form_url,
+                                                         extra_context=extra_context)
+
     @staticmethod
     def handle_relation_id(request, obj):
         """处理当前所选发票和已选发票的id"""
@@ -139,7 +153,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         print(update_send_invoices)
         if update_send_invoices is not None:
             for data in update_send_invoices:
-                trading_record = trading_record_data.filter(send_invoices_id_id=data.id)
+                trading_record = trading_record_data.get(send_invoices_id_id=data.id)
                 print(trading_record)
                 #计算当前发票的应收额
                 wait_payment_value = data.wait_payment + \
@@ -190,16 +204,16 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                 # step3: 计算当前所选发票的待到款总额
                 wait_payment_value = self.total_wait_payment(send_invoice_id)
                 # step4: 根据待开票总额与待到款总额的大小关系选择不同处理逻辑
-                # try:
+                try:
                     # 移除当前未被选中的发票信息
-                self.delete_trading_record(obj.id, delete_set)
+                    self.delete_trading_record(obj.id, delete_set)
                     # 更新发票被分配的到款额
-                obj.wait_invoices, invoices = self.update_invoice(send_invoice_id,
+                    obj.wait_invoices, invoices = self.update_invoice(send_invoice_id,
                                                                  now_wait_invoices, obj.id)
-                obj.save()
+                    obj.save()
+                except Exception:
+                    pass
             super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
-            # except Exception:
-            #     pass
         else:
             if len(request.POST.getlist('send_invoice')):
                 temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
@@ -207,21 +221,33 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                 super(PaymentInfoAdmin, self).save_model(request, obj,
                                                              form, change)
                 if obj.flag:
-                    # try:
+                    try:
                     # 从request中获取关联的发票id并转为int类型
-                    send_invoice_id = [int(x) for x in
-                                       request.POST.getlist('send_invoice')]
-                    obj.wait_invoices, invoices = self.update_invoice(
-                        send_invoice_id, receive_value, obj.id)
-                    obj.save()
-                    # except Exception:
-                    #     pass
+                        send_invoice_id = [int(x) for x in
+                                           request.POST.getlist('send_invoice')]
+                        print(send_invoice_id)
+                        obj.wait_invoices, invoices = self.update_invoice(
+                            send_invoice_id, receive_value, obj.id)
+                        obj.save()
+                    except Exception:
+                        pass
             else:
                 #新增时不选择发票的情况
                 obj.wait_invoices = receive_value
                 temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
                 obj.payment_number = temp
                 super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
+
+    def delete_model(self, request, obj):
+        trading_record_data = obj.tradingrecord_set.all()
+        print(trading_record_data)
+        for data in trading_record_data:
+            send_invoice = SendInvoices.objects.get(id=data.send_invoices_id_id)
+            print(send_invoice)
+            value = send_invoice.wait_payment + data.transaction_amount
+            send_invoice.wait_payment=value
+            send_invoice.save()
+        super(PaymentInfoAdmin, self).delete_model(request, obj)
 
 
 class SendInvoiceAdmin(ImportExportActionModelAdmin):
@@ -416,3 +442,12 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         if change:
             obj.fill_name = request.user
         super(SendInvoiceAdmin, self).save_model(request, obj, form, change)
+
+    def delete_model(self, request, obj):
+        trading_record_data = obj.tradingrecord_set.all()
+        if trading_record_data is not None:
+            for data in trading_record_data:
+                payment_info = PaymentInfo.objects.get(id=data.payment_info_id_id)
+                value = payment_info.wait_invoices + data.transaction_amount
+                payment_info.update(wait_invoices=value)
+        super(SendInvoiceAdmin, self).delete_model(request, obj)
