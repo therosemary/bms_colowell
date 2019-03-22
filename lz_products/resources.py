@@ -1,10 +1,12 @@
-from lz_products.models import LzProducts
 from import_export import resources, fields
 from import_export.widgets import DateWidget
+
+from lz_products.models import LzProducts
 
 
 class LzProductsResource(resources.ModelResource):
     """The import_export resource class for model Products"""
+    
     barcode = fields.Field(
         attribute="barcode", column_name=u"常易舒编号",
     )

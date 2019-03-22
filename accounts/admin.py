@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
+from dingtalk_sdk_gmdzy2010.user_request import DeptUserRequest
+
+from bms_colowell.mixins import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
     DINGTALK_AGENT_ID
-from bms_colowell.notice_mixin import NotificationMixin
-from accounts.utils import get_token, get_department_users
-
-from dingtalk_sdk_gmdzy2010.user_request import DeptUserRequest
+from bms_colowell.utils import get_token, get_department_users
 
 
 class BmsUserAdmin(UserAdmin):

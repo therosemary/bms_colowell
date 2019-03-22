@@ -4,24 +4,14 @@ import zipfile
 
 from django.contrib import admin
 from django.contrib.auth.tokens import default_token_generator
-from django.http import StreamingHttpResponse
-from django.urls import path, reverse
+from django.urls import reverse
 from django.utils import timezone
 
 from import_export.admin import ImportExportModelAdmin
+
+from bms_colowell.settings import MEDIA_ROOT
 from lz_products.resources import LzProductsResource
 from lz_products.models import BatchDownloadRecords
-from bms_colowell.settings import MEDIA_ROOT
-
-
-def file_iterator(file_name, chunk_size=512):
-    with open(file_name, 'rb') as file_stream:
-        while True:
-            chunk = file_stream.read(chunk_size)
-            if chunk:
-                yield chunk
-            else:
-                break
 
 
 class LzProductsAdmin(ImportExportModelAdmin):
@@ -36,15 +26,16 @@ class LzProductsAdmin(ImportExportModelAdmin):
         'sample_code', 'barcode', 'risk_state', 'received_date', 'test_date',
         'report_date', 'report_download',
     )
-    list_per_page = 30
-    save_as_continue = False
-    resource_class = LzProductsResource
     list_display_links = ('barcode', )
+    list_per_page = 30
+    resource_class = LzProductsResource
+    save_as_continue = False
+    search_fields = ('sample_code', 'barcode', )
     
     @staticmethod
     def get_report(request, obj, token):
         """Method to generate pdf file."""
-    
+        
         # Generate pdf file by execute command line using wkhtmltopdf
         barcode = obj.barcode
         kwargs = {
@@ -63,7 +54,7 @@ class LzProductsAdmin(ImportExportModelAdmin):
         command.extend([uri, output_absolute_path])
         get_pdf = subprocess.Popen(command)
         get_pdf.wait()
-    
+        
         # save pdf report to the corresponding model instance
         obj.pdf_upload = output
         obj.save()
@@ -111,11 +102,21 @@ class LzProductsAdmin(ImportExportModelAdmin):
         message = '文件已打包，点击<a href="{}"><b>下载</b></a>'.format(uri)
         self.message_user(request, message)
     
-    create_download_record.short_description = "批量【生成】并【下载】报告"
+    create_download_record.short_description = "批量操作-【生成&打包】报告"
+    
+    def batch_generate_report(self, request, queryset):
+        """Actions to batch generate report."""
+        
+        token = default_token_generator.make_token(request.user)
+        for obj in queryset:
+            self.get_report(request, obj, token)
+        self.message_user(request, "已批量生成选定报告")
+
+    batch_generate_report.short_description = "批量操作-【生成】报告"
 
 
 class BatchDownloadRecordsAdmin(admin.ModelAdmin):
-    """Admin for batch download."""
+    """Admin for batch download records."""
     
     fields = (
         'serial_number', 'download_by', 'created_at', 'file_counts',
@@ -125,7 +126,10 @@ class BatchDownloadRecordsAdmin(admin.ModelAdmin):
         'serial_number', 'download_by', 'created_at', 'file_counts',
         'download_uri',
     )
-    list_per_page = 30
-    readonly_fields = ('zipped_file', 'download_uri')
-    save_as_continue = False
     list_display_links = ('serial_number', )
+    list_per_page = 30
+    readonly_fields = (
+        'serial_number', 'download_by', 'created_at', 'file_counts',
+        'zipped_file', 'download_uri'
+    )
+    save_as_continue = False
