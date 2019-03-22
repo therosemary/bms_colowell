@@ -1,6 +1,7 @@
 # from django.urls import path
 # from django.http import JsonResponse, HttpResponse
 from django.utils.html import format_html
+from django.db.models import Q
 # import json
 from import_export.admin import ImportExportActionModelAdmin, ImportExportModelAdmin
 from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
@@ -8,6 +9,8 @@ from invoices.models import SendInvoices, PaymentInfo
 from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
 from projects.resources import ContractInfoResources, InvoiceInfoResources, \
     BoxApplicationsResources
+from accounts.models import BmsUser
+from django.contrib.auth.models import Group
 # from projects import views
 import  datetime
 
@@ -111,6 +114,13 @@ class InvoiceInfoAdmin(ImportExportModelAdmin):
               'address_phone', 'opening_bank', 'bank_account_number',
               'invoice_value', 'invoice_content', 'remark', 'apply_name',
               'flag', 'approve_flag',)
+    # TODO:发票提交、审批按钮按权限显示（测试）
+    # base_fields = ('contract_id', 'salesman', 'invoice_type',
+    #                'invoice_issuing', 'invoice_title', 'tariff_item',
+    #                'send_address', 'address_phone', 'opening_bank',
+    #                'bank_account_number', 'invoice_value', 'invoice_content',
+    #                'remark', 'apply_name',
+    #           )
     list_display = (
         'salesman', 'invoice_title', 'invoice_value', 'invoice_type',
         'invoice_content', 'flag', 'approve_flag',
@@ -161,6 +171,15 @@ class InvoiceInfoAdmin(ImportExportModelAdmin):
     def change_view(self, request, object_id, form_url='', extra_context=None):
         contract_data = InvoiceInfo.objects.filter(id=object_id)
         self.get_readonly_fields(request, obj=contract_data)
+        # TODO:发票提交、审批按钮按权限显示（测试）
+        # condition = Q(groups__id=2) & Q(id=request.user.id)
+        # current_user = BmsUser.objects.filter(condition).all()
+        # self.fields = []
+        # if current_user.exists():
+        #     print(current_user)
+        #     self.fields = self.base_fields + ('approve_flag',)
+        # else:
+        #     self.fields = self.base_fields + ('flag',)
         return super(InvoiceInfoAdmin, self).change_view(
             request, object_id, form_url, extra_context=extra_context
         )
@@ -224,5 +243,7 @@ class BoxApplicationsAdmin(ImportExportActionModelAdmin):
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
-        initial['proposer'] = request.user
+        property_value = initial.get('proposer', request.user)
+        print(property_value)
+        initial['proposer'] = property_value
         return initial
