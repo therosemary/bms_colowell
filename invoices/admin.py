@@ -2,13 +2,14 @@ import datetime
 from django.utils.html import format_html
 from django.contrib import admin
 from django.db.models import Sum, Q
-from import_export.admin import ImportExportActionModelAdmin
+from import_export.admin import ImportExportActionModelAdmin, \
+    ImportExportModelAdmin, ExportActionModelAdmin
 from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
 from projects.models import InvoiceInfo
 from invoices.models import SendInvoices, PaymentInfo, TradingRecord
 from invoices.forms import SendInvoicesForm
-from invoices.resources import SendInvoiceResources, PaymentInfoResource
+from invoices.resources import SendInvoiceResources, PaymentInfoResource, TradingRecordResource
 
 
 # class PaymentInline(admin.TabularInline):
@@ -112,7 +113,6 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         else:
             new_wait_invoices = now_wait_invoices
             send_invoice_len = len(wait_send_invoices_order)
-            print(wait_send_invoices_order, wait_payment_value)
             if wait_payment_value - wait_send_invoices_order[send_invoice_len-1].wait_payment < now_wait_invoices:
                 new_wait_invoices = 0
                 # 最后一张发票的待到款额
@@ -182,9 +182,6 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     def save_model(self, request, obj, form , change):
         # 获取form页面到款额
         receive_value = float(request.POST.get('receive_value', 0))
-        delete_set = []
-        level_set = []
-        diff_set = []
         if change:
             if obj.flag:
                 # step1：获取修改前后的发票id，并求交集和差集
@@ -200,7 +197,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                 delete_set = list(set(diff_set) & set(before_send_invoice_id))
                 # step2: 计算当前待开票总额，当前到款额减去交易记录表中level_set的交易总额
                 trading_value = self.total_invoices_value(obj.id, level_set)
-                now_wait_invoices = receive_value - trading_value
+                now_wait_invoices = obj.receive_value - trading_value
                 # step3: 计算当前所选发票的待到款总额
                 wait_payment_value = self.total_wait_payment(send_invoice_id)
                 # step4: 根据待开票总额与待到款总额的大小关系选择不同处理逻辑
@@ -266,7 +263,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     )
     send_invoice_info = (
         'invoice_number', 'billing_date', 'invoice_send_date',
-        'tracking_number', 'ele_invoice', 'send_flag'
+        'tracking_number', 'tax_rate', 'ele_invoice', 'send_flag'
     )
     fieldsets = (
         ('发票申请信息', {
@@ -277,7 +274,7 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         }),
     )
     list_display = (
-        'get_salesman', 'get_contract_number', 'billing_date',
+        'invoice_id', 'get_salesman', 'get_contract_number', 'billing_date',
         'invoice_number', 'get_invoice_value', 'get_receive_value',
         'wait_payment', 'get_receive_date', 'get_invoice_title',
         'get_invoice_content', 'tracking_number', 'get_remark',
@@ -288,10 +285,10 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     readonly_fields = invoice_info
     form = SendInvoicesForm
     list_filter = (('invoice_id__fill_date', DateRangeFilter),
-                   'invoice_id__salesman')
+                   'invoice_id__salesman',)
     resource_class = SendInvoiceResources
     list_display_links = ('get_salesman', 'get_contract_number')
-    search_fields = ('invoice_number',)
+    search_fields = ('invoice_number', 'invoice_id__invoice_number')
 
     def receivables(self, obj):
         """自动计算应收金额"""
@@ -386,15 +383,18 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         """按时间段统计开票额及到款额"""
         invoice_values = 0
         receive_values = 0
+        sum_wait_payment = 0
         if qs is not None:
             for data in qs:
                 invoice_data = InvoiceInfo.objects.get(id=data.invoice_id.id)
                 if invoice_data.invoice_value is not None:
                     invoice_values += invoice_data.invoice_value
-                payment_data = data.paymentinfo_set.exclude(receive_value__exact=None)
-                if payment_data is not None:
-                    for payment in payment_data:
-                        receive_values += payment.receive_value
+                sum_wait_payment += data.wait_payment
+                # payment_data = data.paymentinfo_set.exclude(receive_value__exact=None)
+                # if payment_data is not None:
+                #     for payment in payment_data:
+                #         receive_values += payment.receive_value
+            receive_values = invoice_values - sum_wait_payment
         return invoice_values, receive_values
 
     def get_readonly_fields(self, request, obj=None):
@@ -445,9 +445,50 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
 
     def delete_model(self, request, obj):
         trading_record_data = obj.tradingrecord_set.all()
+        print(trading_record_data)
         if trading_record_data is not None:
             for data in trading_record_data:
                 payment_info = PaymentInfo.objects.get(id=data.payment_info_id_id)
                 value = payment_info.wait_invoices + data.transaction_amount
-                payment_info.update(wait_invoices=value)
+                payment_info.wait_invoices=value
+                payment_info.save()
         super(SendInvoiceAdmin, self).delete_model(request, obj)
+
+
+class TradingRecordAdmin(ExportActionModelAdmin):
+    """发票、到款中间记录表"""
+
+    fields = (
+        'id', 'get_contract_number', 'get_invoices_number',
+        'get_payment_number', 'transaction_amount', 'transaction_date'
+    )
+    list_display = (
+        'id', 'get_contract_number', 'get_invoices_number',
+        'get_payment_number', 'transaction_amount', 'transaction_date'
+    )
+    list_per_page = 40
+    readonly_fields = fields
+    date_hierarchy = 'transaction_date'
+    list_display_links = ('get_invoices_number', 'get_payment_number')
+    resource_class = TradingRecordResource
+
+    def get_contract_number(self, obj):
+        if obj.payment_info_id is not None:
+            return obj.payment_info_id.contract_number
+        else:
+            return None
+    get_contract_number.short_description = "合同编号"
+
+    def get_invoices_number(self, obj):
+        if obj.send_invoices_id is not None:
+            return obj.send_invoices_id.invoice_id.invoice_number
+        else:
+            return None
+    get_invoices_number.short_description = "发票编号"
+
+    def get_payment_number(self, obj):
+        if obj.payment_info_id is not None:
+            return obj.payment_info_id.payment_number
+        else:
+            return None
+    get_payment_number.short_description = "到款编号"
