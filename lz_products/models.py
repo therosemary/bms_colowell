@@ -1,12 +1,20 @@
 import os
 
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 from django.utils.html import format_html
 
 
+BmsUserModel = get_user_model()
+
+
 def upload_to_report(obj, filename):
     return os.path.join("lz_reports", filename)
+
+
+def upload_to_zipped(obj, filename):
+    return os.path.join("zipped_files", filename)
 
 
 class LzProducts(models.Model):
@@ -52,3 +60,33 @@ class LzProducts(models.Model):
         else:
             return "-"
     report_download.short_description = "报告下载"
+
+
+class BatchDownloadRecords(models.Model):
+    serial_number = models.CharField(
+        verbose_name="记录流水号", max_length=18, primary_key=True,
+    )
+    download_by = models.ForeignKey(
+        BmsUserModel, verbose_name="下载人", on_delete=models.SET_NULL,
+        null=True,
+    )
+    created_at = models.DateTimeField(
+        verbose_name="创建时间", null=True, blank=True, default=timezone.now
+    )
+    file_counts = models.SmallIntegerField(
+        verbose_name="文件数量", null=True, blank=True,
+    )
+    zipped_file = models.FileField(
+        verbose_name="压缩文件", null=True, blank=True,
+        upload_to=upload_to_zipped,
+    )
+    download_uri = models.URLField(
+        verbose_name="下载链接", null=True, blank=True,
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = verbose_name_plural = "批量下载记录"
+    
+    def __str__(self):
+        return "{}".format(self.serial_number)

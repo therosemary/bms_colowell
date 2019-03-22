@@ -2,12 +2,10 @@
 *.sqlite3
 */__pycache__/
 */migrations/*
+
 .idea/
 bms_colowell/
+collected_statics/
 media/
 statics/
-collected_statics/
-suggestions/utils.py
 templates/report/
-templates/lz_report/
-debug.log

@@ -5,11 +5,12 @@ from import_export.admin import ImportExportActionModelAdmin, \
     ExportActionModelAdmin
 from django.contrib.admin import ModelAdmin
 # from tech_support.forms import BoxApplicationsForm
+from rangefilter.filter import DateRangeFilter
+
 from tech_support.models import *
-from experiment.models import ExtExecute
 from import_export import fields
 # from tech_support.resources import BoxApplicationsResources
-
+from tech_support.resources import TechsupportResources
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
@@ -22,7 +23,7 @@ class TechsupportInline(admin.TabularInline):
     def get_readonly_fields(self, request, obj=None):
         try:
             if obj.submit:
-                self.readonly_fields = ["bar_code", "name"]
+                self.readonly_fields = ["barcode", "name"]
         except AttributeError:
             return []
         return []
@@ -103,7 +104,7 @@ class BoxDeliveriesAdmin(ExportActionModelAdmin):
                 #                                 Monthchoose[
                 #                                     sj.month] + str(
                 #             Techsupport.objects.latest('id').id + 1)
-                #     instance.save()
+                instance.save()
                 formset.save_m2m()
 
 
@@ -118,6 +119,7 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
     )
     list_display_links = ('barcode',)
     actions = ["accept_box", ]
+    resource_class = TechsupportResources
 
     def accept_box(self, request, queryset):
         n = 0
@@ -139,6 +141,11 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
         self.message_user(request, "已成功核对{0}个盒子样本".format(n))
 
     accept_box.short_description = '核对所选盒子'
+
+    def get_list_filter(self, request):
+        return ['status',  "insure_receive",
+                ('receive_date', DateRangeFilter),
+                ('report_end_date', DateRangeFilter)]
 
     def get_actions(self, request):
         actions = super().get_actions(request)
@@ -172,7 +179,6 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
         if obj.insure_receive and obj.status==0:
             obj.status = 1
         obj.save()
-
 
 
 class ExtMethodAdmin(ModelAdmin):

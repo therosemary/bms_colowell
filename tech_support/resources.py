@@ -10,21 +10,24 @@ Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
 
 
 class BoxDeliveriesResource(resources.ModelResource):
+    """
+    盒子发货导入
+    """
     boxes = Field(
         column_name="对应盒子条形码", attribute="boxes"
     )
     deliver_number = Field(
         column_name="盒子发货编号", attribute="box_deliver__index_number")
-    bar_code = Field(
-        column_name="盒子条形码", attribute="bar_code"
+    barcode = Field(
+        column_name="盒子条形码", attribute="barcode"
     )
 
     class Meta:
         model = BoxDeliveries
         skip_unchanged = True
-        import_id_fields = ('bar_code',)
-        fields = ('id', 'deliver_number', 'bar_code')
-        export_order = ('id', 'deliver_number', 'bar_code')
+        import_id_fields = ('barcode',)
+        fields = ('id', 'deliver_number', 'barcode')
+        export_order = ('id', 'deliver_number', 'barcode')
 
     def export(self, queryset=None, *args, **kwargs):
         queryset_result = Techsupport.objects.filter(id=None)
@@ -59,11 +62,14 @@ class BoxDeliveriesResource(resources.ModelResource):
         instance.box_deliver = BoxDeliveries.objects.get(
             index_number=row["盒子发货编号"])
 
-        instance.bar_code = row["盒子条形码"]
+        instance.barcode = row["盒子条形码"]
         return instance
 
 
 class TechsupportResources(resources.ModelResource):
+    """
+    确认收货时更新盒子内容
+    """
     # id = Field(
     #     column_name='id', attribute='id', default=None
     # )
@@ -86,7 +92,7 @@ class TechsupportResources(resources.ModelResource):
         column_name='快递单号', attribute='send_number', default=None
     )
     index_number = Field(
-        column_name='盒子编号', attribute='index_number', default=None
+        column_name='样品编号', attribute='index_number', default=None
     )
     report_date = Field(
         column_name='报告出具日期', attribute='report_date',
@@ -112,7 +118,6 @@ class TechsupportResources(resources.ModelResource):
     )
     id_number = Field(
         column_name='身份证号码', attribute='id_number',
-        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     email = Field(
         column_name='提取-实验备注', attribute='email', default=None
@@ -173,7 +178,6 @@ class TechsupportResources(resources.ModelResource):
     )
     other_chronic_diseases = Field(
         column_name='其他慢性病', attribute='other_chronic_diseases',
-        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     questionnaire_note = Field(
         column_name='调查问卷备注', attribute='questionnaire_note',
@@ -185,7 +189,6 @@ class TechsupportResources(resources.ModelResource):
         skip_unchanged = True
         import_id_fields = ('barcode',)
         fields = (
-            "id",
             'receive_date', 'sampling_date', "report_end_date",
             "project_source",
             "send_number", 'index_number', "report_date",
@@ -200,7 +203,6 @@ class TechsupportResources(resources.ModelResource):
             "other_chronic_diseases",
             'questionnaire_note')
         export_order = (
-            "id",
             'receive_date', 'sampling_date', "report_end_date",
             "project_source",
             "send_number", 'index_number', "report_date",
@@ -216,8 +218,8 @@ class TechsupportResources(resources.ModelResource):
             'questionnaire_note')
 
     def get_export_headers(self):
-        return ["id", "收样日期", "盒子条形码", "报告截止",
-                "检测项目来源", "快递单号", "盒子编号", "报告出具日期",
+        return ["收样日期", "采样日期", "报告截止",
+                "检测项目来源", "快递单号", "样品编号", "报告出具日期",
                 "体检号", "条形码", "姓名",
                 "性别", "年龄", "联系方式", "身份证号码",
                 "邮箱", "职业", "BMI", "身高(m)",
@@ -229,7 +231,14 @@ class TechsupportResources(resources.ModelResource):
                 "调查问卷备注"
                 ]
 
-
+    def get_or_init_instance(self, instance_loader, row):
+        instance = self.get_instance(instance_loader, row)
+        if instance:
+            if instance.status < 1:
+                instance.status = 1
+            return (instance, False)
+        else:
+            return (self.init_instance(row), True)
 
 
 # class BoxApplicationsResources(resources.ModelResource):
