@@ -12,7 +12,7 @@ from projects.resources import ContractInfoResources, InvoiceInfoResources, \
 from accounts.models import BmsUser
 from django.contrib.auth.models import Group
 # from projects import views
-import  datetime
+import datetime
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""

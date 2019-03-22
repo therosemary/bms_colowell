@@ -6,10 +6,12 @@ from import_export.admin import ImportExportActionModelAdmin, \
     ImportExportModelAdmin, ExportActionModelAdmin
 from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
+
 from projects.models import InvoiceInfo
 from invoices.models import SendInvoices, PaymentInfo, TradingRecord
 from invoices.forms import SendInvoicesForm
-from invoices.resources import SendInvoiceResources, PaymentInfoResource, TradingRecordResource
+from invoices.resources import SendInvoiceResources, PaymentInfoResource, \
+    TradingRecordResource
 
 
 # class PaymentInline(admin.TabularInline):
@@ -47,9 +49,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     def change_view(self, request, object_id, form_url='', extra_context=None):
         payment_data = PaymentInfo.objects.get(id=object_id)
         self.get_readonly_fields(request, obj=payment_data)
-        return super(PaymentInfoAdmin, self).change_view(request, object_id,
-                                                         form_url,
-                                                         extra_context=extra_context)
+        return super(PaymentInfoAdmin, self).change_view(request, object_id, form_url, extra_context=extra_context)
 
     @staticmethod
     def handle_relation_id(request, obj):
@@ -100,7 +100,9 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     def update_invoice(send_invoice_id, now_wait_invoices, payment_id):
         """更新被选中的发票信息"""
         # 获取当前被选中且待到款额大于零的发票信息
-        wait_payment_invoices, wait_payment_value = PaymentInfoAdmin.total_wait_payment(send_invoice_id)
+        wait_payment_invoices, wait_payment_value = (
+            PaymentInfoAdmin.total_wait_payment(send_invoice_id)
+        )
         wait_send_invoices_order = wait_payment_invoices.order_by('fill_date')
         # 判断待开票额与总应收金额的大小
         if now_wait_invoices >= wait_payment_value:
@@ -113,13 +115,13 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         else:
             new_wait_invoices = now_wait_invoices
             send_invoice_len = len(wait_send_invoices_order)
-            if wait_payment_value - wait_send_invoices_order[send_invoice_len-1].wait_payment < now_wait_invoices:
+            payment = wait_send_invoices_order[send_invoice_len-1].wait_payment
+            if wait_payment_value - payment < now_wait_invoices:
                 new_wait_invoices = 0
                 # 最后一张发票的待到款额
                 last_wait_payment = wait_payment_value - now_wait_invoices
                 # 最后一张发票的本次到款额
-                final_receive_value = wait_send_invoices_order[
-                                          send_invoice_len-1].wait_payment - last_wait_payment
+                final_receive_value = payment - last_wait_payment
                 # 新增中间表记录
                 PaymentInfoAdmin.create_middle(payment_id,
                                                wait_send_invoices_order,
@@ -156,7 +158,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                 trading_record = trading_record_data.get(send_invoices_id_id=data.id)
                 print(trading_record)
                 #计算当前发票的应收额
-                wait_payment_value = data.wait_payment + \
+                wait_payment_value = data.wait_payment +\
                                      trading_record.transaction_amount
                 SendInvoices.objects.filter(id=data.id).update(
                     wait_payment=wait_payment_value)
@@ -170,11 +172,12 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         """合计已开票额：合计中间表的交易额"""
         trading_value = 0
         if len(intersect_set):
-            trading_records = TradingRecord.objects.filter(Q(
-                payment_info_id_id=payment_id) &
-                Q(send_invoices_id_id__in=intersect_set))
-            trading = trading_records.aggregate(trading_value=Sum(
-                'transaction_amount'))
+            condition = Q(payment_info_id_id=payment_id) &\
+                        Q(send_invoices_id_id__in=intersect_set)
+            trading_records = TradingRecord.objects.filter(condition)
+            trading = (
+                trading_records.aggregate(trading_value=Sum('transaction_amount'))
+            )
             trading_value = trading.get('trading_value', 0)
         return trading_value
 
@@ -205,8 +208,10 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                     # 移除当前未被选中的发票信息
                     self.delete_trading_record(obj.id, delete_set)
                     # 更新发票被分配的到款额
-                    obj.wait_invoices, invoices = self.update_invoice(send_invoice_id,
-                                                                 now_wait_invoices, obj.id)
+                    obj.wait_invoices, invoices = (
+                        self.update_invoice(send_invoice_id,
+                                            now_wait_invoices, obj.id)
+                    )
                     obj.save()
                 except Exception:
                     pass
@@ -323,8 +328,8 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
     get_invoice_type.short_description = "发票类型"
 
     def get_invoice_issuing(self, obj):
-        issuing_entities = {'shry': "上海锐翌", 'hzth': "杭州拓宏", 'hzry': "杭州锐翌",
-                            'sdry': "山东锐翌"}
+        issuing_entities = {'shry': "上海锐翌", 'hzth': "杭州拓宏",
+                            'hzry': "杭州锐翌", 'sdry': "山东锐翌"}
         return issuing_entities[obj.invoice_id.invoice_issuing]
     get_invoice_issuing.short_description = "开票单位"
 
@@ -404,15 +409,15 @@ class SendInvoiceAdmin(ImportExportActionModelAdmin):
         # if obj:
         if hasattr(obj, 'send_flag'):
             if obj.send_flag:
-                self.readonly_fields = self.invoice_info + self.send_invoice_info
+                self.readonly_fields = self.invoice_info + \
+                                       self.send_invoice_info
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         send_invoice = SendInvoices.objects.filter(pk=object_id)
         self.get_readonly_fields(request, obj=send_invoice)
         return super(SendInvoiceAdmin, self).change_view(
-            request, object_id, form_url, extra_context=extra_context
-        )
+            request, object_id, form_url, extra_context=extra_context)
 
     def changelist_view(self, request, extra_context=None):
         extra_context = extra_context or {}
