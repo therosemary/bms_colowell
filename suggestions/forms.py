@@ -1,25 +1,10 @@
 from decimal import Decimal
 
 from django import forms
-from suggestions.models import Collections, Choices
+from suggestions.models import Collections
 
 
 class CollectionsForm(forms.ModelForm):
-    # _f05 = forms.ModelMultipleChoiceField(
-    #     label="下消化道症状",
-    #     queryset=Choices.objects.filter(code__contains="f05"),
-    #     widget=forms.CheckboxSelectMultiple()
-    # )
-    # _f06 = forms.ModelMultipleChoiceField(
-    #     label="其它病史",
-    #     queryset=Choices.objects.filter(code__contains="f06"),
-    #     widget=forms.CheckboxSelectMultiple()
-    # )
-    # _f07 = forms.ModelMultipleChoiceField(
-    #     label="慢性病史",
-    #     queryset=Choices.objects.filter(code__contains="f07"),
-    #     widget=forms.CheckboxSelectMultiple()
-    # )
     t01 = forms.CharField(
         label="饮食建议", required=False,
         widget=forms.Textarea(attrs={'cols': 100, 'rows': 5}),
@@ -52,21 +37,3 @@ class CollectionsForm(forms.ModelForm):
     class Meta:
         model = Collections
         fields = '__all__'
-
-    def _decimalization(self, field_name):
-        original = self.cleaned_data.get(field_name)
-        if original:
-            original = Decimal(original).quantize(Decimal('0.00'))
-        return original
-
-    def clean_kras_mutation_rate(self):
-        return self._decimalization("kras_mutation_rate")
-
-    def clean_bmp3_mutation_rate(self):
-        return self._decimalization("bmp3_mutation_rate")
-
-    def clean_ndrg4_mutation_rate(self):
-        return self._decimalization("ndrg4_mutation_rate")
-
-    def clean_hemoglobin_content(self):
-        return self._decimalization("hemoglobin_content")
