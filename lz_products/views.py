@@ -3,20 +3,11 @@ from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.response import HttpResponse, TemplateResponse
 
+from bms_colowell.utils import file_iterator
 from lz_products.models import LzProducts, BatchDownloadRecords
 
 
 BmsUserModel = get_user_model()
-
-
-def file_iterator(file_name, chunk_size=512):
-    with open(file_name, 'rb') as file_stream:
-        while True:
-            chunk = file_stream.read(chunk_size)
-            if chunk:
-                yield chunk
-            else:
-                break
 
 
 def lz_report_view(request, user_id=None, barcode=None, token=None):
