@@ -36,6 +36,9 @@ class SendInvoices(models.Model):
     wait_payment = models.FloatField(
         verbose_name="应收金额", null=True, blank=True, default=0
     )
+    tax_rate = models.FloatField(
+        verbose_name="税率", null=True, blank=True
+    )
 
     class Meta:
         verbose_name = verbose_name_plural = "发票信息"
@@ -80,11 +83,11 @@ class PaymentInfo(models.Model):
 
 class TradingRecord(models.Model):
     send_invoices_id = models.ForeignKey(
-        SendInvoices, verbose_name="发票编号", on_delete=models.SET_NULL,
+        SendInvoices, verbose_name="发票编号", on_delete=models.CASCADE,
         null=True, blank=True
     )
     payment_info_id = models.ForeignKey(
-        PaymentInfo, verbose_name="到款编号", on_delete=models.SET_NULL,
+        PaymentInfo, verbose_name="到款编号", on_delete=models.CASCADE,
         null=True, blank=True
     )
     transaction_amount = models.FloatField(
@@ -92,7 +95,6 @@ class TradingRecord(models.Model):
     )
     transaction_date = models.DateField(
         verbose_name="交易时间", auto_now=True
-
     )
 
     class Meta:

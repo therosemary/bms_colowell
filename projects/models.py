@@ -221,6 +221,9 @@ class InvoiceInfo(models.Model):
         verbose_name="审核状态", max_length=3, choices=APPROVE_CHOICE, null=True,
         blank=True, default='ds'
     )
+    approve_submit_flag = models.BooleanField(
+        verbose_name="提交审核", default=False
+    )
 
     def __str__(self):
         return "{}".format(self.invoice_number)
@@ -228,3 +231,7 @@ class InvoiceInfo(models.Model):
     class Meta:
         verbose_name = verbose_name_plural = "开票信息"
         ordering = ['fill_date']
+
+    @staticmethod
+    def autocomplete_search_fields():
+        return 'salesman',

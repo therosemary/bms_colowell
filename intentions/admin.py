@@ -23,5 +23,6 @@ class IntentionAdmin(ImportExportActionModelAdmin):
 
     def get_changeform_initial_data(self, request):
         initial = super(IntentionAdmin, self).get_changeform_initial_data(request)
-        initial['salesman'] = request.user
+        salesman_value = initial.get('salesman', request.user)
+        initial['salesman'] = salesman_value
         return initial
