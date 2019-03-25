@@ -14,6 +14,6 @@ def ajax_salesman(request):
         if contract_val is not None:
             contract_data = ContractsInfo.objects.get(contract_number=contract_val)
             # TODO: 业务员信息获取错误
-            # salesman_result = {'salesamn': contract_data.staff_name}
+            salesman_result = {'salesman': contract_data.staff_name}
     return JsonResponse(salesman_result)
     # return HttpResponse(json.dumps(salesman_result), content_type="application/json")
