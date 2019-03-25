@@ -1,18 +1,16 @@
 import os
 import subprocess
-# import pdfkit
 
 from django.contrib import admin
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import path, reverse
 
-from pystrich.code128 import Code128Encoder
-from suggestions.forms import CollectionsForm
-from suggestions.utils import ScoreEvaluation, limit_suggestions
-from suggestions.models import Choices
-from bms_colowell.notice_mixin import NotificationMixin
+from bms_colowell.mixins import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
-    DINGTALK_AGENT_ID, MEDIA_ROOT, BARCODE_IMAGE_OPTIONS
+    DINGTALK_AGENT_ID, MEDIA_ROOT
+from bms_colowell.utils import ScoreEvaluation, limit_suggestions
+from suggestions.forms import CollectionsForm
+from suggestions.models import Choices
 
 
 class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
