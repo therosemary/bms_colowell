@@ -1,10 +1,12 @@
 import datetime
+from django.contrib import messages
 from django.utils.html import format_html
 from django.contrib import admin
 from django.db.models import Sum, Q
 from import_export.admin import ImportExportActionModelAdmin, \
     ImportExportModelAdmin, ExportActionModelAdmin
-from daterange_filter.filter import DateRangeFilter
+from jet.filters import DateRangeFilter
+# from daterange_filter.filter import DateRangeFilter
 # from django.contrib.admin.views.main import ChangeList
 
 from projects.models import InvoiceInfo
@@ -38,12 +40,13 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
     list_display_links = ('payment_number',)
     search_fields = ('payment_number',)
     resource_class = PaymentInfoResource
+    list_filter = (('receive_date', DateRangeFilter),)
 
     def get_readonly_fields(self, request, obj=None):
         self.readonly_fields = ()
         if hasattr(obj, 'flag'):
             if obj.flag:
-                self.readonly_fields = ('receive_value', 'flag')
+                self.readonly_fields = ('receive_value', 'receive_date', 'flag')
         return self.readonly_fields
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -97,7 +100,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
         return wait_payment_invoices, wait_payment_value
 
     @staticmethod
-    def update_invoice(send_invoice_id, now_wait_invoices, payment_id):
+    def update_invoice(request, send_invoice_id, now_wait_invoices, payment_id):
         """更新被选中的发票信息"""
         # 获取当前被选中且待到款额大于零的发票信息
         wait_payment_invoices, wait_payment_value = (
@@ -117,6 +120,7 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
             send_invoice_len = len(wait_send_invoices_order)
             payment = wait_send_invoices_order[send_invoice_len-1].wait_payment
             if wait_payment_value - payment < now_wait_invoices:
+                print(wait_payment_value, payment)
                 new_wait_invoices = 0
                 # 最后一张发票的待到款额
                 last_wait_payment = wait_payment_value - now_wait_invoices
@@ -140,7 +144,9 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                 #     wait_payment=last_wait_payment)
             else:
                 # 所选发票无意义，结束当次更改，弹出提示信息
-                pass
+                meg = "所选发票总应收额远大于该次到款额，请检查！"
+                messages.add_message(request, messages.ERROR, meg)
+                raise ValueError('error')
         return new_wait_invoices, wait_send_invoices_order
 
     @staticmethod
@@ -209,30 +215,40 @@ class PaymentInfoAdmin(ImportExportActionModelAdmin):
                     self.delete_trading_record(obj.id, delete_set)
                     # 更新发票被分配的到款额
                     obj.wait_invoices, invoices = (
-                        self.update_invoice(send_invoice_id,
+                        self.update_invoice(request, send_invoice_id,
                                             now_wait_invoices, obj.id)
                     )
                     obj.save()
-                except Exception:
-                    pass
+                except ValueError as e:
+                    print(e)
             super(PaymentInfoAdmin, self).save_model(request, obj, form, change)
         else:
             if len(request.POST.getlist('send_invoice')):
                 temp = 'RE' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
                 obj.payment_number = temp
-                super(PaymentInfoAdmin, self).save_model(request, obj,
+                obj.wait_invoices = receive_value
+                try:
+                    super(PaymentInfoAdmin, self).save_model(request, obj,
                                                              form, change)
-                if obj.flag:
-                    try:
+                    if obj.flag:
                     # 从request中获取关联的发票id并转为int类型
                         send_invoice_id = [int(x) for x in
                                            request.POST.getlist('send_invoice')]
-                        print(send_invoice_id)
                         obj.wait_invoices, invoices = self.update_invoice(
-                            send_invoice_id, receive_value, obj.id)
+                            request, send_invoice_id, receive_value, obj.id)
                         obj.save()
-                    except Exception:
-                        pass
+                except ValueError as e:
+                    print(e)
+                # if obj.flag:
+                #     try:
+                #     # 从request中获取关联的发票id并转为int类型
+                #         send_invoice_id = [int(x) for x in
+                #                            request.POST.getlist('send_invoice')]
+                #         obj.wait_invoices, invoices = self.update_invoice(
+                #             request, send_invoice_id, receive_value, obj.id)
+                #         obj.save()
+                #     except Exception as e:
+                #         print(e)
             else:
                 #新增时不选择发票的情况
                 obj.wait_invoices = receive_value
@@ -476,6 +492,7 @@ class TradingRecordAdmin(ExportActionModelAdmin):
     date_hierarchy = 'transaction_date'
     list_display_links = ('get_invoices_number', 'get_payment_number')
     resource_class = TradingRecordResource
+    list_filter = (('payment_info_id__receive_date', DateRangeFilter),)
 
     def get_contract_number(self, obj):
         if obj.payment_info_id is not None:

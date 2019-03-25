@@ -4,11 +4,10 @@ from django.utils.html import format_html
 from django.db.models import Q
 # import json
 from import_export.admin import ImportExportActionModelAdmin, ImportExportModelAdmin
-from projects.models import InvoiceInfo, ContractsInfo, BoxApplications
+from projects.models import InvoiceInfo, ContractsInfo
 from invoices.models import SendInvoices, PaymentInfo
-from projects.forms import ContractInfoForm, InvoiceInfoForm, BoxApplicationsForm
-from projects.resources import ContractInfoResources, InvoiceInfoResources, \
-    BoxApplicationsResources
+from projects.forms import ContractInfoForm, InvoiceInfoForm
+from projects.resources import ContractInfoResources, InvoiceInfoResources
 from accounts.models import BmsUser
 from django.contrib.auth.models import Group
 # from projects import views
@@ -16,7 +15,6 @@ import datetime
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""
-    # TODO: 20190108 合同信息外键关联代理商和业务员，造成其中一个外键无用
     fields = (
         'contract_number', 'client', 'box_price', 'detection_price',
         'contract_money', 'send_date', 'tracking_number', 'send_back_date',
@@ -189,8 +187,11 @@ class InvoiceInfoAdmin(ImportExportModelAdmin):
         if change:
             send_invoices = SendInvoices.objects.filter(invoice_id=obj)
             if not send_invoices.exists():
-                if request.POST.get('approve_flag') == 'tg':
-                    value = float(request.POST.get('invoice_value'))
+                approve_status = request.POST.get('approve_flag',
+                                                  obj.approve_flag)
+                if approve_status == 'tg':
+                    value = float(request.POST.get('invoice_value',
+                                                   obj.invoice_value))
                     SendInvoices.objects.create(invoice_id=obj, wait_payment=value)
             super(InvoiceInfoAdmin, self).save_model(request, obj, form, change)
         else:
@@ -200,50 +201,3 @@ class InvoiceInfoAdmin(ImportExportModelAdmin):
             if request.POST.get('approve_flag') == 'tg':
                 value = float(request.POST.get('invoice_value'))
                 SendInvoices.objects.create(invoice_id=obj, wait_payment=value)
-
-
-class BoxApplicationsAdmin(ImportExportActionModelAdmin):
-    """申请盒子信息管理"""
-
-    fields = (
-        'contract_number', 'amount', 'classification', 'intention_client',
-        'address_name', 'address_phone', 'send_address', 'box_price',
-        'detection_price', 'use', 'proposer', 'box_submit_flag'
-    )
-    list_display = (
-        'colored_contract_number', 'amount', 'classification',
-        'intention_client', 'address_name', 'address_phone', 'send_address',
-        'proposer', 'box_price', 'detection_price', 'use', 'submit_time',
-        'approval_status', 'box_submit_flag'
-    )
-    list_per_page = 40
-    save_as_continue = False
-    resource_class = BoxApplicationsResources
-    form = BoxApplicationsForm
-
-    def get_readonly_fields(self, request, obj=None):
-        """功能：配合change_view()使用，实现申请提交后信息变为只读"""
-        self.readonly_fields = ()
-        if hasattr(obj, 'box_submit_flag'):
-            if obj.box_submit_flag:
-                self.readonly_fields = (
-                    'contract_number', 'amount', 'classification',
-                    'intention_client', 'address_name', 'address_phone',
-                    'send_address', 'box_price', 'detection_price', 'use',
-                    'box_submit_flag'
-                )
-        return self.readonly_fields
-
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-        contract_data = BoxApplications.objects.filter(id=object_id)
-        self.get_readonly_fields(request, obj=contract_data)
-        return super(BoxApplicationsAdmin, self).change_view(
-            request, object_id, form_url, extra_context=extra_context
-        )
-
-    def get_changeform_initial_data(self, request):
-        initial = super().get_changeform_initial_data(request)
-        property_value = initial.get('proposer', request.user)
-        print(property_value)
-        initial['proposer'] = property_value
-        return initial
