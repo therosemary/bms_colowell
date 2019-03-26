@@ -4,108 +4,105 @@ from django.contrib.auth.models import Group
 from import_export.admin import ImportExportActionModelAdmin, \
     ExportActionModelAdmin
 from django.contrib.admin import ModelAdmin
-# from tech_support.forms import BoxApplicationsForm
+from tech_support.forms import BoxApplicationsForm
 from rangefilter.filter import DateRangeFilter
 
 from tech_support.models import *
 from import_export import fields
-# from tech_support.resources import BoxApplicationsResources
+from tech_support.resources import BoxApplicationsResources
 from tech_support.resources import TechsupportResources
+    # BoxDeliveriesResource
 
 Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
 
 
-class TechsupportInline(admin.TabularInline):
-    model = Techsupport
-    fields = ["barcode", "name"]
+# class TechsupportInline(admin.TabularInline):
+#     model = Techsupport
+#     fields = ["barcode", "name"]
+#
+#     def get_readonly_fields(self, request, obj=None):
+#         try:
+#             if obj.submit:
+#                 return ["barcode", "name"]
+#         except AttributeError:
+#             return []
+#         return []
 
-    def get_readonly_fields(self, request, obj=None):
-        try:
-            if obj.submit:
-                self.readonly_fields = ["barcode", "name"]
-        except AttributeError:
-            return []
-        return []
 
-
-class BoxDeliveriesAdmin(ExportActionModelAdmin):
-    """盒子发货管理"""
-    inlines = [TechsupportInline]
-    list_per_page = 50
-    search_fields = ("sale_man", "send_date")
-    save_on_top = False
-    list_display = ("sale_man", "customer",
-                    'send_number', 'send_date', 'made_date')
-    list_display_links = ('customer',)
-    resource_class = BoxDeliveries
-    fieldsets = (
-        ('盒子发货信息', {
-            'fields': ('sale_man', 'customer', 'send_number',
-                       "address", "box_number",
-                       "send_date", "made_date", 'submit')
-        }),
-    )
-
-    def get_readonly_fields(self, request, obj=None):
-        try:
-            if obj.submit:
-                return ['sale_man', "customer", "box_number",
-                        "send_number", "send_date",
-                        'made_date', "submit", "index_number", "address"]
-        except AttributeError:
-            pass
-        return ["box_number", ]
-
-    def box_number(self, obj):
-        if obj:
-            n = 0
-            for i in obj.boxes_set.all():
-                n += 1
-            return n
-        return 0
-    box_number.short_description = '盒子数量'
-
-    # def save_model(self, request, obj, form, change):
-    #     if not obj.index_number:
-    #         sj = datetime.datetime.now()
-    #         if BoxDeliveries.objects.all().count() == 0:
-    #             obj.index_number = str(sj.year) + Monthchoose[sj.month] + "1"
-    #
-    #         else:
-    #             obj.index_number = str(sj.year) + Monthchoose[sj.month] + str(
-    #                 BoxDeliveries.objects.latest('id').id + 1)
-        # if obj.submit:
-        #     sj = datetime.datetime.now()
-        #     if BoxDeliveries.objects.all().count() == 0:
-        #         ext_number = "Ext_" + str(sj.year) + Monthchoose[
-        #             sj.month] + "1"
-        #
-        #     else:
-        #         ext_number = "Ext_" + str(sj.year) + Monthchoose[
-        #             sj.month] + str(ExtSubmit.objects.latest('id').id + 1)
-        #     ExtSubmit.objects.create(extsubmit_number=ext_number,)
-        # obj.save()
-
-    def save_formset(self, request, form, formset, change):
-        instances = formset.save(commit=False)
-        for obj in formset.deleted_objects:
-            obj.delete()
-        if instances:
-            sj = datetime.datetime.now()
-            for instance in instances:
-                # if not instance.index_number:
-                #     if Techsupport.objects.all().count() == 0:
-                #         instance.index_number = "HZ" + str(sj.year) + \
-                #                                 Monthchoose[
-                #                                     sj.month] + "1"
-                #     else:
-                #         instance.index_number = "HZ" + str(sj.year) + \
-                #                                 Monthchoose[
-                #                                     sj.month] + str(
-                #             Techsupport.objects.latest('id').id + 1)
-                instance.save()
-                formset.save_m2m()
+# class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
+#     """盒子发货管理"""
+#     inlines = [TechsupportInline]
+#     list_per_page = 50
+#     search_fields = ("sale_man", "send_date")
+#     save_on_top = False
+#     list_display = ("sale_man", "customer",
+#                     'send_number', 'send_date', 'made_date')
+#     list_display_links = ('customer',)
+#     # resource_class = BoxDeliveriesResource
+#     fieldsets = (
+#         ('盒子发货信息', {
+#             'fields': ('sale_man', 'customer', 'send_number',
+#                        "address", "box_number",
+#                        "send_date", "made_date", 'submit')
+#         }),
+#     )
+#
+#     def get_export_resource_class(self):
+#         return
+#
+#     def get_import_resource_class(self):
+#         return
+#
+#     def get_readonly_fields(self, request, obj=None):
+#         try:
+#             if obj.submit:
+#                 return ['sale_man', "customer", "box_number",
+#                         "send_number", "send_date",
+#                         'made_date', "submit", "index_number", "address"]
+#         except AttributeError:
+#             pass
+#         return ["box_number", ]
+#
+#     def box_number(self, obj):
+#         if obj:
+#             n = 0
+#             for i in obj.boxes_set.all():
+#                 n += 1
+#             return n
+#         return 0
+#     box_number.short_description = '盒子数量'
+#
+#     def save_model(self, request, obj, form, change):
+#         if not obj.index_number:
+#             sj = datetime.datetime.now()
+#             if BoxDeliveries.objects.all().count() == 0:
+#                 obj.index_number = str(sj.year) + Monthchoose[sj.month] + "1"
+#
+#             else:
+#                 obj.index_number = str(sj.year) + Monthchoose[sj.month] + str
+#                     (BoxDeliveries.objects.latest('id').id + 1)
+#         obj.save()
+#
+#     def save_formset(self, request, form, formset, change):
+#         instances = formset.save(commit=False)
+#         for obj in formset.deleted_objects:
+#             obj.delete()
+#         if instances:
+#             sj = datetime.datetime.now()
+#             for instance in instances:
+#                 # if not instance.index_number:
+#                 #     if Techsupport.objects.all().count() == 0:
+#                 #         instance.index_number = "HZ" + str(sj.year) + \
+#                 #                                 Monthchoose[
+#                 #                                     sj.month] + "1"
+#                 #     else:
+#                 #         instance.index_number = "HZ" + str(sj.year) + \
+#                 #                                 Monthchoose[
+#                 #                                     sj.month] + str(
+#                 #             Techsupport.objects.latest('id').id + 1)
+#                 instance.save()
+#                 formset.save_m2m()
 
 
 @admin.register(Techsupport)
@@ -120,6 +117,14 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
     list_display_links = ('barcode',)
     actions = ["accept_box", ]
     resource_class = TechsupportResources
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        # extra_context = extra_context or {}
+        # extra_context['show_delete'] = False
+        # extra_context['show_save_and_continue'] = False
+        print(object_id)
+        return super().change_view(request, object_id, form_url,
+                                   extra_context=extra_context)
 
     def accept_box(self, request, queryset):
         n = 0
@@ -176,7 +181,7 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
                 return ['accept_box']
 
     def save_model(self, request, obj, form, change):
-        if obj.insure_receive and obj.status==0:
+        if obj.insure_receive and obj.status == 0:
             obj.status = 1
         obj.save()
 
@@ -236,46 +241,46 @@ class ExtSubmitAdmin(ImportExportActionModelAdmin):
         return super().formfield_for_manytomany(db_field, request, **kwargs)
 
 
-# class BoxApplicationsAdmin(ImportExportActionModelAdmin):
-#     """申请盒子信息管理"""
-#
-#     fields = (
-#         'contract_number', 'amount', 'classification', 'intention_client',
-#         'address_name', 'address_phone', 'send_address', 'box_price',
-#         'detection_price', 'use', 'proposer', 'box_submit_flag'
-#     )
-#     list_display = (
-#         'colored_contract_number', 'amount', 'classification',
-#         'intention_client', 'address_name', 'address_phone', 'send_address',
-#         'proposer', 'box_price', 'detection_price', 'use', 'submit_time',
-#         'approval_status', 'box_submit_flag'
-#     )
-#     list_per_page = 40
-#     save_as_continue = False
-#     resource_class = BoxApplicationsResources
-#     form = BoxApplicationsForm
-#
-#     def get_readonly_fields(self, request, obj=None):
-#         """功能：配合change_view()使用，实现申请提交后信息变为只读"""
-#         self.readonly_fields = ()
-#         if hasattr(obj, 'box_submit_flag'):
-#             if obj.box_submit_flag:
-#                 self.readonly_fields = (
-#                     'contract_number', 'amount', 'classification',
-#                     'intention_client', 'address_name', 'address_phone',
-#                     'send_address', 'box_price', 'detection_price', 'use',
-#                     'box_submit_flag'
-#                 )
-#         return self.readonly_fields
-#
-#     def change_view(self, request, object_id, form_url='', extra_context=None):
-#         contract_data = BoxApplications.objects.filter(id=object_id)
-#         self.get_readonly_fields(request, obj=contract_data)
-#         return super(BoxApplicationsAdmin, self).change_view(
-#             request, object_id, form_url, extra_context=extra_context
-#         )
-#
-#     def get_changeform_initial_data(self, request):
-#         initial = super().get_changeform_initial_data(request)
-#         initial['proposer'] = request.user
-#         return initial
+class BoxApplicationsAdmin(ImportExportActionModelAdmin):
+    """申请盒子信息管理"""
+
+    fields = (
+        'contract_number', 'amount', 'classification', 'intention_client',
+        'address_name', 'address_phone', 'send_address', 'box_price',
+        'detection_price', 'use', 'proposer', 'box_submit_flag'
+    )
+    list_display = (
+        'colored_contract_number', 'amount', 'classification',
+        'intention_client', 'address_name', 'address_phone', 'send_address',
+        'proposer', 'box_price', 'detection_price', 'use', 'submit_time',
+        'approval_status', 'box_submit_flag'
+    )
+    list_per_page = 40
+    save_as_continue = False
+    resource_class = BoxApplicationsResources
+    form = BoxApplicationsForm
+
+    def get_readonly_fields(self, request, obj=None):
+        """功能：配合change_view()使用，实现申请提交后信息变为只读"""
+        self.readonly_fields = ()
+        if hasattr(obj, 'box_submit_flag'):
+            if obj.box_submit_flag:
+                self.readonly_fields = (
+                    'contract_number', 'amount', 'classification',
+                    'intention_client', 'address_name', 'address_phone',
+                    'send_address', 'box_price', 'detection_price', 'use',
+                    'box_submit_flag'
+                )
+        return self.readonly_fields
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        contract_data = BoxApplications.objects.filter(id=object_id)
+        self.get_readonly_fields(request, obj=contract_data)
+        return super(BoxApplicationsAdmin, self).change_view(
+            request, object_id, form_url, extra_context=extra_context
+        )
+
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial['proposer'] = request.user
+        return initial
