@@ -6,26 +6,21 @@ from projects.models import ContractsInfo
 from suggestions.models import Choices
 
 
-class BoxDeliveries(models.Model):
-    """盒子发货管理"""
-    # index_number = models.CharField("盒子发货编号", max_length=20)
-    sale_man = models.ForeignKey(
-        AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
-        null=True)
-    customer = models.CharField(max_length=20, verbose_name="客户")
-    # box_number = models.IntegerField(verbose_name="邮寄盒子数")
-    send_number = models.CharField(max_length=200, verbose_name="快递单号")
-    address = models.CharField(max_length=200, verbose_name="地址", default="")
-    send_date = models.DateField("邮寄日期", null=True)
-    made_date = models.DateField("生产日期", null=True)
-    submit = models.BooleanField(verbose_name='提交', default=False)
-    parent = models.ForeignKey(
-                    Partners, verbose_name="合作方", on_delete=models.SET_NULL,
-                    null=True, blank=True)
-
-    class Meta:
-        app_label = "tech_support"
-        verbose_name = verbose_name_plural = "盒子发货管理"
+# class BoxDeliveries(models.Model):
+#     """盒子发货管理"""
+#     # index_number = models.CharField("盒子发货编号", max_length=20)
+#     sale_man = models.ForeignKey(
+#         AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
+#         null=True)
+#     customer = models.CharField(max_length=20, verbose_name="客户")
+#     # box_number = models.IntegerField(verbose_name="邮寄盒子数")
+#
+#
+#     submit = models.BooleanField(verbose_name='提交', default=False)
+#
+#     class Meta:
+#         app_label = "tech_support"
+#         verbose_name = verbose_name_plural = "盒子发货管理"
 
 
 class Techsupport(models.Model):
@@ -48,6 +43,17 @@ class Techsupport(models.Model):
     )
     status = models.IntegerField(choices=BOX_STATUS, verbose_name="盒子状态",
                                  default=0, blank=True, null=True)
+    # 盒子发货移植内容
+    parent = models.ForeignKey(
+        Partners, verbose_name="合作方", on_delete=models.SET_NULL,
+        null=True, blank=True)
+    send_date = models.DateField(verbose_name="邮寄日期", blank=True, null=True)
+    made_date = models.DateField(verbose_name="生产日期", blank=True, null=True)
+    address = models.CharField(max_length=200, verbose_name="地址", default="")
+    sale_man = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
+        blank=True, null=True)
+
     receive_date = models.DateField(
         verbose_name="收样日期", blank=True, null=True)
     sampling_date = models.DateField(
@@ -122,10 +128,10 @@ class Techsupport(models.Model):
         verbose_name="调查问卷备注", max_length=200, blank=True, null=True)
     istasking = models.BooleanField(
         verbose_name="是否开始任务", default=False)
-    boxdeliveries = models.ForeignKey(
-        to=BoxDeliveries, verbose_name="盒子发货编号", on_delete=models.SET_NULL,
-        blank=True, null=True
-    )
+    # boxdeliveries = models.ForeignKey(
+    #     to=BoxDeliveries, verbose_name="盒子发货编号", on_delete=models.SET_NULL,
+    #     related_name="tech", blank=True, null=True
+    # )
     insure_receive = models.BooleanField(
         verbose_name="收货确认", default=False
     )
@@ -267,77 +273,77 @@ class ExtSubmit(models.Model):
 
 
 
-# class BoxApplications(models.Model):
-#     CLASSIFICATION = (
-#         ('YY', u'已有合同'),
-#         ('YX', u'意向合同'),
-#         ('LS', u'零售'),
-#         ('ZS', u'赠送')
-#     )
-#     intention_client = models.ForeignKey(
-#         Partners, verbose_name="客户", on_delete=models.SET_NULL, null=True,
-#         blank=True
-#     )
-#     amount = models.IntegerField(
-#         verbose_name="申请数量", null=True, blank=True
-#     )
-#     classification = models.CharField(
-#         verbose_name="申请类别", max_length=3, choices=CLASSIFICATION,
-#         null=True, blank=True
-#     )
-#     contract_number = models.ForeignKey(
-#         ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
-#         null=True, blank=True
-#     )
-#     address_name = models.CharField(
-#         verbose_name="收件人姓名", max_length=50, null=True, blank=True
-#     )
-#     address_phone = models.CharField(
-#         verbose_name="收件人号码", max_length=20, null=True, blank=True
-#     )
-#     send_address = models.CharField(
-#         verbose_name="邮寄地址", max_length=200, null=True, blank=True
-#     )
-#     submit_time = models.DateField(
-#         verbose_name="提交时间", auto_now=True
-#     )
-#     approval_status = models.BooleanField(
-#         verbose_name="审批状态", default=False, null=True, blank=True
-#     )
-#     box_price = models.FloatField(
-#         verbose_name="盒子单价", null=True, blank=True
-#     )
-#     detection_price = models.FloatField(
-#         verbose_name="检测单价", null=True, blank=True
-#     )
-#     use = models.CharField(
-#         verbose_name="用途", max_length=100, null=True, blank=True
-#     )
-#     proposer = models.ForeignKey(
-#         AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
-#         null=True, blank=True
-#     )
-#     box_submit_flag = models.BooleanField(
-#         verbose_name="是否提交", default=False
-#     )
-#
-#     def colored_contract_number(self):
-#         if self.contract_number is not None:
-#             if self.contract_number.contract_type == 'YX':
-#                 return format_html(
-#                     '<span style="color:{}">{}</span>', 'red',
-#                     self.contract_number
-#                 )
-#             return format_html(
-#                 '<span>{}</span>', self.contract_number
-#             )
-#     colored_contract_number.short_description = "合同号"
-#
-#     class Meta:
-#         verbose_name = verbose_name_plural = "盒子申请"
-#         ordering = ["-submit_time"]
-#
-#     def __str__(self):
-#         return '盒子申请编号：{}'.format(self.id)
+class BoxApplications(models.Model):
+    CLASSIFICATION = (
+        ('YY', u'已有合同'),
+        ('YX', u'意向合同'),
+        ('LS', u'零售'),
+        ('ZS', u'赠送')
+    )
+    intention_client = models.ForeignKey(
+        Partners, verbose_name="客户", on_delete=models.SET_NULL, null=True,
+        blank=True
+    )
+    amount = models.IntegerField(
+        verbose_name="申请数量", null=True, blank=True
+    )
+    classification = models.CharField(
+        verbose_name="申请类别", max_length=3, choices=CLASSIFICATION,
+        null=True, blank=True
+    )
+    contract_number = models.ForeignKey(
+        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    address_name = models.CharField(
+        verbose_name="收件人姓名", max_length=50, null=True, blank=True
+    )
+    address_phone = models.CharField(
+        verbose_name="收件人号码", max_length=20, null=True, blank=True
+    )
+    send_address = models.CharField(
+        verbose_name="邮寄地址", max_length=200, null=True, blank=True
+    )
+    submit_time = models.DateField(
+        verbose_name="提交时间", auto_now=True
+    )
+    approval_status = models.BooleanField(
+        verbose_name="审批状态", default=False, null=True, blank=True
+    )
+    box_price = models.FloatField(
+        verbose_name="盒子单价", null=True, blank=True
+    )
+    detection_price = models.FloatField(
+        verbose_name="检测单价", null=True, blank=True
+    )
+    use = models.CharField(
+        verbose_name="用途", max_length=100, null=True, blank=True
+    )
+    proposer = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    box_submit_flag = models.BooleanField(
+        verbose_name="是否提交", default=False
+    )
+
+    def colored_contract_number(self):
+        if self.contract_number is not None:
+            if self.contract_number.contract_type == 'YX':
+                return format_html(
+                    '<span style="color:{}">{}</span>', 'red',
+                    self.contract_number
+                )
+            return format_html(
+                '<span>{}</span>', self.contract_number
+            )
+    colored_contract_number.short_description = "合同号"
+
+    class Meta:
+        verbose_name = verbose_name_plural = "盒子申请"
+        ordering = ["-submit_time"]
+
+    def __str__(self):
+        return '盒子申请编号：{}'.format(self.id)
 
 
