@@ -1,7 +1,9 @@
 from django.test import TestCase
-from projects.models import ContractsInfo, BoxApplications, InvoiceInfo
+
 from accounts.models import BmsUser
+from projects.models import ContractsInfo, InvoiceInfo
 from partners.models import Partners
+
 
 class TestProject(TestCase):
     """projects模块测试类"""
@@ -25,13 +27,6 @@ class TestProject(TestCase):
             staff_name=self.test_user,
         )
         self.assertTrue(self.test_contract)
-
-    def test_can_create_box(self):
-        """测试用例：新建申请盒子记录"""
-        test_box = BoxApplications.objects.create(
-            amount=30, use="零售", proposer=self.test_username
-        )
-        self.assertTrue(test_box)
 
     def test_can_create_invoice(self):
         """测试用例：新建申请发票记录"""

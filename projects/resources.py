@@ -1,9 +1,10 @@
-from import_export import resources
+from import_export.widgets import DateWidget
 from import_export.fields import Field
-from import_export.widgets import IntegerWidget, DecimalWidget, \
-    ForeignKeyWidget, DateWidget
+from import_export import resources
+
 from projects.models import ContractsInfo, InvoiceInfo
 from invoices.models import PaymentInfo
+
 
 class ContractInfoResources(resources.ModelResource):
     """合同信息导入导出resources"""
@@ -95,7 +96,11 @@ class ContractInfoResources(resources.ModelResource):
 
     def dehydrate_full_set_price(self, contractinfo):
         """计算全套价格"""
-        full_set_price = contractinfo.box_price + contractinfo.detection_price
+        if contractinfo.box_price is not None and contractinfo.detection_price \
+                is not None:
+            full_set_price = contractinfo.box_price + contractinfo.detection_price
+        else:
+            full_set_price = None
         return full_set_price
 
     # def dehydrate_count_invoice_value(self, contractinfo):

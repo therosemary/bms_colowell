@@ -1,7 +1,7 @@
 from django.db import models
-from partners.models import Partners
+
 from bms_colowell.settings import AUTH_USER_MODEL
-from django.utils.html import format_html
+from partners.models import Partners
 
 
 class ContractsInfo(models.Model):
@@ -39,7 +39,7 @@ class ContractsInfo(models.Model):
         verbose_name="寄回时间", null=True, blank=True
     )
     contract_content = models.FileField(
-        verbose_name="合同内容", upload_to="#", max_length=100, null=True,
+        verbose_name="合同内容", upload_to="contract", max_length=100, null=True,
         blank=True
     )
     contract_type = models.CharField(

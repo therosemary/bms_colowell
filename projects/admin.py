@@ -1,17 +1,20 @@
-# from django.urls import path
-# from django.http import JsonResponse, HttpResponse
-from django.utils.html import format_html
-from django.db.models import Q
+import datetime
 # import json
-from import_export.admin import ImportExportActionModelAdmin, ImportExportModelAdmin
-from projects.models import InvoiceInfo, ContractsInfo
-from invoices.models import SendInvoices, PaymentInfo
+
+from django.utils.html import format_html
+# from django.contrib.auth.models import Group
+# from django.http import JsonResponse, HttpResponse
+# from django.urls import path
+# from django.db.models import Q
+
+from projects.models import ContractsInfo, InvoiceInfo
 from projects.forms import ContractInfoForm, InvoiceInfoForm
 from projects.resources import ContractInfoResources, InvoiceInfoResources
-from accounts.models import BmsUser
-from django.contrib.auth.models import Group
+from import_export.admin import ImportExportActionModelAdmin
+from invoices.models import SendInvoices, PaymentInfo
+# from accounts.models import BmsUser
 # from projects import views
-import datetime
+
 
 class ContractsInfoAdmin(ImportExportActionModelAdmin):
     """合同信息管理"""
@@ -96,14 +99,13 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
         if change:
             super(ContractsInfoAdmin, self).save_model(request, obj, form, change)
         else:
-            print(datetime.datetime.now().strftime('%Y%m%d%H%M%S'))
             contract_code = datetime.datetime.now().strftime('%Y%m%d') + \
                             'RYS-' + datetime.datetime.now().strftime('%H%M%S')
             obj.contract_code = contract_code
             super().save_model(request, obj, form, change)
 
 
-class InvoiceInfoAdmin(ImportExportModelAdmin):
+class InvoiceInfoAdmin(ImportExportActionModelAdmin):
     """开票信息管理"""
 
     change_form_template = 'admin/projects/projects_invoices_change_form.html'
