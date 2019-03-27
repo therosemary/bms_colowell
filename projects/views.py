@@ -1,8 +1,7 @@
-from django.shortcuts import render
 from django.http import JsonResponse
-from django.http import HttpResponse
+
 from projects.models import ContractsInfo
-import json
+
 
 # Create your views here.
 def ajax_salesman(request):
@@ -16,4 +15,5 @@ def ajax_salesman(request):
             # TODO: 业务员信息获取错误
             salesman_result = {'salesman': contract_data.staff_name}
     return JsonResponse(salesman_result)
-    # return HttpResponse(json.dumps(salesman_result), content_type="application/json")
+    # return HttpResponse(json.dumps(salesman_result),
+    # con   tent_type="application/json")
