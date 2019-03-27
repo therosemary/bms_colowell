@@ -17,6 +17,22 @@ def upload_to_zipped(obj, filename):
     return os.path.join("zipped_files", filename)
 
 
+class Batches(models.Model):
+    batch_code = models.CharField(
+        verbose_name="批次号", max_length=18, primary_key=True
+    )
+    create_at = models.DateField(
+        verbose_name="入库于", null=True, blank=True, default=timezone.now
+    )
+
+    class Meta:
+        ordering = ["-create_at"]
+        verbose_name = verbose_name_plural = "批次记录"
+
+    def __str__(self):
+        return "%s" % self.batch_code
+
+
 class LzProducts(models.Model):
     barcode = models.CharField(
         verbose_name="常易舒编号", max_length=18, primary_key=True,
@@ -43,6 +59,9 @@ class LzProducts(models.Model):
     pdf_upload = models.FileField(
         verbose_name="报告", null=True, blank=True,
         upload_to=upload_to_report,
+    )
+    batch_code = models.ForeignKey(
+        Batches, verbose_name="批次号", on_delete=models.SET_NULL, null=True,
     )
     
     class Meta:
