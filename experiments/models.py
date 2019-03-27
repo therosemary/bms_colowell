@@ -1,5 +1,6 @@
 from django.db import models
 from bms_colowell.settings import AUTH_USER_MODEL
+from suggestions.models import Collections
 from tech_support.models import Techsupport
 
 
@@ -108,31 +109,31 @@ class Experiments(models.Model):
         verbose_name="荧光定量-仪器", max_length=50, blank=True, null=True)
     fq_loop_number = models.CharField(
         verbose_name="荧光定量-循环数", max_length=50, blank=True, null=True)
-    fq_background = models.CharField(
-        verbose_name="荧光定量-Background", max_length=50, blank=True, null=True
-    )
-    fq_actb_noise = models.CharField(
-        verbose_name="荧光定量-ACTB_NoiseBand/STDMultiplier", max_length=50,
-        blank=True, null=True
-    )
+    # fq_background = models.CharField(
+    #     verbose_name="荧光定量-Background", max_length=50, blank=True, null=True
+    # )
+    # fq_actb_noise = models.CharField(
+    #     verbose_name="荧光定量-ACTB_NoiseBand/STDMultiplier", max_length=50,
+    #     blank=True, null=True
+    # )
     fq_actb_ct = models.CharField(verbose_name="荧光定量-ACTB_CT值",
                                   max_length=50, blank=True, null=True)
     fq_actb_amp = models.CharField(
         verbose_name="荧光定量-ACTB_扩增曲线", max_length=50, blank=True,
         null=True
     )
-    fq_sfrp2_noise = models.CharField(
-        verbose_name="荧光定量-Sfrp2_NoiseBand/STDMultiplier",
-        max_length=50, blank=True, null=True)
+    # fq_sfrp2_noise = models.CharField(
+    #     verbose_name="荧光定量-Sfrp2_NoiseBand/STDMultiplier",
+    #     max_length=50, blank=True, null=True)
     fq_sfrp2_ct = models.CharField(verbose_name="荧光定量-Sfrp2_CT值",
                                    max_length=50, blank=True, null=True)
     fq_sfrp2_amp = models.CharField(
         verbose_name="荧光定量-Sfrp2_扩增曲线", max_length=50, blank=True,
         null=True
     )
-    fq_sdc2_noise = models.CharField(
-        verbose_name="荧光定量-Sdc2_NoiseBand/STDMultiplier", max_length=50,
-        blank=True, null=True)
+    # fq_sdc2_noise = models.CharField(
+    #     verbose_name="荧光定量-Sdc2_NoiseBand/STDMultiplier", max_length=50,
+    #     blank=True, null=True)
     fq_sdc2_ct = models.CharField(
         verbose_name="荧光定量-Sdc2_CT值", max_length=50, blank=True, null=True)
     fq_sdc2_amp = models.CharField(
@@ -156,3 +157,34 @@ class Experiments(models.Model):
 
     def __str__(self):
         return self.index_number
+
+
+class ResultJudgement(models.Model):
+    experiment = models.OneToOneField(
+        to=Experiments, verbose_name="对应实验", blank=True, null=True,
+        on_delete=models.SET_NULL)
+    collection = models.OneToOneField(
+        to=Collections, verbose_name="对应调查问卷", blank=True, null=True,
+        on_delete=models.SET_NULL)
+    risk = models.CharField(verbose_name="风险性", choices=(("high", u"高风险"),
+                                                            ("low", u"低风险")),
+                            blank=True, null=True, max_length=20)
+    SDC2 = models.CharField(verbose_name="SDC2基因检测结果", max_length=20,
+                            choices=(("yin", u"阴性"),
+                                     ("yang", u"阳性")),
+                            blank=True, null=True)
+    SFRP2 = models.CharField(verbose_name="SFRP2基因检测结果", max_length=20,
+                             choices=(("yin", u"阴性"),
+                                     ("yang", u"阳性")),
+                             blank=True, null=True)
+    res_date = models.DateField(verbose_name="判定日期", blank=True, null=True)
+    risk_file = models.FileField(verbose_name="风险评估报告",
+                                 upload_to="riskfile", blank=True, null=True)
+    submit = models.BooleanField(verbose_name="提交", blank=True, default=False)
+
+    class Meta:
+        app_label = "experiments"
+        verbose_name = verbose_name_plural = "结果判定"
+
+    def __str__(self):
+        return self.experiment.index_number

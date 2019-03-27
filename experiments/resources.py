@@ -159,15 +159,15 @@ class ExperimentsResource(resources.ModelResource):
         column_name='荧光定量-循环数', attribute='fq_loop_number',
         default=None
     )
-    fq_background = Field(
-        column_name='荧光定量-Background', attribute='fq_background',
-        default=None
-    )
-    fq_actb_noise = Field(
-        column_name='荧光定量-ACTB_NoiseBand/STDMultiplier',
-        attribute='fq_actb_noise',
-        default=None
-    )
+    # fq_background = Field(
+    #     column_name='荧光定量-Background', attribute='fq_background',
+    #     default=None
+    # )
+    # fq_actb_noise = Field(
+    #     column_name='荧光定量-ACTB_NoiseBand/STDMultiplier',
+    #     attribute='fq_actb_noise',
+    #     default=None
+    # )
     fq_actb_ct = Field(
         column_name='荧光定量-ACTB_CT值', attribute='fq_actb_ct',
         default=None
@@ -176,11 +176,11 @@ class ExperimentsResource(resources.ModelResource):
         column_name='荧光定量-ACTB_扩增曲线', attribute='fq_actb_amp',
         default=None
     )
-    fq_sfrp2_noise = Field(
-        column_name='荧光定量-Sfrp2_NoiseBand/STDMultiplier',
-        attribute='fq_sfrp2_noise',
-        default=None
-    )
+    # fq_sfrp2_noise = Field(
+    #     column_name='荧光定量-Sfrp2_NoiseBand/STDMultiplier',
+    #     attribute='fq_sfrp2_noise',
+    #     default=None
+    # )
     fq_sfrp2_ct = Field(
         column_name='荧光定量-Sfrp2_CT值', attribute='fq_sfrp2_ct',
         default=None
@@ -189,11 +189,11 @@ class ExperimentsResource(resources.ModelResource):
         column_name='荧光定量-Sfrp2_扩增曲线', attribute='fq_sfrp2_amp',
         default=None
     )
-    fq_sdc2_noise = Field(
-        column_name='荧光定量-Sdc2_NoiseBand/STDMultiplier',
-        attribute='fq_sdc2_noise',
-        default=None
-    )
+    # fq_sdc2_noise = Field(
+    #     column_name='荧光定量-Sdc2_NoiseBand/STDMultiplier',
+    #     attribute='fq_sdc2_noise',
+    #     default=None
+    # )
     fq_sdc2_ct = Field(
         column_name='荧光定量-Sdc2_CT值', attribute='fq_sdc2_ct',
         default=None
@@ -225,63 +225,81 @@ class ExperimentsResource(resources.ModelResource):
         skip_unchanged = True
         import_id_fields = ('index_number',)
         fields = (
-                  "id",
-                  'index_number', 'boxes', "receive_date", "projects_source",
-                  "ext_method", 'ext_objective', "ext_start_number",
-                  "ext_hemoglobin", "ext_cz_volume", 'ext_density',
-                  "ext_elution_volume", "ext_operator", 'ext_date',
-                  "ext_note", 'qua_test_number', "qua_instrument",
-                  "qua_sample_size", "qua_loop_number", "qua_background",
-                  "qua_noise", 'qua_ct', "qua_amplification_curve",
-                  "qua_is_quality", "qua_operator", "qua_date",
-                  "qua_note", 'bis_test_number', "bis_begin", "bis_template",
-                  "bis_elution", "bis_is_quality", "bis_operator", "bis_date",
-                  'bis_note',
-                  'fq_test_number', "fq_instrument", "fq_loop_number",
-                  "fq_background", "fq_actb_noise", 'fq_actb_ct',
-                  "fq_actb_amp", "fq_sfrp2_noise", 'fq_sfrp2_ct',
-                  "fq_sfrp2_amp", "fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
-                  "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
+                "id",
+                'index_number', 'boxes', "receive_date", "projects_source",
+                "ext_method", 'ext_objective', "ext_start_number",
+                "ext_hemoglobin", "ext_cz_volume", 'ext_density',
+                "ext_elution_volume", "ext_operator", 'ext_date',
+                "ext_note", 'qua_test_number', "qua_instrument",
+                "qua_sample_size", "qua_loop_number", "qua_background",
+                "qua_noise", 'qua_ct', "qua_amplification_curve",
+                "qua_is_quality", "qua_operator", "qua_date",
+                "qua_note", 'bis_test_number', "bis_begin", "bis_template",
+                "bis_elution", "bis_is_quality", "bis_operator", "bis_date",
+                'bis_note',
+                'fq_test_number', "fq_instrument", "fq_loop_number",
+                'fq_actb_ct',
+                "fq_actb_amp",  'fq_sfrp2_ct',
+                "fq_sfrp2_amp",  'fq_sdc2_ct', "fq_sdc2_amp",
+                "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
+        # (
+        #           "id",
+        #           'index_number', 'boxes', "receive_date", "projects_source",
+        #           "ext_method", 'ext_objective', "ext_start_number",
+        #           "ext_hemoglobin", "ext_cz_volume", 'ext_density',
+        #           "ext_elution_volume", "ext_operator", 'ext_date',
+        #           "ext_note", 'qua_test_number', "qua_instrument",
+        #           "qua_sample_size", "qua_loop_number", "qua_background",
+        #           "qua_noise", 'qua_ct', "qua_amplification_curve",
+        #           "qua_is_quality", "qua_operator", "qua_date",
+        #           "qua_note", 'bis_test_number', "bis_begin", "bis_template",
+        #           "bis_elution", "bis_is_quality", "bis_operator", "bis_date",
+        #           'bis_note',
+        #           'fq_test_number', "fq_instrument", "fq_loop_number",
+        #           "fq_background", "fq_actb_noise", 'fq_actb_ct',
+        #           "fq_actb_amp", "fq_sfrp2_noise", 'fq_sfrp2_ct',
+        #           "fq_sfrp2_amp", "fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
+        #           "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
         export_order = (
-                  "id",
-                  'index_number', 'boxes', "receive_date", "projects_source",
-                  "ext_method", 'ext_objective', "ext_start_number",
-                  "ext_hemoglobin", "ext_cz_volume", 'ext_density',
-                  "ext_elution_volume", "ext_operator", 'ext_date',
-                  "ext_note", 'qua_test_number', "qua_instrument",
-                  "qua_sample_size", "qua_loop_number", "qua_background",
-                  "qua_noise", 'qua_ct', "qua_amplification_curve",
-                  "qua_is_quality", "qua_operator", "qua_date",
-                  "qua_note", 'bis_test_number', "bis_begin", "bis_template",
-                  "bis_elution", "bis_is_quality", "bis_operator", "bis_date",
-                  'bis_note',
-                  'fq_test_number', "fq_instrument", "fq_loop_number",
-                  "fq_background", "fq_actb_noise", 'fq_actb_ct',
-                  "fq_actb_amp", "fq_sfrp2_noise", 'fq_sfrp2_ct',
-                  "fq_sfrp2_amp", "fq_sdc2_noise", 'fq_sdc2_ct', "fq_sdc2_amp",
-                  "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
+                "id",
+                'index_number', 'boxes', "receive_date", "projects_source",
+                "ext_method", 'ext_objective', "ext_start_number",
+                "ext_hemoglobin", "ext_cz_volume", 'ext_density',
+                "ext_elution_volume", "ext_operator", 'ext_date',
+                "ext_note", 'qua_test_number', "qua_instrument",
+                "qua_sample_size", "qua_loop_number", "qua_background",
+                "qua_noise", 'qua_ct', "qua_amplification_curve",
+                "qua_is_quality", "qua_operator", "qua_date",
+                "qua_note", 'bis_test_number', "bis_begin", "bis_template",
+                "bis_elution", "bis_is_quality", "bis_operator", "bis_date",
+                'bis_note',
+                'fq_test_number', "fq_instrument", "fq_loop_number",
+                'fq_actb_ct',
+                "fq_actb_amp",  'fq_sfrp2_ct',
+                "fq_sfrp2_amp",  'fq_sdc2_ct', "fq_sdc2_amp",
+                "fq_is_quality", "fq_operator", "fq_date", "fq_suggest")
 
-    def get_export_headers(self):
-        return ["id", "实验编号", "盒子条形码", "收样日期",
-                "检测项目来源", "提取-提取方法", "提取-目的", "提取-起始取样量(ml)",
-                "提取-血红蛋白", "提取-磁珠体积(ul)", "提取-提取浓度(ng/ul)",
-                "提取-洗脱体积(ul)", "提取-操作人员", "提取-日期", "提取-实验备注",
-                "质检-试剂批次", "质检-仪器", "质检-上样量", "质检-循环数",
-                "质检-Background", "质检-非甲基化内参ACTB_Noise Band",
-                "质检-非甲基化内参ACTB_CT值", "质检-非甲基化内参ACTB_扩增曲线",
-                "质检-有无质控", "质检-操作人员", "质检-日期", "质检-实验备注",
-                "BIS-试剂批次", "BIS-起始量(ng)", "BIS-模板量(ul)",
-                "BIS-洗脱体积(ul)", "BIS-有无质控", "BIS-操作人员", "BIS-日期",
-                "BIS-实验备注", "荧光定量-试剂批次", "荧光定量-仪器",
-                "荧光定量-循环数", "荧光定量-Background",
-                "荧光定量-ACTB_NoiseBand/STDMultiplier", "荧光定量-ACTB_CT值",
-                "荧光定量-ACTB_扩增曲线",
-                "荧光定量-Sfrp2_NoiseBand/STDMultiplier",'荧光定量-Sfrp2_CT值',
-                '荧光定量-Sfrp2_扩增曲线',
-                '荧光定量-Sdc2_NoiseBand/STDMultiplier','荧光定量-Sdc2_CT值',
-                '荧光定量-Sdc2_扩增曲线', '荧光定量-有无质控', '荧光定量-操作人员',
-                '荧光定量-日期', '荧光定量-建议'
-                ]
+    # def get_export_headers(self):
+    #     return ["id", "实验编号", "盒子条形码", "收样日期",
+    #             "检测项目来源", "提取-提取方法", "提取-目的", "提取-起始取样量(ml)",
+    #             "提取-血红蛋白", "提取-磁珠体积(ul)", "提取-提取浓度(ng/ul)",
+    #             "提取-洗脱体积(ul)", "提取-操作人员", "提取-日期", "提取-实验备注",
+    #             "质检-试剂批次", "质检-仪器", "质检-上样量", "质检-循环数",
+    #             "质检-Background", "质检-非甲基化内参ACTB_Noise Band",
+    #             "质检-非甲基化内参ACTB_CT值", "质检-非甲基化内参ACTB_扩增曲线",
+    #             "质检-有无质控", "质检-操作人员", "质检-日期", "质检-实验备注",
+    #             "BIS-试剂批次", "BIS-起始量(ng)", "BIS-模板量(ul)",
+    #             "BIS-洗脱体积(ul)", "BIS-有无质控", "BIS-操作人员", "BIS-日期",
+    #             "BIS-实验备注", "荧光定量-试剂批次", "荧光定量-仪器",
+    #             "荧光定量-循环数", "荧光定量-Background",
+    #             "荧光定量-ACTB_NoiseBand/STDMultiplier", "荧光定量-ACTB_CT值",
+    #             "荧光定量-ACTB_扩增曲线",
+    #             "荧光定量-Sfrp2_NoiseBand/STDMultiplier",'荧光定量-Sfrp2_CT值',
+    #             '荧光定量-Sfrp2_扩增曲线',
+    #             '荧光定量-Sdc2_NoiseBand/STDMultiplier','荧光定量-Sdc2_CT值',
+    #             '荧光定量-Sdc2_扩增曲线', '荧光定量-有无质控', '荧光定量-操作人员',
+    #             '荧光定量-日期', '荧光定量-建议'
+    #             ]
 
     # def get_or_init_instance(self, instance_loader, row):
     #     instance = self.get_instance(instance_loader, row)
