@@ -1,7 +1,7 @@
 from django.db import models
-from partners.models import Partners
+
 from bms_colowell.settings import AUTH_USER_MODEL
-from django.utils.html import format_html
+from partners.models import Partners
 
 
 class ContractsInfo(models.Model):
@@ -39,7 +39,7 @@ class ContractsInfo(models.Model):
         verbose_name="寄回时间", null=True, blank=True
     )
     contract_content = models.FileField(
-        verbose_name="合同内容", upload_to="#", max_length=100, null=True,
+        verbose_name="合同内容", upload_to="contract", max_length=100, null=True,
         blank=True
     )
     contract_type = models.CharField(
@@ -66,80 +66,6 @@ class ContractsInfo(models.Model):
 
     def __str__(self):
         return '{}'.format(self.contract_number)
-
-
-class BoxApplications(models.Model):
-    CLASSIFICATION = (
-        ('YY', u'已有合同'),
-        ('YX', u'意向合同'),
-        ('LS', u'零售'),
-        ('ZS', u'赠送')
-    )
-    intention_client = models.ForeignKey(
-        Partners, verbose_name="客户", on_delete=models.SET_NULL, null=True,
-        blank=True
-    )
-    amount = models.IntegerField(
-        verbose_name="申请数量", null=True, blank=True
-    )
-    classification = models.CharField(
-        verbose_name="申请类别", max_length=3, choices=CLASSIFICATION,
-        null=True, blank=True
-    )
-    contract_number = models.ForeignKey(
-        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
-        null=True, blank=True
-    )
-    address_name = models.CharField(
-        verbose_name="收件人姓名", max_length=50, null=True, blank=True
-    )
-    address_phone = models.CharField(
-        verbose_name="收件人号码", max_length=20, null=True, blank=True
-    )
-    send_address = models.CharField(
-        verbose_name="邮寄地址", max_length=200, null=True, blank=True
-    )
-    submit_time = models.DateField(
-        verbose_name="提交时间", auto_now=True
-    )
-    approval_status = models.BooleanField(
-        verbose_name="审批状态", default=False, null=True, blank=True
-    )
-    box_price = models.FloatField(
-        verbose_name="盒子单价", null=True, blank=True
-    )
-    detection_price = models.FloatField(
-        verbose_name="检测单价", null=True, blank=True
-    )
-    use = models.CharField(
-        verbose_name="用途", max_length=100, null=True, blank=True
-    )
-    proposer = models.ForeignKey(
-        AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
-        null=True, blank=True
-    )
-    box_submit_flag = models.BooleanField(
-        verbose_name="是否提交", default=False
-    )
-
-    def colored_contract_number(self):
-        if self.contract_number is not None:
-            if self.contract_number.contract_type == 'YX':
-                return format_html(
-                    '<span style="color:{}">{}</span>', 'red', self.contract_number
-                )
-            return format_html(
-                '<span>{}</span>', self.contract_number
-            )
-    colored_contract_number.short_description = "合同号"
-
-
-    class Meta:
-        verbose_name = verbose_name_plural = "盒子申请"
-        ordering = ["-submit_time"]
-
-    def __str__(self):
-        return '盒子申请编号：{}'.format(self.id)
 
 
 class InvoiceInfo(models.Model):

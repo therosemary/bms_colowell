@@ -1,9 +1,10 @@
-from import_export import resources
+from import_export.widgets import DateWidget
 from import_export.fields import Field
-from import_export.widgets import IntegerWidget, DecimalWidget, \
-    ForeignKeyWidget, DateWidget
-from projects.models import ContractsInfo, InvoiceInfo, BoxApplications
+from import_export import resources
+
+from projects.models import ContractsInfo, InvoiceInfo
 from invoices.models import PaymentInfo
+
 
 class ContractInfoResources(resources.ModelResource):
     """合同信息导入导出resources"""
@@ -95,7 +96,11 @@ class ContractInfoResources(resources.ModelResource):
 
     def dehydrate_full_set_price(self, contractinfo):
         """计算全套价格"""
-        full_set_price = contractinfo.box_price + contractinfo.detection_price
+        if contractinfo.box_price is not None and contractinfo.detection_price \
+                is not None:
+            full_set_price = contractinfo.box_price + contractinfo.detection_price
+        else:
+            full_set_price = None
         return full_set_price
 
     # def dehydrate_count_invoice_value(self, contractinfo):
@@ -201,77 +206,4 @@ class InvoiceInfoResources(resources.ModelResource):
                           u'开票单位', u'发票抬头', u'税号', u'对方地址', u'号码',
                           u'开户行', u'账号', u'开票金额', u'开票内容', u'备注',
                           u'申请人', u'是否提交', u'审批状态', u'填写时间']
-        return export_headers
-
-
-class BoxApplicationsResources(resources.ModelResource):
-    """盒子申请信息导入导出"""
-
-    application_id = Field(
-        column_name="申请编号", attribute='id', default=None
-    )
-    contract_id = Field(
-        column_name="合同号", attribute='contract_number',
-        widget=ForeignKeyWidget(ContractsInfo, 'contract_number'), default=None
-    )
-    amount = Field(
-        column_name="申请数量", attribute='amount', widget=IntegerWidget()
-    )
-    classification = Field(
-        column_name="申请类别", attribute='classification'
-    )
-    address_name = Field(
-        column_name="收件人姓名", attribute='address_name'
-    )
-    address_phone = Field(
-        column_name="收件人号码", attribute='address_phone'
-    )
-    send_address = Field(
-        column_name="邮寄地址", attribute='send_address'
-    )
-    box_price = Field(
-        column_name="盒子单价", attribute='box_price', default=None
-    )
-    detection_price = Field(
-        column_name="检测单价", attribute='detection_price', default=None
-    )
-    use = Field(
-        column_name="用途", attribute='use'
-    )
-    proposer = Field(
-        column_name="申请人", attribute='proposer', default=None
-    )
-    submit_time = Field(
-        column_name="提交时间", attribute='submit_time', widget=DateWidget(
-            '%Y-%m-%d')
-    )
-    approval_status = Field(
-        column_name="审批状态", attribute='approval_status'
-    )
-    box_submit_flag = Field(
-        column_name="是否提交", attribute='box_submit_flag'
-    )
-
-    class Meta:
-        model = BoxApplications
-        fields = (
-            'application_id', 'contract_id', 'amount', 'classification',
-            'address_name', 'address_phone', 'send_address', 'box_price',
-            'detection_price', 'use', 'proposer', 'submit_time',
-            'approval_status', 'box_submit_flag'
-        )
-        export_order = (
-            'application_id', 'contract_id', 'amount', 'classification',
-            'address_name', 'address_phone', 'send_address', 'box_price',
-            'detection_price', 'use', 'proposer', 'submit_time',
-            'approval_status', 'box_submit_flag'
-        )
-        skip_unchanged = True
-        import_id_fields = ['application_id']
-
-    def get_export_headers(self):
-        export_headers = [u'申请编号', u'合同号', u'申请数量', u'申请类别',
-                          u'收件人姓名', u'收件人号码', u'邮寄地址', u'盒子单价',
-                          u'检测单价', u'用途', u'申请人', u'提交时间', u'审批状态',
-                          u'是否提交']
         return export_headers
