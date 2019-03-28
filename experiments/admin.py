@@ -1,25 +1,14 @@
 from django.contrib import admin
 from import_export.admin import ImportExportActionModelAdmin
-from accounts.models import WechatInfo, BmsUser
+from accounts.models import DingtalkInfo, BmsUser
 from experiments.models import ResultJudgement
 from experiments.resources import ExperimentsResource
 from rangefilter.filter import DateRangeFilter
 from bms_colowell.mixins import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET, \
     DINGTALK_AGENT_ID, MEDIA_ROOT
+from products.models import Products
 from suggestions.models import Collections
-
-info_middle = WechatInfo.objects.filter(bms_user=BmsUser.objects.filter
-                                        (username="宋元元").first()).first()
-EXPERIMENT_MIDDLE = info_middle.openid if info_middle else None
-info_result1 = WechatInfo.objects.filter(bms_user=BmsUser.objects.filter
-                                         (username="王美丛").first()).first()
-info_result2 = WechatInfo.objects.filter(bms_user=BmsUser.objects.filter
-                                         (username="王云霞").first()).first()
-if info_result2 and info_result1:
-    EXPERIMENT_RESULT = [info_result2.openid, info_result1.openid]
-else:
-    EXPERIMENT_RESULT = None
 
 
 class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
@@ -89,12 +78,24 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
         i = 0
         j = 0
         for obj in queryset:
-            ResultJudgement.objects.create(experiment=obj)
-            # TODO 调查问卷绑定外键
-            # collection = Collections.objects.get()
+            barcode = obj.boxes.barcode
+            collection_ = Collections.objects.get(
+                product=Products.objects.get(barcode=barcode))
+            ResultJudgement.objects.create(
+                experiment=obj, collection=collection_)
             j += 1
         content = "{0}个任务成功进入结果判定".format(j)
-        self.send_work_notice(content, DINGTALK_AGENT_ID, EXPERIMENT_RESULT)
+        result_experiment = []
+        for i in BmsUser.objects.all():
+            if (i.has_perm("experiments.add_resultjudgement") and i.has_perm(
+                    "experiments.change_resultjudgement") and i.is_approver):
+                ding_ = DingtalkInfo.objects.filter(bms_user=i).first()
+                if ding_:
+                    dingid = ding_.userid
+                else:
+                    dingid = None
+                result_experiment.append(dingid)
+        self.send_work_notice(content, DINGTALK_AGENT_ID, result_experiment)
         call_back = self.send_dingtalk_result
         message = "已钉钉通知" if call_back else "钉钉通知失败"
         self.message_user(request, message)
@@ -115,7 +116,17 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
                 i += 1
         content = "此次提交成功{0}个提取任务，{1}个任务已提交，请勿重复提交". \
             format(j, i)
-        self.send_work_notice(content, DINGTALK_AGENT_ID, EXPERIMENT_MIDDLE)
+        middle_experiment = []
+        for i in BmsUser.objects.all():
+            if (i.has_perm("experiments.add_experiments") and i.has_perm(
+                    "experiments.change_experiments") and i.is_approver):
+                ding_ = DingtalkInfo.objects.filter(bms_user=i).first()
+                if ding_:
+                    dingid = ding_.userid
+                else:
+                    dingid = None
+                middle_experiment.append(dingid)
+        self.send_work_notice(content, DINGTALK_AGENT_ID, middle_experiment)
         call_back = self.send_dingtalk_result
         message = "已钉钉通知" if call_back else "钉钉通知失败"
         self.message_user(request, message)
@@ -136,7 +147,17 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
                 i += 1
         content = "此次提交成功{0}个质检任务，{1}个任务已提交，请勿重复提交". \
             format(j, i)
-        self.send_work_notice(content, DINGTALK_AGENT_ID, EXPERIMENT_MIDDLE)
+        middle_experiment = []
+        for i in BmsUser.objects.all():
+            if (i.has_perm("experiments.add_experiments") and i.has_perm(
+                    "experiments.change_experiments") and i.is_approver):
+                ding_ = DingtalkInfo.objects.filter(bms_user=i).first()
+                if ding_:
+                    dingid = ding_.userid
+                else:
+                    dingid = None
+                middle_experiment.append(dingid)
+        self.send_work_notice(content, DINGTALK_AGENT_ID, middle_experiment)
         call_back = self.send_dingtalk_result
         message = "已钉钉通知" if call_back else "钉钉通知失败"
         self.message_user(request, message)
@@ -157,7 +178,17 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
                 i += 1
         content = "此次提交成功{0}个BIS任务，{1}个任务已提交，请勿重复提交". \
             format(j, i)
-        self.send_work_notice(content, DINGTALK_AGENT_ID, EXPERIMENT_MIDDLE)
+        middle_experiment = []
+        for i in BmsUser.objects.all():
+            if (i.has_perm("experiments.add_experiments") and i.has_perm(
+                    "experiments.change_experiments") and i.is_approver):
+                ding_ = DingtalkInfo.objects.filter(bms_user=i).first()
+                if ding_:
+                    dingid = ding_.userid
+                else:
+                    dingid = None
+                middle_experiment.append(dingid)
+        self.send_work_notice(content, DINGTALK_AGENT_ID, middle_experiment)
         call_back = self.send_dingtalk_result
         message = "已钉钉通知" if call_back else "钉钉通知失败"
         self.message_user(request, message)
@@ -178,7 +209,17 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
                 i += 1
         content = "此次提交成功{0}个荧光定量任务，{1}个任务已提交，请勿重复提交". \
             format(j, i)
-        self.send_work_notice(content, DINGTALK_AGENT_ID, EXPERIMENT_MIDDLE)
+        middle_experiment = []
+        for i in BmsUser.objects.all():
+            if (i.has_perm("experiments.add_experiments") and i.has_perm(
+                    "experiments.change_experiments") and i.is_approver):
+                ding_ = DingtalkInfo.objects.filter(bms_user=i).first()
+                if ding_:
+                    dingid = ding_.userid
+                else:
+                    dingid = None
+                middle_experiment.append(dingid)
+        self.send_work_notice(content, DINGTALK_AGENT_ID, middle_experiment)
         call_back = self.send_dingtalk_result
         message = "已钉钉通知" if call_back else "钉钉通知失败"
         self.message_user(request, message)
@@ -186,6 +227,7 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
     to_submit_fq.short_description = '提交荧光定量任务'
 
     def get_list_filter(self, request):
+
         return ['submit_ext', "submit_qua", "submit_bis", "submit_fq",
                 ('receive_date', DateRangeFilter)]
 
@@ -270,50 +312,67 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
 
 class ResultJudgementAdmin(admin.ModelAdmin):
     list_display = ["experiment", "risk", "SDC2", "SFRP2", "res_date",
-                    "submit"]
+                    "submit_exp", "submit_tech"]
     list_display_links = ["experiment", ]
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
-            if obj.submit:
+            if obj.submit_tech and obj.submit_exp:
                 return ['fq_instrument', "fq_actb_ct", "fq_actb_amp",
                         "fq_sdc2_ct", "fq_sdc2_amp", "fq_sfrp2_ct",
                         'fq_sfrp2_amp', "qualified_", "experiment",
                         "collection", "experiment", "risk", "SDC2", "SFRP2",
-                        "res_date", "submit", "risk_file", "ext_hemoglobin"]
-            if request.user.has_perm("experiments.change_resultjudgement"):
-                return ['fq_instrument', "fq_actb_ct", "fq_actb_amp",
-                        "fq_sdc2_ct", "fq_sdc2_amp", "fq_sfrp2_ct",
-                        'fq_sfrp2_amp', "qualified_", "experiment",
-                        "collection", "ext_hemoglobin"]
+                        "res_date", "submit", "risk_file", "ext_hemoglobin",
+                        "f01", "f02", "f03", "f04", "f05", "f06", "f07", "f08",
+                        "f09", "f10", "f11", "submit_tech", "submit_exp"]
+            if request.user.is_approver:
+                if obj.submit_exp:
+                    return ['fq_instrument', "fq_actb_ct", "fq_actb_amp",
+                            "fq_sdc2_ct", "fq_sdc2_amp", "fq_sfrp2_ct",
+                            'fq_sfrp2_amp', "qualified_", "experiment",
+                            "collection", "ext_hemoglobin", "f01", "f02",
+                            "f03", "f04", "f05", "f06", "f07", "f08", "f09",
+                            "f10", "f11", "risk", "SDC2", "SFRP2", "res_date",
+                            "submit_exp"]
+                else:
+                    return ['fq_instrument', "fq_actb_ct", "fq_actb_amp",
+                            "fq_sdc2_ct", "fq_sdc2_amp", "fq_sfrp2_ct",
+                            'fq_sfrp2_amp', "qualified_", "experiment",
+                            "collection", "ext_hemoglobin", "f01", "f02",
+                            "f03","f04", "f05", "f06", "f07", "f08", "f09",
+                            "f10", "f11"]
             else:
-                return ['fq_instrument', "fq_actb_ct", "fq_actb_amp",
-                        "fq_sdc2_ct", "fq_sdc2_amp", "fq_sfrp2_ct",
-                        'fq_sfrp2_amp', "qualified_", "experiment",
-                        "collection", "ext_hemoglobin"]
+                if obj.submit_tech:
+                    return ['ext_hemoglobin', "risk", 'SDC2', "SFRP2",
+                            "res_date", "risk_file", "submit_tech"]
+                else:
+                    return ['ext_hemoglobin', "risk", 'SDC2', "SFRP2",
+                            "res_date"]
         else:
             return ['fq_instrument', "fq_actb_ct", "fq_actb_amp", "fq_sdc2_ct",
                     "fq_sdc2_amp", "fq_sfrp2_ct", 'fq_sfrp2_amp', "qualified_",
-                    "experiment", "collection", "ext_hemoglobin"]
+                    "collection", "ext_hemoglobin", "f01", "f02", "f03", "f04",
+                    "f05", "f06", "f07", "f08", "f09", "f10", "f11"]
 
     def get_fieldsets(self, request, obj=None):
-        if request.user.has_perm("experiments.change_resultjudgement"):
+        if request.user.is_approver:
             return (
                 ('结果判定', {
                     'fields': ("experiment", 'ext_hemoglobin',
                                'fq_instrument', ("fq_actb_ct", "fq_actb_amp"),
                                ("fq_sdc2_ct", "fq_sdc2_amp"),
                                ("fq_sfrp2_ct", 'fq_sfrp2_amp',),
-                               "qualified_", "risk", ('SDC2', "SFRP2"),
-                               "res_date", "submit")
+                               "qualified_", ("f01", "f02", "f03"),
+                               ("f04", "f05", "f06", "f07"), ("f08", "f09"),
+                               ("f10", "f11"), "risk", ('SDC2', "SFRP2"),
+                               "res_date", "submit_exp")
                 }),
             )
         else:
             return (
-
                 ('结果判定', {
                     'fields': ('ext_hemoglobin', "risk", ('SDC2', "SFRP2"),
-                               "res_date", "risk_file", "submit")
+                               "res_date", "risk_file", "submit_tech")
                 }),
             )
 
@@ -393,3 +452,69 @@ class ResultJudgementAdmin(admin.ModelAdmin):
             return None
 
     ext_hemoglobin.short_description = "血红蛋白"
+
+    def f01(self, obj):
+        if obj:
+            return obj.collection.f01
+
+    f01.short_description = "吸烟"
+
+    def f02(self, obj):
+        if obj:
+            return obj.collection.f02
+
+    f02.short_description = "喝酒"
+
+    def f03(self, obj):
+        if obj:
+            return obj.collection.f03
+
+    f03.short_description = "本人肠癌息肉史"
+
+    def f04(self, obj):
+        if obj:
+            return obj.collection.f04
+
+    f04.short_description = "直系亲属肠癌息肉史"
+
+    def f05(self, obj):
+        if obj:
+            return obj.collection.f05
+
+    f05.short_description = "下消化道症状"
+
+    def f06(self, obj):
+        if obj:
+            return obj.collection.f06
+
+    f06.short_description = "指定病史"
+
+    def f07(self, obj):
+        if obj:
+            return obj.collection.f07
+
+    f07.short_description = "慢性病史"
+
+    def f08(self, obj):
+        if obj:
+            return obj.collection.f08
+
+    f08.short_description = "身体指数"
+
+    def f09(self, obj):
+        if obj:
+            return obj.collection.f09
+
+    f09.short_description = "年龄分段"
+
+    def f10(self, obj):
+        if obj:
+            return obj.collection.f10
+
+    f10.short_description = "风险结果"
+
+    def f11(self, obj):
+        if obj:
+            return obj.collection.f11
+
+    f11.short_description = "肠镜"
