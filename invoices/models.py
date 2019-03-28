@@ -1,6 +1,7 @@
 from django.db import models
+
 from bms_colowell.settings import AUTH_USER_MODEL
-from projects.models import InvoiceInfo, ContractsInfo
+from projects.models import ContractsInfo, InvoiceInfo
 
 
 class SendInvoices(models.Model):
@@ -17,7 +18,7 @@ class SendInvoices(models.Model):
         verbose_name="快递单号", max_length=25, null=True, blank=True
     )
     ele_invoice = models.FileField(
-        verbose_name="电子发票", upload_to="#", max_length=100, null=True,
+        verbose_name="电子发票", upload_to="ele_invoice", max_length=100, null=True,
         blank=True
     )
     fill_date = models.DateField(
