@@ -3,7 +3,6 @@ import os
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db.models.fields.related import ForeignKey
-from django.http import HttpResponseRedirect
 from django.template.response import HttpResponse, TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -19,7 +18,7 @@ from pystrich.code128 import Code128Encoder
 
 from bms_colowell.settings import MEDIA_ROOT, BARCODE_IMAGE_OPTIONS
 from products.resources import ProductsResource
-from products.models import Products, Deliveries
+from products.models import Products
 
 
 class ProductsInline(admin.TabularInline):
@@ -102,13 +101,6 @@ class ProductsAdmin(ImportExportModelAdmin):
             tmp_storage.remove()
 
             return self.process_result(result, request)
-
-    def process_result(self, result, request):
-        # Only if a session key of "redirect_to" is set, the fk column
-        # will be redirect to inline model
-        if "redirect_to" in request.session.keys():
-            return HttpResponseRedirect(request.session.get("redirect_to"))
-        return super().process_result(result, request)
 
     def import_action(self, request, *args, **kwargs):
         """
