@@ -6,7 +6,6 @@ from django.contrib import admin
 from django.contrib.auth.tokens import default_token_generator
 from django.core.exceptions import PermissionDenied
 from django.db.models.fields.related import ForeignKey
-from django.http import HttpResponseRedirect
 from django.template.response import HttpResponse, TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
@@ -29,11 +28,11 @@ class LzProductsAdmin(ImportExportModelAdmin):
     actions = ["create_download_record"]
     fields = (
         'sample_code', 'barcode', 'risk_state', 'received_date', 'test_date',
-        'report_date', 'pdf_upload',
+        'report_date', 'pdf_upload', 'batch_code',
     )
     list_display = (
         'sample_code', 'barcode', 'risk_state', 'received_date', 'test_date',
-        'report_date', 'report_download',
+        'report_date', 'report_download', 'batch_code',
     )
     list_display_links = ('barcode', )
     list_per_page = 30
@@ -173,13 +172,6 @@ class LzProductsAdmin(ImportExportModelAdmin):
             tmp_storage.remove()
             
             return self.process_result(result, request)
-
-    def process_result(self, result, request):
-        # Only if a session key of "redirect_to" is set, the fk column
-        # will be redirect to inline model
-        if "redirect_to" in request.session.keys():
-            return HttpResponseRedirect(request.session.get("redirect_to"))
-        return super().process_result(result, request)
     
     def import_action(self, request, *args, **kwargs):
         """
@@ -224,8 +216,7 @@ class LzProductsAdmin(ImportExportModelAdmin):
             except UnicodeDecodeError as e:
                 return HttpResponse(u"<h1>导入文件编码错误: %s</h1>" % e)
             except Exception as e:
-                return HttpResponse(
-                    u"读取文件时<h1>%s 异常发生: %s</h1>" % (
+                return HttpResponse(u"读取文件时<h1>%s 异常发生: %s</h1>" % (
                         type(e).__name__, import_file.name))
             
             # Only if a session key of "redirect_to" is set, the fk column
