@@ -1,5 +1,6 @@
 from django import forms
-from .models import SendInvoices
+
+from invoices.models import SendInvoices
 
 
 class SendInvoicesForm(forms.ModelForm):

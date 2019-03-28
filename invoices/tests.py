@@ -1,8 +1,10 @@
 import datetime
+
 from django.test import TestCase
-from projects.models import ContractsInfo, InvoiceInfo
+
 from accounts.models import BmsUser
-from .models import SendInvoices
+from projects.models import ContractsInfo, InvoiceInfo
+from invoices.models import SendInvoices
 
 
 class TestInvoices(TestCase):
