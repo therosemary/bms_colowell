@@ -1,7 +1,11 @@
 import os
 import re
+
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+from bms_colowell.settings import AUTH_USER_MODEL
 
 
 def barcode_validators(value):
@@ -13,6 +17,37 @@ def barcode_validators(value):
 
 def upload_to(obj, filename):
     return os.path.join("products", filename)
+
+
+class Deliveries(models.Model):
+    """Deliveries management."""
+    
+    LIMIT_CHOICES_TO = {
+        "is_staff": True,
+        "is_superuser": False,
+    }
+    serial_number = models.CharField(
+        verbose_name="流水号", max_length=20, primary_key=True
+    )
+    salesman = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
+        null=True, limit_choices_to=LIMIT_CHOICES_TO,
+    )
+    customer = models.CharField(
+        verbose_name="客户", max_length=256, null=True, blank=True,
+    )
+    is_submit = models.BooleanField(
+        verbose_name='提交', default=False
+    )
+    add_date = models.DateField(
+        verbose_name="发货日期", null=True, blank=True, default=timezone.now
+    )
+    
+    def __str__(self):
+        return "%s" % self.serial_number
+    
+    class Meta:
+        verbose_name = verbose_name_plural = "盒子发货记录"
 
 
 class Products(models.Model):
@@ -54,6 +89,9 @@ class Products(models.Model):
     )
     operator = models.CharField(
         verbose_name="操作人员", max_length=32, null=True, blank=True
+    )
+    serial_number = models.ForeignKey(
+        Deliveries, verbose_name="发货号", on_delete=models.SET_NULL, null=True
     )
     
     class Meta:
