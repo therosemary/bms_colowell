@@ -19,7 +19,8 @@ class BmsUserAdmin(UserAdmin):
             'fields': ('mobile_phone', 'email', )
         }), ('用户权限', {
             'fields': (
-                ('is_active', 'is_staff', 'is_superuser', 'is_bound', ),
+                ('is_active', 'is_staff', 'is_superuser', 'is_bound',
+                 'is_approver'),
                 'groups', 'user_permissions',
             )
         }),
@@ -32,9 +33,11 @@ class BmsUserAdmin(UserAdmin):
     )
     list_display = (
         'username', 'mobile_phone', 'email', 'is_active', 'is_staff',
-        'is_superuser', 'last_name', 'first_name', 'is_bound',
+        'is_superuser', 'last_name', 'first_name', 'is_bound', 'is_approver'
     )
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'groups')
+    list_filter = (
+        'is_staff', 'is_superuser', 'is_active', 'groups', 'is_approver'
+    )
     search_fields = (
         'mobile_phone', 'username', 'first_name', 'last_name', 'email',
     )

@@ -9,6 +9,9 @@ class BmsUser(AbstractUser):
     is_bound = models.BooleanField(
         verbose_name="绑定钉钉", default=False,
     )
+    is_approver = models.BooleanField(
+        verbose_name="审批权限", default=False,
+    )
     
     class Meta:
         verbose_name = verbose_name_plural = "用户"

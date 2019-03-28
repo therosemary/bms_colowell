@@ -28,16 +28,19 @@ class LzProductsResource(resources.ModelResource):
         attribute="report_date", column_name=u"报告日期",
         widget=DateWidget(format='%Y/%m/%d')
     )
-
+    batch_code_id = fields.Field(
+        attribute="batch_code_id", column_name="批次号"
+    )
+    
     class Meta:
         model = LzProducts
         fields = (
             'sample_code', 'barcode', 'risk_state', 'received_date',
-            'test_date', 'report_date',
+            'test_date', 'report_date', 'batch_code_id',
         )
         export_order = (
             'sample_code', 'barcode', 'risk_state', 'received_date',
-            'test_date', 'report_date',
+            'test_date', 'report_date', 'batch_code_id',
         )
         import_id_fields = ('barcode',)
         skip_unchanged = True
