@@ -1,8 +1,9 @@
 from import_export import resources
 from import_export.fields import Field
-from import_export.widgets import ForeignKeyWidget, DateWidget
+from import_export.widgets import DateWidget
+
 from projects.models import InvoiceInfo
-from invoices.models import SendInvoices, PaymentInfo, TradingRecord
+from invoices.models import PaymentInfo, SendInvoices, TradingRecord
 
 
 class SendInvoiceResources(resources.ModelResource):
@@ -55,10 +56,10 @@ class SendInvoiceResources(resources.ModelResource):
         column_name="申请人", attribute='invoice_id__apply_name', default=None
     )
     receive_value = Field(
-        column_name="到账金额", attribute='invoice_id__receive_value', default=None
+        column_name="到账金额", attribute='receive_value', default=None
     )
     receive_date = Field(
-        column_name="到账时间", attribute='invoice_id__receive_date', default=None,
+        column_name="到账时间", attribute='receive_date', default=None,
         widget=DateWidget(format='%Y-%m-%d'),
     )
     invoice_number = Field(
@@ -125,6 +126,22 @@ class SendInvoiceResources(resources.ModelResource):
         issuing_entities = {'shry': '上海锐翌', 'hzth': '杭州拓宏', 'hzry': '杭州锐翌',
                             'sdry': '山东锐翌'}
         return issuing_entities[sendinvoices.invoice_id.invoice_issuing]
+
+    def dehydrate_receive_value(self, sendinvoices):
+        invoice_data = InvoiceInfo.objects.get(id=sendinvoices.invoice_id.id)
+        if invoice_data.invoice_value is not None:
+            return invoice_data.invoice_value - sendinvoices.wait_payment
+        else:
+            return None
+
+    def dehydrate_receive_date(self, sendinvoices):
+        receive_date = None
+        send_obj = SendInvoices.objects.get(id=sendinvoices.id)
+        sd_data = send_obj.paymentinfo_set.exclude(receive_date__exact=None)
+        sd_data_order = sd_data.order_by('-receive_date')
+        if len(sd_data_order):
+            receive_date = sd_data_order[0].receive_date.strftime('%Y-%m-%d')
+        return receive_date
 
 
 class PaymentInfoResource(resources.ModelResource):
