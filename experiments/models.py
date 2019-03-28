@@ -161,7 +161,7 @@ class Experiments(models.Model):
 
 class ResultJudgement(models.Model):
     experiment = models.OneToOneField(
-        to=Experiments, verbose_name="对应实验", blank=True, null=True,
+        to=Experiments, verbose_name="对应实验", null=True,
         on_delete=models.SET_NULL)
     collection = models.OneToOneField(
         to=Collections, verbose_name="对应调查问卷", blank=True, null=True,
@@ -180,7 +180,10 @@ class ResultJudgement(models.Model):
     res_date = models.DateField(verbose_name="判定日期", blank=True, null=True)
     risk_file = models.FileField(verbose_name="风险评估报告",
                                  upload_to="riskfile", blank=True, null=True)
-    submit = models.BooleanField(verbose_name="提交", blank=True, default=False)
+    submit_exp = models.BooleanField(verbose_name="实验提交", blank=True,
+                                     default=False)
+    submit_tech = models.BooleanField(verbose_name="技术支持提交", blank=True,
+                                      default=False)
 
     class Meta:
         app_label = "experiments"
