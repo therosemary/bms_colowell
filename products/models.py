@@ -5,7 +5,10 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
-from bms_colowell.settings import AUTH_USER_MODEL
+from pystrich.code128 import Code128Encoder
+
+from bms_colowell.settings import AUTH_USER_MODEL, MEDIA_ROOT,\
+    BARCODE_IMAGE_OPTIONS
 
 
 def barcode_validators(value):
@@ -78,7 +81,7 @@ class Products(models.Model):
         verbose_name="增加日期", auto_now_add=True
     )
     sold_date = models.DateTimeField(
-        verbose_name="出库日期", null=True, blank=True,
+        verbose_name="出库日期", null=True, blank=True, default=timezone.now
     )
     sold_to = models.CharField(
         verbose_name="售出至？", max_length=128, null=True, blank=True,
@@ -91,7 +94,8 @@ class Products(models.Model):
         verbose_name="操作人员", max_length=32, null=True, blank=True
     )
     serial_number = models.ForeignKey(
-        Deliveries, verbose_name="发货号", on_delete=models.SET_NULL, null=True
+        Deliveries, verbose_name="发货号", on_delete=models.SET_NULL, null=True,
+        blank=True,
     )
     
     class Meta:
@@ -100,3 +104,17 @@ class Products(models.Model):
     
     def __str__(self):
         return "%s" % self.barcode
+    
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        # generate the barcode PNG image.
+        barcode = self.barcode
+        img_path = os.path.join(MEDIA_ROOT, "products/{}.png".format(barcode))
+        encoder = Code128Encoder(barcode, options=BARCODE_IMAGE_OPTIONS)
+        encoder.save(img_path)
+        self.barcode_img = "products/{}.png".format(barcode)
+
+        return super().save(force_insert=force_insert,
+                            force_update=force_update, using=using,
+                            update_fields=update_fields)
+        
