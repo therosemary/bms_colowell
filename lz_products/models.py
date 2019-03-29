@@ -62,6 +62,7 @@ class LzProducts(models.Model):
     )
     batch_code = models.ForeignKey(
         Batches, verbose_name="批次号", on_delete=models.SET_NULL, null=True,
+        blank=True,
     )
     
     class Meta:
