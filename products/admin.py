@@ -1,5 +1,3 @@
-import os
-
 from django.contrib import admin
 from django.core.exceptions import PermissionDenied
 from django.db.models.fields.related import ForeignKey
@@ -8,15 +6,13 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.utils.encoding import force_text
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from django.views.decorators.http import require_POST
 
 from import_export.admin import ImportExportModelAdmin
 from import_export.forms import ConfirmImportForm
 
-from pystrich.code128 import Code128Encoder
-
-from bms_colowell.settings import MEDIA_ROOT, BARCODE_IMAGE_OPTIONS
 from products.resources import ProductsResource
 from products.models import Products
 
@@ -38,36 +34,63 @@ class ProductsInline(admin.TabularInline):
 class ProductsAdmin(ImportExportModelAdmin):
     resource_class = ProductsResource
     fields = (
-        "barcode", "barcode_img", "sold_date", "sold_to", "sold_way",
+        "barcode", "real_barcode_image", "sold_date", "sold_to", "sold_way",
         "operator", ("is_approved", "is_sold_out", "is_bound"), "serial_number"
     )
     list_per_page = 10
     list_display = (
-        "barcode", "is_approved", "is_sold_out", "is_bound", "add_date",
-        "sold_date", "sold_to", "sold_way", "operator",
+        "barcode", "real_barcode_image", "is_approved", "is_sold_out", "is_bound",
+        "add_date", "sold_date", "sold_to", "sold_way", "operator",
     )
     list_display_links = ('barcode', )
     list_filter = ("is_bound", "is_sold_out", "is_approved")
+    readonly_fields = ("real_barcode_image", )
     save_as_continue = False
     search_fields = ("barcode", "operator", )
     
-    def append_fk_col(self, request, dataset):
-        """Method to append fk column(foreignkey) into the dataset."""
+    def real_barcode_image(self, obj):
+        return format_html('<img src="{}" alt="{}" height="20%">',
+                           obj.barcode_img.url, obj.barcode)
+    real_barcode_image.short_description = "条形码"
+
+    def get_session_fk_name(self, request, wanted_fk_name="", column_name=""):
+        """Method to get model foreignkey name in session."""
+        session_keys = request.session.keys()
     
-        # The first step is to get all the foreignkey fields
+        # STEP 1. get all of the foreignkey fields of current model.
         current_model_fk = []
         for field in self.model._meta.local_fields:
             if isinstance(field, ForeignKey):
                 current_model_fk.append(field)
         
-        # Then to check whether such fk field are stored into the request
-        # session, if it is true, append a new column with the same length
-        # as the dataset to the dataset.
+        # STEP 2. to check whether such fk field are stored into the request
+        # session, if it is true, return.
         for fk in current_model_fk:
-            if fk.attname in request.session.keys():
-                fk_val = request.session.get(fk.attname, "")
-                fk_col = [fk_val for _t in range(len(dataset))]
-                dataset.append_col(fk_col, header=fk.verbose_name)
+            if fk.attname in session_keys:
+                wanted_fk_name = fk.attname
+                column_name = fk.verbose_name
+        return wanted_fk_name, column_name
+    
+    def append_fk_col(self, request, dataset):
+        """Method to append fk column(foreignkey) into the dataset."""
+        session_keys = request.session.keys()
+        fk_name, column_name = self.get_session_fk_name(request)
+        fk_value = request.session.get(fk_name, "")
+        fk_col = [fk_value for _t in range(len(dataset))]
+        dataset.append_col(fk_col, header=column_name)
+        
+        # These useless session data should be deleted after the real import
+        # step(dry_run=False).
+        if fk_name in session_keys:
+            del request.session[fk_name]
+            del request.session["redirect_to"]
+    
+    def append_fk_col_preview(self, request, dataset):
+        """Method to append fk column(foreignkey) into the dataset."""
+        fk_name, column_name = self.get_session_fk_name(request)
+        fk_value = request.session.get(fk_name, "")
+        fk_col = [fk_value for _t in range(len(dataset))]
+        dataset.append_col(fk_col, header=column_name)
 
     @method_decorator(require_POST)
     def process_import(self, request, *args, **kwargs):
@@ -152,7 +175,7 @@ class ProductsAdmin(ImportExportModelAdmin):
             # Only if a session key of "redirect_to" is set, the fk column
             # will be appended to the dataset
             if "redirect_to" in request.session.keys():
-                self.append_fk_col(request, dataset)
+                self.append_fk_col_preview(request, dataset)
 
             result = resource.import_data(
                 dataset, dry_run=True, raise_errors=False,
@@ -178,20 +201,6 @@ class ProductsAdmin(ImportExportModelAdmin):
 
         request.current_app = self.admin_site.name
         return TemplateResponse(request, [self.import_template_name], context)
-
-    @staticmethod
-    def generate_barcode_img(obj):
-        barcode = obj.barcode
-        img_path = os.path.join(MEDIA_ROOT, "products/{}.png".format(barcode))
-        encoder = Code128Encoder(barcode, options=BARCODE_IMAGE_OPTIONS)
-        encoder.save(img_path)
-        obj.barcode_img = "products/{}.png".format(barcode)
-        obj.save()
-    
-    def save_model(self, request, obj, form, change):
-        super().save_model(request, obj, form, change)
-        # TODO: to accomplish the method of generate barcode
-        self.generate_barcode_img(obj)
 
 
 class DeliveriesAdmin(admin.ModelAdmin):
@@ -225,7 +234,6 @@ class DeliveriesAdmin(admin.ModelAdmin):
     def change_view(self, request, object_id, form_url='', extra_context=None):
         """Reconstruct the change view in order to pass inline import data for
         current model admin."""
-        
         extra_context = extra_context or {}
         
         # Get all inline model and prepare context for each of them.
@@ -239,17 +247,17 @@ class DeliveriesAdmin(admin.ModelAdmin):
                                "redirect_url": redirect_url, }
             inline_import_urls.append(model_info_dict)
         
-        # Besides, we need to store a redirect url in order to redirect back to
-        # current changelist view after the import.
-        current_model_info = self._get_model_info(self.model)
-        whole_url_name = "admin:{}_{}_changelist".format(*current_model_info)
-        redirect_to = reverse(whole_url_name)
-        
-        # The last step is to store the primary key of the model into
-        # request.session, bring this state to the import view of inline model
+        # TODO: The redirection after import should be handled.
+        # current_model_info = self._get_model_info(self.model)
+        # whole_url_name = "admin:{}_{}_changelist".format(*current_model_info)
+        # redirect_to = reverse(whole_url_name)
+        # request.session["redirect_to"] = redirect_to
+
+        # To store the primary key of the model into request.session, bring
+        # this state to the import view of inline model
+        # TODO: to deal with the session pollution
         pk_name = "{}_id".format(self.model._meta.pk.attname)
         request.session[pk_name] = object_id
-        request.session["redirect_to"] = redirect_to
         
         # refresh the context
         extra_context["inline_import_urls"] = inline_import_urls
