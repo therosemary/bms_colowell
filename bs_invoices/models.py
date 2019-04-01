@@ -50,7 +50,7 @@ class Payment(models.Model):
         verbose_name = verbose_name_plural = "到款信息"
 
     def __str__(self):
-        return self.payment_number
+        return '{}'.format(self.payment_number)
 
 
 class Invoices(models.Model):
@@ -170,7 +170,7 @@ class Invoices(models.Model):
     )
 
     def __str__(self):
-        return "{}".format(self.invoice_number)
+        return "{}".format(self.invoice_id)
 
     class Meta:
         verbose_name = verbose_name_plural = "开票信息"
