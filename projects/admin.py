@@ -2,15 +2,17 @@ import datetime
 # import json
 
 from django.utils.html import format_html
+from django.db.models import Sum
 # from django.contrib.auth.models import Group
 # from django.http import JsonResponse, HttpResponse
 # from django.urls import path
-# from django.db.models import Q
+
+from import_export.admin import ImportExportActionModelAdmin
 
 from projects.models import ContractsInfo
 from projects.forms import ContractInfoForm
 from projects.resources import ContractInfoResources
-from import_export.admin import ImportExportActionModelAdmin
+from bs_invoices.models import BusinessRecord
 # from accounts.models import BmsUser
 # from projects import views
 
@@ -63,14 +65,23 @@ class ContractsInfoAdmin(ImportExportActionModelAdmin):
 
     def receive_invoice_value(self, obj):
         """自定义列表字段：已到账金额"""
-        receive_value = 0
-        payment_datas = PaymentInfo.objects.filter(contract_number=obj.id,
-                                                   receive_value__isnull=False)
+        paid = 0
+        payment_datas = None
+        # TODO: 重写查询
+        # payment_datas = PaymentInfo.objects.filter(contract_number=obj.id,
+        #                                            receive_value__isnull=False)
+        bs_record = BusinessRecord.objects.filter(contract_number=obj.id)
+        if len(bs_record):
+            for record_data in bs_record:
+                payment_data = record_data.payment_set.all()
+                pay = payment_data.aggregate(value=Sum('receive_value'))
+                pay_amount = pay.get('value', 0)
+                paid += pay_amount
         if payment_datas is not None:
             for payment in payment_datas:
-                receive_value += payment.receive_value
+                paid += payment.receive_value
         return format_html(
-            '<span>{}</span>', receive_value
+            '<span>{}</span>', paid
         )
     receive_invoice_value.short_description = "已到账金额"
 
