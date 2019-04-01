@@ -8,16 +8,24 @@ class BmsUser(AbstractUser):
     )
     is_bound = models.BooleanField(
         verbose_name="绑定钉钉", default=False,
+        help_text="若员工绑定钉钉，其可以通过【钉钉扫码登陆】站点",
     )
     is_approver = models.BooleanField(
-        verbose_name="审批权限", default=False,
+        verbose_name="特殊审批权", default=False,
+        help_text="某些情况下，非管理职位员工需要【特殊审批权】",
+    )
+    is_director = models.BooleanField(
+        verbose_name="部门总监", default=False,
+    )
+    is_assistant_director = models.BooleanField(
+        verbose_name="部门副总监", default=False,
     )
     
     class Meta:
         verbose_name = verbose_name_plural = "用户"
     
     def __str__(self):
-        return "【{}】".format(self.username)
+        return "{}".format(self.username)
 
 
 class WechatInfo(models.Model):

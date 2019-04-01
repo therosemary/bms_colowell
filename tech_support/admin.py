@@ -1,6 +1,7 @@
 import datetime
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.urls import reverse
 from import_export.admin import ImportExportActionModelAdmin, \
     ExportActionModelAdmin
 from django.contrib.admin import ModelAdmin
@@ -17,92 +18,116 @@ Monthchoose = {1: "A", 2: "B", 3: "C", 4: "D", 5: "E", 6: "F", 7: "G",
                8: "H", 9: "I", 10: "G", 11: "K", 12: "L", }
 
 
-# class TechsupportInline(admin.TabularInline):
-#     model = Techsupport
-#     fields = ["barcode", "name"]
-#
-#     def get_readonly_fields(self, request, obj=None):
-#         try:
-#             if obj.submit:
-#                 return ["barcode", "name"]
-#         except AttributeError:
-#             return []
-#         return []
+class TechsupportInline(admin.TabularInline):
+    model = Techsupport
+    fields = ["barcode", "name"]
+
+    def get_readonly_fields(self, request, obj=None):
+        try:
+            if obj.submit:
+                return ["barcode", "name"]
+        except AttributeError:
+            return []
+        return []
 
 
-# class BoxDeliveriesAdmin(ImportExportActionModelAdmin):
-#     """盒子发货管理"""
-#     inlines = [TechsupportInline]
-#     list_per_page = 50
-#     search_fields = ("sale_man", "send_date")
-#     save_on_top = False
-#     list_display = ("sale_man", "customer",
-#                     'send_number', 'send_date', 'made_date')
-#     list_display_links = ('customer',)
-#     # resource_class = BoxDeliveriesResource
-#     fieldsets = (
-#         ('盒子发货信息', {
-#             'fields': ('sale_man', 'customer', 'send_number',
-#                        "address", "box_number",
-#                        "send_date", "made_date", 'submit')
-#         }),
-#     )
-#
-#     def get_export_resource_class(self):
-#         return
-#
-#     def get_import_resource_class(self):
-#         return
-#
-#     def get_readonly_fields(self, request, obj=None):
-#         try:
-#             if obj.submit:
-#                 return ['sale_man', "customer", "box_number",
-#                         "send_number", "send_date",
-#                         'made_date', "submit", "index_number", "address"]
-#         except AttributeError:
-#             pass
-#         return ["box_number", ]
-#
-#     def box_number(self, obj):
-#         if obj:
-#             n = 0
-#             for i in obj.boxes_set.all():
-#                 n += 1
-#             return n
-#         return 0
-#     box_number.short_description = '盒子数量'
-#
-#     def save_model(self, request, obj, form, change):
-#         if not obj.index_number:
-#             sj = datetime.datetime.now()
-#             if BoxDeliveries.objects.all().count() == 0:
-#                 obj.index_number = str(sj.year) + Monthchoose[sj.month] + "1"
-#
-#             else:
-#                 obj.index_number = str(sj.year) + Monthchoose[sj.month] + str
-#                     (BoxDeliveries.objects.latest('id').id + 1)
-#         obj.save()
-#
-#     def save_formset(self, request, form, formset, change):
-#         instances = formset.save(commit=False)
-#         for obj in formset.deleted_objects:
-#             obj.delete()
-#         if instances:
-#             sj = datetime.datetime.now()
-#             for instance in instances:
-#                 # if not instance.index_number:
-#                 #     if Techsupport.objects.all().count() == 0:
-#                 #         instance.index_number = "HZ" + str(sj.year) + \
-#                 #                                 Monthchoose[
-#                 #                                     sj.month] + "1"
-#                 #     else:
-#                 #         instance.index_number = "HZ" + str(sj.year) + \
-#                 #                                 Monthchoose[
-#                 #                                     sj.month] + str(
-#                 #             Techsupport.objects.latest('id').id + 1)
-#                 instance.save()
-#                 formset.save_m2m()
+class BoxDeliveriesAdmin(ModelAdmin):
+    """盒子发货管理"""
+    inlines = [TechsupportInline]
+    list_per_page = 50
+    search_fields = ("sale_man", "send_date")
+    save_on_top = False
+    list_display = ("sale_man", "customer",
+                    'send_number', 'send_date', 'made_date')
+    list_display_links = ('customer',)
+    # resource_class = BoxDeliveriesResource
+    fieldsets = (
+        ('盒子发货信息', {
+            'fields': ('sale_man', 'customer', 'send_number',
+                       "address", "box_number",
+                       "send_date", "made_date", 'submit')
+        }),
+    )
+
+    @staticmethod
+    def _get_model_info(model):
+        return model._meta.app_label, model._meta.model_name
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        """Reconstruct the change view in order to pass inline import data for
+        current model admin."""
+
+        extra_context = extra_context or {}
+
+        # Get all inline model and prepare context for each of them.
+        inline_import_urls = []
+        for inline_model in self.inlines:
+            model_info = self._get_model_info(inline_model.model)
+            redirect_url = reverse("admin:{}_{}_import".format(*model_info))
+            verbose_name = inline_model.model._meta.verbose_name
+
+            model_info_dict = {"verbose_name": verbose_name,
+                               "redirect_url": redirect_url, }
+            inline_import_urls.append(model_info_dict)
+
+        # Besides, we need to store a redirect url in order to redirect back to
+        # current changelist view after the import.
+        current_model_info = self._get_model_info(self.model)
+        whole_url_name = "admin:{}_{}_changelist".format(*current_model_info)
+        redirect_to = reverse(whole_url_name)
+
+        # The last step is to store the primary key of the model into
+        # request.session, bring this state to the import view of inline model
+        pk_name = "{}_id".format(self.model._meta.pk.attname)
+        request.session[pk_name] = object_id
+        request.session["redirect_to"] = redirect_to
+
+        # refresh the context
+        extra_context["inline_import_urls"] = inline_import_urls
+        return super().change_view(request, object_id,
+                                   extra_context=extra_context)
+
+    def get_readonly_fields(self, request, obj=None):
+        try:
+            if obj.submit:
+                return ['sale_man', "customer", "box_number",
+                        "send_number", "send_date",
+                        'made_date', "submit", "index_number", "address"]
+        except AttributeError:
+            pass
+        return ["box_number", ]
+
+    def box_number(self, obj):
+        if obj:
+            n = 0
+            for i in obj.boxes_set.all():
+                n += 1
+            return n
+        return 0
+    box_number.short_description = '盒子数量'
+
+    def save_model(self, request, obj, form, change):
+        if not obj.index_number:
+            sj = datetime.datetime.now()
+            if BoxDeliveries.objects.all().count() == 0:
+                obj.index_number = str(sj.year) + Monthchoose[sj.month] + "1"
+
+            else:
+                obj.index_number = str(sj.year) + Monthchoose[sj.month] + str(
+                    BoxDeliveries.objects.latest('id').id + 1)
+        obj.save()
+
+    def save_formset(self, request, form, formset, change):
+        instances = formset.save(commit=False)
+        for obj in formset.deleted_objects:
+            obj.delete()
+        if instances:
+            for instance in instances:
+                instance.save()
+                boxdeliever = instance.boxdeliveries
+                boxdeliever.box_number += 1
+                boxdeliever.save()
+                formset.save_m2m()
 
 
 @admin.register(Techsupport)
@@ -159,20 +184,6 @@ class TechsupportAdmin(ImportExportActionModelAdmin):
             if i.name != "技术支持":
                 del actions['accept_box']
         return actions
-        # try:
-        #     current_group_set = Group.objects.filter(user=request.user)
-        #     # names = [i.name for i in current_group_set]
-        #     if current_group_set[0].name == "合作伙伴":
-        #         # del actions['export_admin_action']
-        #         return actions
-        #     else:
-        #         # del actions['export_admin_action']
-        #         # del actions['make_sampleinfoform_submit']
-        #         del actions['insure_sampleinfoform']
-        #         # del actions['test1']
-        #         return actions
-        # except:
-        #     return actions
 
     def get_exclude(self, request, obj=None):
         current_group_set = Group.objects.filter(user=request.user)

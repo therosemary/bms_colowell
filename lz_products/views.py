@@ -48,4 +48,4 @@ def batch_download(request, user_id=None, serial_number=None, token=None):
         )
         return response
     else:
-        return HttpResponse("授权失败")
+        return HttpResponse("下载链接已失效，请在修改页面内下载")
