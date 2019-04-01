@@ -3,22 +3,25 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
+from jet.admin import CompactInline
+from jet.filters import DateRangeFilter
+
 from bms_colowell.utils import InlineImportExportModelAdmin
 from products.resources import ProductsResource
 from products.models import Products
 
 
-class ProductsInline(admin.TabularInline):
+class ProductsInline(CompactInline):
     model = Products
     extra = 0
     fields = (
-        "barcode", "is_approved", "is_sold_out", "is_bound", "add_date",
+        "barcode", "is_approved", "is_sold_out", "is_bound",
         "sold_date", "sold_to", "sold_way", "operator",
     )
-    readonly_fields = (
-        "barcode", "is_approved", "is_sold_out", "is_bound", "add_date",
-        "sold_date", "sold_to", "sold_way", "operator",
-    )
+    # readonly_fields = (
+    #     "barcode", "is_approved", "is_sold_out", "is_bound", "add_date",
+    #     "sold_date", "sold_to", "sold_way", "operator",
+    # )
     show_change_link = False
 
 
@@ -30,19 +33,22 @@ class ProductsAdmin(InlineImportExportModelAdmin):
     )
     list_per_page = 10
     list_display = (
-        "barcode", "real_barcode_image", "is_approved", "is_sold_out", "is_bound",
-        "add_date", "sold_date", "sold_to", "sold_way", "operator",
+        "barcode", "real_barcode_image", "is_approved", "is_sold_out",
+        "is_bound", "add_date", "sold_date", "sold_to", "sold_way", "operator",
     )
     list_display_links = ('barcode', )
-    list_filter = ("is_bound", "is_sold_out", "is_approved")
+    list_filter = (
+        "is_bound", "is_sold_out", "is_approved", ("add_date", DateRangeFilter)
+    )
     readonly_fields = ("real_barcode_image", )
     save_as_continue = False
     search_fields = ("barcode", "operator", )
+    date_hierarchy = "add_date"
     
     def real_barcode_image(self, obj):
         return format_html('<img src="{}" alt="{}" height="20%">',
                            obj.barcode_img.url, obj.barcode)
-    real_barcode_image.short_description = "条形码"
+    real_barcode_image.short_description = "条形码图片"
 
 
 class DeliveriesAdmin(admin.ModelAdmin):
@@ -55,11 +61,14 @@ class DeliveriesAdmin(admin.ModelAdmin):
     list_display_links = ('serial_number',)
     list_per_page = 30
     inlines = [ProductsInline]
-
+    
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial['serial_number'] = timezone.now().strftime("%Y%m%d%H%M%S")
+        return initial
+    
     def render_change_form(self, request, context, add=False, change=False,
                            form_url='', obj=None):
-        initial = context["adminform"].form.initial
-        initial['serial_number'] = timezone.now().strftime("%Y%m%d%H%M%S")
         if obj and obj.is_submit:
             context['show_save'] = False
             context['show_delete'] = False

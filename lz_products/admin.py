@@ -7,6 +7,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.urls import reverse
 from django.utils import timezone
 
+from jet.filters import DateRangeFilter
+
 from bms_colowell.settings import MEDIA_ROOT
 from bms_colowell.utils import InlineImportExportModelAdmin
 from lz_products.resources import LzProductsResource
@@ -26,6 +28,11 @@ class LzProductsAdmin(InlineImportExportModelAdmin):
         'report_date', 'report_download', 'batch_code',
     )
     list_display_links = ('barcode', )
+    list_filter = (
+        ('received_date', DateRangeFilter),
+        ('test_date', DateRangeFilter),
+        ('report_date', DateRangeFilter),
+    )
     list_per_page = 30
     resource_class = LzProductsResource
     save_as_continue = False

@@ -5,6 +5,8 @@ from django.contrib import admin
 from django.contrib.auth.tokens import default_token_generator
 from django.urls import path, reverse
 
+from jet.filters import DateRangeFilter
+
 from bms_colowell.mixins import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET,\
     DINGTALK_AGENT_ID, MEDIA_ROOT
@@ -19,6 +21,7 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
     actions = ["generate_pdf"]
     appkey = DINGTALK_APPKEY
     appsecret = DINGTALK_SECRET
+    date_hierarchy = "create_at"
     fieldsets = (
         (None, {
             'fields': ('product', 'version', '_f10', '_f12', '_f08', '_f09', ),
@@ -45,7 +48,7 @@ class CollectionsAdmin(admin.ModelAdmin, NotificationMixin):
         'product', '_f01', '_f02', '_f03', '_f04', 'f05_string', 'f06_string',
         'f07_string', '_f08', '_f09', '_f10', 'is_submit', 'report_download'
     )
-    list_filter = ('is_submit', )
+    list_filter = ('is_submit', ('create_at', DateRangeFilter))
     ordering = ('product__barcode', )
     radio_fields = {
         '_f01': admin.HORIZONTAL, '_f02': admin.HORIZONTAL,
