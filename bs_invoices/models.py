@@ -30,7 +30,7 @@ class Payment(models.Model):
         blank=True
     )
     receive_value = models.FloatField(
-        verbose_name="到账金额", null=True, blank=True
+        verbose_name="到账金额", null=True, blank=True, default=0
     )
     receive_date = models.DateField(
         verbose_name="到账时间", null=True, blank=True
@@ -110,7 +110,7 @@ class Invoices(models.Model):
         verbose_name="账号", max_length=50, null=True, blank=True
     )
     invoice_value = models.FloatField(
-        verbose_name="开票金额", null=True, blank=True
+        verbose_name="开票金额", null=True, blank=True, default=0
     )
     invoice_content = models.CharField(
         verbose_name="开票内容", max_length=150, null=True, blank=True

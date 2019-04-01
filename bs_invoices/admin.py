@@ -3,10 +3,11 @@ import datetime
 from django.contrib import admin
 from django.db.models import Q, Sum
 
-from import_export.admin import ImportExportModelAdmin
+from import_export.admin import ImportExportActionModelAdmin
 from jet.filters import DateRangeFilter
 
 from bs_invoices.models import Payment, Invoices
+from bs_invoices.resources import InvoicesResources, PaymentResource
 
 
 class LinkPaymentInline(admin.StackedInline):
@@ -43,7 +44,7 @@ class LinkInvoicesInline(admin.StackedInline):
     )
 
 
-class BusinessRecordAdmin(ImportExportModelAdmin):
+class BusinessRecordAdmin(admin.ModelAdmin):
     """交易流管理"""
 
     inlines = [LinkInvoicesInline, LinkPaymentInline]
@@ -70,7 +71,7 @@ class BusinessRecordAdmin(ImportExportModelAdmin):
 
 
 def update_middle_deal(record_id):
-    # TODO: 判断当前发票是否已提交；金额分配逻辑考虑不全
+    # TODO: 判断当前发票是否已提交
     # 统计当前业务流下的总开票额及总到款额
     in_condition = Q(record_number_id=record_id) & Q(wait_payment__gt=0)
     invoice_data = Invoices.objects.filter(in_condition)
@@ -118,7 +119,7 @@ def update_middle_deal(record_id):
                 invoice_data.filter(id=now_id).update(wait_payment=new_wait_payment)
 
 
-class InvoicesAdmin(ImportExportModelAdmin):
+class InvoicesAdmin(ImportExportActionModelAdmin):
     """发票信息管理"""
     invoice_info = (
         'record_number', 'salesman', 'invoice_type', 'invoice_issuing',
@@ -146,6 +147,7 @@ class InvoicesAdmin(ImportExportModelAdmin):
     list_display_links = ('invoice_id',)
     list_per_page = 40
     save_as_continue = False
+    resource_class = InvoicesResources
 
     @staticmethod
     def invoice_middle_deal(obj):
@@ -220,7 +222,7 @@ class InvoicesAdmin(ImportExportModelAdmin):
         super().delete_model(request, obj)
 
 
-class PaymentAdmin(ImportExportModelAdmin):
+class PaymentAdmin(ImportExportActionModelAdmin):
     """到款信息管理"""
 
     fields = (
@@ -236,6 +238,7 @@ class PaymentAdmin(ImportExportModelAdmin):
     search_fields = ('payment_number',)
     # resource_class = PaymentResource
     list_filter = (('receive_date', DateRangeFilter),)
+    resource_class = PaymentResource
 
     def get_readonly_fields(self, request, obj=None):
         self.readonly_fields = ()
