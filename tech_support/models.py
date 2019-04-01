@@ -6,21 +6,27 @@ from projects.models import ContractsInfo
 from suggestions.models import Choices
 
 
-# class BoxDeliveries(models.Model):
-#     """盒子发货管理"""
-#     # index_number = models.CharField("盒子发货编号", max_length=20)
-#     sale_man = models.ForeignKey(
-#         AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
-#         null=True)
-#     customer = models.CharField(max_length=20, verbose_name="客户")
-#     # box_number = models.IntegerField(verbose_name="邮寄盒子数")
-#
-#
-#     submit = models.BooleanField(verbose_name='提交', default=False)
-#
-#     class Meta:
-#         app_label = "tech_support"
-#         verbose_name = verbose_name_plural = "盒子发货管理"
+class BoxDeliveries(models.Model):
+    """盒子发货管理"""
+    index_number = models.CharField("盒子发货编号", max_length=20)
+    sale_man = models.ForeignKey(
+        AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
+        null=True)
+    customer = models.CharField(max_length=20, verbose_name="客户")
+    box_number = models.IntegerField(verbose_name="邮寄盒子数", default=0)
+    parent = models.ForeignKey(
+        Partners, verbose_name="合作方", on_delete=models.SET_NULL,
+        null=True, blank=True)
+    send_date = models.DateField(verbose_name="邮寄日期", blank=True, null=True)
+    made_date = models.DateField(verbose_name="生产日期", blank=True, null=True)
+    address = models.CharField(max_length=200, verbose_name="地址", default="")
+    submit = models.BooleanField(verbose_name='提交', default=False)
+    send_number = models.CharField(
+        max_length=200, verbose_name="快递单号", blank=True, null=True)
+
+    class Meta:
+        app_label = "tech_support"
+        verbose_name = verbose_name_plural = "盒子发货管理"
 
 
 class Techsupport(models.Model):
@@ -43,17 +49,6 @@ class Techsupport(models.Model):
     )
     status = models.IntegerField(choices=BOX_STATUS, verbose_name="盒子状态",
                                  default=0, blank=True, null=True)
-    # 盒子发货移植内容
-    parent = models.ForeignKey(
-        Partners, verbose_name="合作方", on_delete=models.SET_NULL,
-        null=True, blank=True)
-    send_date = models.DateField(verbose_name="邮寄日期", blank=True, null=True)
-    made_date = models.DateField(verbose_name="生产日期", blank=True, null=True)
-    address = models.CharField(max_length=200, verbose_name="地址", default="")
-    sale_man = models.ForeignKey(
-        AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
-        blank=True, null=True)
-
     receive_date = models.DateField(
         verbose_name="收样日期", blank=True, null=True)
     sampling_date = models.DateField(
@@ -128,10 +123,10 @@ class Techsupport(models.Model):
         verbose_name="调查问卷备注", max_length=200, blank=True, null=True)
     istasking = models.BooleanField(
         verbose_name="是否开始任务", default=False)
-    # boxdeliveries = models.ForeignKey(
-    #     to=BoxDeliveries, verbose_name="盒子发货编号", on_delete=models.SET_NULL,
-    #     related_name="tech", blank=True, null=True
-    # )
+    boxdeliveries = models.ForeignKey(
+        to=BoxDeliveries, verbose_name="盒子发货编号", on_delete=models.SET_NULL,
+        related_name="tech", blank=True, null=True
+    )
     insure_receive = models.BooleanField(
         verbose_name="收货确认", default=False
     )
@@ -270,7 +265,6 @@ class ExtSubmit(models.Model):
     class Meta:
         app_label = "tech_support"
         verbose_name = verbose_name_plural = "提取下单管理"
-
 
 
 class BoxApplications(models.Model):
