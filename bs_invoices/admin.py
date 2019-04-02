@@ -125,11 +125,11 @@ class InvoicesAdmin(ImportExportActionModelAdmin):
         'record_number', 'salesman', 'invoice_type', 'invoice_issuing',
         'invoice_title', 'tariff_item', 'send_address', 'address_phone',
         'opening_bank', 'bank_account_number', 'invoice_value',
-        'invoice_content', 'remark', 'apply_name', 'flag', 'approve_flag',
+        'invoice_content', 'remark', 'apply_name', 'invoice_submit',
     )
     send_invoice_info = (
         'invoice_number', 'billing_date', 'invoice_send_date',
-        'tracking_number', 'tax_rate', 'ele_invoice', 'send_flag'
+        'tracking_number', 'tax_rate', 'ele_invoice', 'send_submit'
     )
     fieldsets = (
         (u'开票信息', {
@@ -138,6 +138,10 @@ class InvoicesAdmin(ImportExportActionModelAdmin):
         (u'寄送信息', {
             'fields': send_invoice_info
         })
+    )
+    invoice_list_display = (
+        'salesman', 'invoice_title', 'invoice_value', 'invoice_type',
+        'invoice_content',
     )
     list_display = (
         'invoice_id', 'salesman', 'contract_id', 'billing_date',
@@ -148,6 +152,37 @@ class InvoicesAdmin(ImportExportActionModelAdmin):
     list_per_page = 40
     save_as_continue = False
     resource_class = InvoicesResources
+
+    # @staticmethod
+    # def get_user_group(request):
+    #     group = request.user.groups.all()
+    #     invoice_change_permission = False
+    #     send_change_permission = False
+    #     for data in group:
+    #         if data.name == "商务":
+    #             invoice_change_permission = True
+    #         if data.name == "财务":
+    #             send_change_permission = True
+    #     return invoice_change_permission, send_change_permission
+    #
+    # def get_readonly_fields(self, request, obj=None):
+    #     invoice_fields = ()
+    #     send_fields = ()
+    #     invoice_change_permission, send_change_permission = \
+    #         self.get_user_group(request)
+    #     if not invoice_change_permission:
+    #         invoice_fields = self.invoice_info
+    #     else:
+    #         if hasattr(obj, 'invoice_submit'):
+    #             if obj.invoice_submit:
+    #                 invoice_fields = self.invoice_info
+    #     if not send_change_permission:
+    #         send_fields = self.send_invoice_info
+    #     else:
+    #         if hasattr(obj, 'send_submit'):
+    #             if obj.send_submit:
+    #                 send_fields = self.send_invoice_info
+    #     return invoice_fields + send_fields
 
     @staticmethod
     def invoice_middle_deal(obj):
@@ -176,13 +211,13 @@ class InvoicesAdmin(ImportExportActionModelAdmin):
         if change:
             super().save_model(request, obj, form, change)
             if hasattr(obj, 'invoice_value') and hasattr(obj, 'wait_payment'):
-                if obj.flag and obj.invoice_value == obj.wait_payment:
+                if obj.invoice_submit and obj.invoice_value == obj.wait_payment:
                     obj.wait_payment = self.invoice_middle_deal(obj)
         else:
             number = 'FP' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S')
             obj.invoice_id = number
             super().save_model(request, obj, form, change)
-            if obj.flag:
+            if obj.invoice_submit:
                 obj.wait_payment = self.invoice_middle_deal(obj)
             else:
                 obj.wait_payment = obj.invoice_value
