@@ -122,18 +122,18 @@ class Invoices(models.Model):
         AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
         null=True, blank=True
     )
-    flag = models.BooleanField(
-        verbose_name="提交开票", default=False
+    invoice_submit = models.BooleanField(
+        verbose_name="是否提交", default=False
     )
     invoice_fill_date = models.DateField(
         verbose_name="填写日期", auto_now_add=True
     )
-    approve_flag = models.CharField(
+    approve_status = models.CharField(
         verbose_name="审核状态", max_length=3, choices=APPROVE_CHOICE, null=True,
-        blank=True, default='ds'
+        blank=True, default='tg'
     )
-    approve_submit_flag = models.BooleanField(
-        verbose_name="提交审核", default=False
+    approve_submit = models.BooleanField(
+        verbose_name="是否提交", default=True
     )
 
     invoice_number = models.CharField(
@@ -155,7 +155,7 @@ class Invoices(models.Model):
     send_fill_date = models.DateField(
         verbose_name="填写日期", auto_now=True
     )
-    send_flag = models.BooleanField(
+    send_submit = models.BooleanField(
         verbose_name="是否提交", default=False
     )
     wait_payment = models.FloatField(
