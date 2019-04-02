@@ -2,8 +2,7 @@ from import_export.widgets import DateWidget
 from import_export.fields import Field
 from import_export import resources
 
-from projects.models import ContractsInfo, InvoiceInfo
-from invoices.models import PaymentInfo
+from projects.models import ContractsInfo
 
 
 class ContractInfoResources(resources.ModelResource):
@@ -124,86 +123,3 @@ class ContractInfoResources(resources.ModelResource):
             for payment in payment_datas:
                 receive_value += payment.receive_value
         return receive_value
-
-
-class InvoiceInfoResources(resources.ModelResource):
-    """发票信息导入导出resources"""
-
-    id = Field(
-        column_name="编号", attribute='id', default=None
-    )
-    invoice_number = Field(
-        column_name="发票编号", attribute='invoice_number', default=None
-    )
-    contract_number = Field(
-        column_name="合同号", attribute='contract_id', default=None
-    )
-    salesman = Field(
-        column_name="业务员", attribute='salesman',
-    )
-    invoice_type = Field(
-        column_name="开票类型", attribute='invoice_type'
-    )
-    invoice_issuing = Field(
-        column_name="开票单位", attribute='invoice_issuing'
-    )
-    invoice_title = Field(
-        column_name="发票抬头", attribute='invoice_title'
-    )
-    tariff_item = Field(
-        column_name="税号", attribute='tariff_item'
-    )
-    send_address = Field(
-        column_name="对方地址", attribute='send_address'
-    )
-    address_phone = Field(
-        column_name="号码", attribute='address_phone'
-    )
-    opening_bank = Field(
-        column_name="开户行", attribute='opening_bank'
-    )
-    bank_account_number = Field(
-        column_name="账号", attribute='bank_account_number'
-    )
-    invoice_value = Field(
-        column_name="开票金额", attribute='invoice_value', default=None
-    )
-    invoice_content = Field(
-        column_name="开票内容", attribute='invoice_content'
-    )
-    remark = Field(
-        column_name="备注", attribute='remark'
-    )
-    apply_name = Field(
-        column_name="申请人", attribute='apply_name', default=None
-    )
-    flag = Field(
-        column_name="是否提交", attribute='flag'
-    )
-    approve_flag = Field(
-        column_name="审批状态", attribute='approve_flag'
-    )
-    fill_date = Field(
-        column_name="填写时间", attribute='fill_date',
-        widget=DateWidget(format='%Y-%m-%d'),
-    )
-
-    class Meta:
-        model = InvoiceInfo
-        fields = (
-            'id', 'invoice_number', 'contract_number', 'salesman',
-            'invoice_type', 'invoice_issuing', 'invoice_title', 'tariff_item',
-            'send_address', 'address_phone', 'opening_bank',
-            'bank_account_number', 'invoice_value', 'invoice_content', 'remark',
-            'apply_name', 'flag', 'approve_flag', 'fill_date',
-        )
-        export_order = fields
-        skip_unchanged = True
-        import_id_fields = ['id']
-
-    def get_export_headers(self):
-        export_headers = [u'编号', u'发票编号', u'合同号', u'业务员', u'开票类型',
-                          u'开票单位', u'发票抬头', u'税号', u'对方地址', u'号码',
-                          u'开户行', u'账号', u'开票金额', u'开票内容', u'备注',
-                          u'申请人', u'是否提交', u'审批状态', u'填写时间']
-        return export_headers
