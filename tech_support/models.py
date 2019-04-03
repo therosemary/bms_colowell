@@ -22,13 +22,13 @@ class BoxDeliveries(models.Model):
     appl_number = models.IntegerField(verbose_name="已申请盒子数量", default=0)
     parent = models.ForeignKey(
         Partners, verbose_name="合作方", on_delete=models.SET_NULL,
-        null=True, blank=True)
+        null=True)
     send_date = models.DateField(verbose_name="邮寄日期", blank=True, null=True)
     made_date = models.DateField(verbose_name="生产日期", blank=True, null=True)
     address = models.CharField(max_length=200, verbose_name="地址", default="")
     submit = models.BooleanField(verbose_name='提交', default=False)
     send_number = models.CharField(
-        max_length=200, verbose_name="快递单号", blank=True, null=True)
+        max_length=200, verbose_name="快递单号", null=True)
 
     class Meta:
         app_label = "tech_support"
@@ -280,7 +280,7 @@ class BoxApplications(models.Model):
         blank=True
     )
     amount = models.IntegerField(
-        verbose_name="申请数量", null=True, blank=True
+        verbose_name="申请数量", null=True
     )
     classification = models.CharField(
         verbose_name="申请类别", max_length=3, choices=CLASSIFICATION,
@@ -316,7 +316,7 @@ class BoxApplications(models.Model):
     )
     proposer = models.ForeignKey(
         AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
-        null=True, blank=True
+        null=True
     )
     box_submit_flag = models.BooleanField(
         verbose_name="是否提交", default=False

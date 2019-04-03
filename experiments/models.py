@@ -1,5 +1,6 @@
 from django.db import models
 from bms_colowell.settings import AUTH_USER_MODEL
+from partners.models import Partners
 from suggestions.models import Collections
 from tech_support.models import Techsupport
 
@@ -150,6 +151,8 @@ class Experiments(models.Model):
     fq_suggest = models.CharField(
         verbose_name="荧光定量-建议", max_length=300, blank=True, null=True)
     submit_fq = models.BooleanField(verbose_name="荧光定量-提交", default=False)
+    enter_res = models.BooleanField(
+        verbose_name="是否进入结果判定", default=False)
 
     class Meta:
         app_label = "experiments"
@@ -167,7 +170,7 @@ class ResultJudgement(models.Model):
         to=Collections, verbose_name="对应调查问卷", blank=True, null=True,
         on_delete=models.SET_NULL)
     risk = models.CharField(verbose_name="风险性", choices=(("high", u"高风险"),
-                                                            ("low", u"低风险")),
+                                                         ("low", u"低风险")),
                             blank=True, null=True, max_length=20)
     SDC2 = models.CharField(verbose_name="SDC2基因检测结果", max_length=20,
                             choices=(("yin", u"阴性"),
@@ -175,19 +178,43 @@ class ResultJudgement(models.Model):
                             blank=True, null=True)
     SFRP2 = models.CharField(verbose_name="SFRP2基因检测结果", max_length=20,
                              choices=(("yin", u"阴性"),
-                                     ("yang", u"阳性")),
+                                      ("yang", u"阳性")),
                              blank=True, null=True)
-    res_date = models.DateField(verbose_name="判定日期", blank=True, null=True)
+    res_date = models.DateField(
+        verbose_name="判定日期", blank=True, null=True)
     risk_file = models.FileField(verbose_name="风险评估报告",
                                  upload_to="riskfile", blank=True, null=True)
     submit_exp = models.BooleanField(verbose_name="实验提交", blank=True,
                                      default=False)
     submit_tech = models.BooleanField(verbose_name="技术支持提交", blank=True,
                                       default=False)
+    # parent = models.ForeignKey(
+    #     Partners, verbose_name="合作方", on_delete=models.SET_NULL,
+    #     null=True)
 
     class Meta:
         app_label = "experiments"
         verbose_name = verbose_name_plural = "结果判定"
 
     def __str__(self):
-        return self.experiment.index_number
+        # if self.experiment:
+        #     return self.experiment.index_number
+        # else:
+        #     return "未选中实验"
+        return str(self.id)
+
+
+class DailyReport(models.Model):
+    report_date = models.DateField(verbose_name="出报告日期")
+    report_file = models.FileField(verbose_name="报告上传",
+                                   upload_to="uploads/report/%Y/%m/%d/")
+    report_user = models.ForeignKey(to=AUTH_USER_MODEL, verbose_name="上传人",
+                                    on_delete=models.SET_NULL, null=True)
+    submit = models.BooleanField(verbose_name="提交", default=False)
+
+    class Meta:
+        app_label = "experiments"
+        verbose_name = verbose_name_plural = "结果报告"
+
+    def __str__(self):
+        return self.report_user.__str__() + ":" + self.report_date.__str__()
