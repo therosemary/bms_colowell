@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from accounts.models import BmsUser
-from projects.models import ContractsInfo, InvoiceInfo
+from projects.models import ContractsInfo
 from partners.models import Partners
 
 
@@ -34,8 +34,3 @@ class TestProject(TestCase):
             contract_id="YX201907010000001234", contract_number="xxxxxxxx",
             staff_name=self.test_user,
         )
-        test_invoice = InvoiceInfo.objects.create(
-            invoice_id="YX201901071441251234", contract_id=self.test_contract,
-            apply_name=self.test_username
-        )
-        self.assertTrue(test_invoice)

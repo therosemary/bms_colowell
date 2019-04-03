@@ -30,7 +30,7 @@ class Payment(models.Model):
         blank=True
     )
     receive_value = models.FloatField(
-        verbose_name="到账金额", null=True, blank=True
+        verbose_name="到账金额", null=True, blank=True, default=0
     )
     receive_date = models.DateField(
         verbose_name="到账时间", null=True, blank=True
@@ -50,7 +50,7 @@ class Payment(models.Model):
         verbose_name = verbose_name_plural = "到款信息"
 
     def __str__(self):
-        return self.payment_number
+        return '{}'.format(self.payment_number)
 
 
 class Invoices(models.Model):
@@ -110,7 +110,7 @@ class Invoices(models.Model):
         verbose_name="账号", max_length=50, null=True, blank=True
     )
     invoice_value = models.FloatField(
-        verbose_name="开票金额", null=True, blank=True
+        verbose_name="开票金额", null=True, blank=True, default=0
     )
     invoice_content = models.CharField(
         verbose_name="开票内容", max_length=150, null=True, blank=True
@@ -122,18 +122,18 @@ class Invoices(models.Model):
         AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
         null=True, blank=True
     )
-    flag = models.BooleanField(
-        verbose_name="提交开票", default=False
+    invoice_submit = models.BooleanField(
+        verbose_name="是否提交", default=False
     )
     invoice_fill_date = models.DateField(
         verbose_name="填写日期", auto_now_add=True
     )
-    approve_flag = models.CharField(
+    approve_status = models.CharField(
         verbose_name="审核状态", max_length=3, choices=APPROVE_CHOICE, null=True,
-        blank=True, default='ds'
+        blank=True, default='tg'
     )
-    approve_submit_flag = models.BooleanField(
-        verbose_name="提交审核", default=False
+    approve_submit = models.BooleanField(
+        verbose_name="是否提交", default=True
     )
 
     invoice_number = models.CharField(
@@ -155,7 +155,7 @@ class Invoices(models.Model):
     send_fill_date = models.DateField(
         verbose_name="填写日期", auto_now=True
     )
-    send_flag = models.BooleanField(
+    send_submit = models.BooleanField(
         verbose_name="是否提交", default=False
     )
     wait_payment = models.FloatField(
@@ -170,7 +170,7 @@ class Invoices(models.Model):
     )
 
     def __str__(self):
-        return "{}".format(self.invoice_number)
+        return "{}".format(self.invoice_id)
 
     class Meta:
         verbose_name = verbose_name_plural = "开票信息"

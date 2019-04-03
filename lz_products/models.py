@@ -103,10 +103,15 @@ class BatchDownloadRecords(models.Model):
     download_uri = models.URLField(
         verbose_name="下载链接", null=True, blank=True,
     )
-
+    
     class Meta:
         ordering = ["-created_at"]
         verbose_name = verbose_name_plural = "批量下载记录"
     
     def __str__(self):
         return "{}".format(self.serial_number)
+    
+    def zipped_file_download(self):
+        _uri = self.download_uri
+        return format_html('<a href="{}">下载</a>', _uri if _uri else "-")
+    zipped_file_download.short_description = "下载链接"
