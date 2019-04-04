@@ -80,26 +80,26 @@ class TechsupportResources(resources.ModelResource):
         widget=ForeignKeyWidget(Partners, "name"), default=None)
     send_date = Field(
         column_name='邮寄日期', attribute='send_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     made_date = Field(
         column_name='生产日期', attribute='made_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     sale_man = Field(
         column_name="业务员", attribute="sale_man",
         widget=ForeignKeyWidget(BmsUser, "username"), default=None)
     receive_date = Field(
         column_name='收样日期', attribute='receive_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     sampling_date = Field(
         column_name='采样日期', attribute='sampling_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     report_end_date = Field(
         column_name='报告截止', attribute='report_end_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     project_source = Field(
         column_name='检测项目来源', attribute='project_source', default=None
@@ -112,7 +112,7 @@ class TechsupportResources(resources.ModelResource):
     )
     report_date = Field(
         column_name='报告出具日期', attribute='report_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     pe_number = Field(
         column_name='体检号', attribute='pe_number', default=None
@@ -164,7 +164,7 @@ class TechsupportResources(resources.ModelResource):
     )
     register_date = Field(
         column_name='登记日期', attribute='register_date',
-        widget=DateWidget(format='%Y/%m/%d'), default=None
+        widget=DateWidget(format='%Y-%m-%d'), default=None
     )
     colonoscopy_result = Field(
         column_name='肠镜结果', attribute='colonoscopy_result', default=None
@@ -199,9 +199,6 @@ class TechsupportResources(resources.ModelResource):
         column_name='调查问卷备注', attribute='questionnaire_note',
         default=None
     )
-    bd_number = Field(
-        column_name="盒子发货编号", attribute="bd_number_id"
-    )
 
     class Meta:
         model = Techsupport
@@ -221,7 +218,7 @@ class TechsupportResources(resources.ModelResource):
             "smoking", 'drinking', "colonoscopy", "cancer",
             "direct_bowel_cancer", "lower_digestive", "other_medical_history",
             "other_chronic_diseases",
-            'questionnaire_note', "bd_number")
+            'questionnaire_note')
         export_order = (
             "parent", "send_date", "made_date", "sale_man",
             'receive_date', 'sampling_date', "report_end_date",
@@ -236,7 +233,7 @@ class TechsupportResources(resources.ModelResource):
             "smoking", 'drinking', "colonoscopy", "cancer",
             "direct_bowel_cancer", "lower_digestive", "other_medical_history",
             "other_chronic_diseases",
-            'questionnaire_note', "bd_number")
+            'questionnaire_note')
 
     # def get_export_headers(self):
     #     return ["收样日期", "采样日期", "报告截止",

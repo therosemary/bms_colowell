@@ -1,6 +1,4 @@
-from datetime import datetime
 from django.contrib import admin
-from django.db.models import Q
 from import_export.admin import ImportExportActionModelAdmin
 from accounts.models import DingtalkInfo, BmsUser
 from experiments.models import ResultJudgement
@@ -9,7 +7,6 @@ from rangefilter.filter import DateRangeFilter
 from bms_colowell.mixins import NotificationMixin
 from bms_colowell.settings import DINGTALK_APPKEY, DINGTALK_SECRET, \
     DINGTALK_AGENT_ID, MEDIA_ROOT
-from partners.models import Partners
 from products.models import Products
 from suggestions.models import Collections
 
@@ -81,25 +78,13 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
         i = 0
         j = 0
         for obj in queryset:
-            if not obj.enter_res:
-                barcode = obj.boxes.barcode
-                product = Products.objects.filter(barcode=barcode)
-                if product.exists():
-                    collection_ = Collections.objects.filter(product=
-                                                             product.first())
-                    if collection_.exists():
-                        ResultJudgement.objects.create(
-                            experiment=obj, collection=collection_.first())
-                    else:
-                        ResultJudgement.objects.create(
-                            experiment=obj)
-                else:
-                    ResultJudgement.objects.create(
-                        experiment=obj)
-                j += 1
-            else:
-                i += 1
-        content = "{0}个任务成功进入结果判定,{1}个任务之前已进入结果判定".format(j, i)
+            barcode = obj.boxes.barcode
+            collection_ = Collections.objects.get(
+                product=Products.objects.get(barcode=barcode))
+            ResultJudgement.objects.create(
+                experiment=obj, collection=collection_)
+            j += 1
+        content = "{0}个任务成功进入结果判定".format(j)
         result_experiment = []
         for i in BmsUser.objects.all():
             if (i.has_perm("experiments.add_resultjudgement") and i.has_perm(
@@ -325,65 +310,7 @@ class ExperimentsAdmin(ImportExportActionModelAdmin, NotificationMixin):
     #     if request.user.has_perm("")
 
 
-class ResultJudgeListFilter(admin.SimpleListFilter):
-    title = "是否上传结果报告"
-    parameter_name = "risk_file"
-
-    def lookups(self, request, model_admin):
-        return [(0, "未上传结果报告"), (1, "已上传结果报告")]
-
-    def queryset(self, request, queryset):
-        if self.value() == "0":
-            return queryset.filter(Q(risk_file=""))
-        if self.value() == "1":
-            return queryset.filter(~Q(risk_file=""))
-
-
-class PartnersListFilter(admin.SimpleListFilter):
-    title = "合作方"
-    parameter_name = "partner"
-
-    def lookups(self, request, model_admin):
-        risk_file = request.GET.get("risk_file")
-        date_bigin = request.GET.get("res_date__gte")
-        date_stop = request.GET.get("res_date__lte")
-        query_ = ResultJudgement.objects.all()
-        if risk_file == "1":
-            query_ = query_.filter(~Q(risk_file=""))
-        elif risk_file == "0":
-            query_ = query_.filter(Q(risk_file=""))
-        else:
-            pass
-        if date_bigin and date_stop:
-            start_date = datetime.strptime(date_bigin, '%Y/%m/%d')
-            stop_date = datetime.strptime(date_stop, '%Y/%m/%d')
-            # print(start_date, stop_date)
-            query_ = query_.filter(res_date__gte=start_date,
-                                   res_date__lte=stop_date)
-        parents = []
-        if query_.exists():
-            for i in query_:
-                print(i.res_date)
-                parent = i.experiment.boxes.bd_number.parent
-                parents.append(parent)
-        # print(parents)
-        parents = [i for i in set(parents)]
-        parents_codes = [p.code for p in parents]
-        parents_names = [p.name for p in parents]
-        return zip(parents_codes, parents_names)
-
-    def queryset(self, request, queryset):
-        all_codes = [i.code for i in Partners.objects.all()]
-        for i in all_codes:
-            if self.value() == i:
-                partner = Partners.objects.filter(code=i).first()
-                return queryset.filter(
-                    experiment__boxes__bd_number__parent=partner)
-        return queryset
-
-
 class ResultJudgementAdmin(admin.ModelAdmin):
-    """结果判定"""
     list_display = ["experiment", "risk", "SDC2", "SFRP2", "res_date",
                     "submit_exp", "submit_tech"]
     list_display_links = ["experiment", ]
@@ -412,7 +339,7 @@ class ResultJudgementAdmin(admin.ModelAdmin):
                             "fq_sdc2_ct", "fq_sdc2_amp", "fq_sfrp2_ct",
                             'fq_sfrp2_amp', "qualified_", "experiment",
                             "collection", "ext_hemoglobin", "f01", "f02",
-                            "f03", "f04", "f05", "f06", "f07", "f08", "f09",
+                            "f03","f04", "f05", "f06", "f07", "f08", "f09",
                             "f10", "f11"]
             else:
                 if obj.submit_tech:
@@ -448,11 +375,6 @@ class ResultJudgementAdmin(admin.ModelAdmin):
                                "res_date", "risk_file", "submit_tech")
                 }),
             )
-
-    def get_list_filter(self, request):
-        """ 提供筛选统计功能 """
-        return [ResultJudgeListFilter, ('res_date', DateRangeFilter),
-                PartnersListFilter]
 
     def qualified_(self, obj):
         if obj:
@@ -596,22 +518,3 @@ class ResultJudgementAdmin(admin.ModelAdmin):
             return obj.collection.f11
 
     f11.short_description = "肠镜"
-
-
-class DailyReportAdmin(admin.ModelAdmin):
-    """ 每日报告管理 """
-    list_display_links = ["report_date", ]
-    list_display = ["report_date", "report_file", "report_user", 'submit']
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            if obj.submit:
-                return ["report_date", "report_file", "report_user", 'submit']
-            else:
-                return []
-        return []
-
-    def save_model(self, request, obj, form, change):
-        if not obj.report_user:
-            obj.report_user = request.user
-        obj.save()
