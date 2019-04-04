@@ -1,12 +1,8 @@
-from django.db.models import Sum
-
-from import_export.widgets import DateWidget, ForeignKeyWidget
+from import_export.widgets import DateWidget
 from import_export.fields import Field
 from import_export import resources
 
 from projects.models import ContractsInfo
-from partners.models import Partners
-from bs_invoices.models import BusinessRecord
 
 
 class ContractInfoResources(resources.ModelResource):
@@ -22,8 +18,7 @@ class ContractInfoResources(resources.ModelResource):
         column_name="合同号", attribute='contract_number'
     )
     client = Field(
-        column_name="客户", attribute='client', default=None,
-        widget=ForeignKeyWidget(Partners, 'name')
+        column_name="客户", attribute='client', default=None
     )
     box_price = Field(
         column_name="盒子单价", attribute='box_price', default=None
@@ -69,7 +64,7 @@ class ContractInfoResources(resources.ModelResource):
         column_name="备注", attribute='remark'
     )
     staff_name = Field(
-        column_name="业务员", attribute='staff_name__username', default=None
+        column_name="业务员", attribute='staff_name', default=None
     )
 
     class Meta:
@@ -91,6 +86,13 @@ class ContractInfoResources(resources.ModelResource):
         import_id_fields = ['contract_id']
         skip_unchanged = True
 
+    def get_export_headers(self):
+        export_headers = [u'编号', u'合同编码', u'合同号', u'客户', u'盒子单价',
+                          u'检测单价', u'全套价格', u'合同金额', u'已到账额',
+                          u'寄出时间', u'邮件单号', u'寄回时间', u'合同类型',
+                          u'起始时间', u'截止时间', u'备注', u'业务员', ]
+        return export_headers
+
     def dehydrate_full_set_price(self, contractinfo):
         """计算全套价格"""
         if contractinfo.box_price is not None and contractinfo.detection_price \
@@ -100,15 +102,24 @@ class ContractInfoResources(resources.ModelResource):
             full_set_price = None
         return full_set_price
 
+    # def dehydrate_count_invoice_value(self, contractinfo):
+    #     """获取已开票总额，包含未审核金额"""
+    #     total_value = 0
+    #     invoice_datas = InvoiceInfo.objects.filter(
+    #         contract_id=contractinfo.contract_id, flag=True
+    #     )
+    #     if invoice_datas:
+    #             for data in invoice_datas:
+    #                 if data.sendinvoices.invoice_approval_status:
+    #                     total_value += data.invoice_value
+    #     return total_value
+
     def dehydrate_receive_invoice_value(self, contractinfo):
         """获取已到账总金额"""
         receive_value = 0
-        bussiness_record = BusinessRecord.objects.filter(
-            contract_number=contractinfo.id)
-        if len(bussiness_record):
-            for record_data in bussiness_record:
-                payment_data = record_data.payment_set.all()
-                pay = payment_data.aggregate(value=Sum('receive_value'))
-                pay_amount = pay.get('value', 0)
-                receive_value += pay_amount
+        payment_datas = PaymentInfo.objects.filter(
+            contract_number=contractinfo.id, receive_value__isnull=False)
+        if payment_datas is not None:
+            for payment in payment_datas:
+                receive_value += payment.receive_value
         return receive_value

@@ -1,9 +1,8 @@
 from import_export import resources
 from import_export.fields import Field
-from import_export.widgets import DateWidget, ForeignKeyWidget
+from import_export.widgets import DateWidget
 
 from bs_invoices.models import Invoices, Payment, BusinessRecord
-from bms_colowell.settings import AUTH_USER_MODEL
 from projects.models import ContractsInfo
 
 
@@ -57,7 +56,7 @@ class InvoicesResources(resources.ModelResource):
         column_name="备注", attribute='remark'
     )
     apply_name = Field(
-        column_name="申请人", attribute='apply_name__username', default=None,
+        column_name="申请人", attribute='apply_name', default=None
     )
     receive_value = Field(
         column_name="到账金额", attribute='receive_value', default=None
@@ -81,7 +80,7 @@ class InvoicesResources(resources.ModelResource):
         column_name="快递单号", attribute='tracking_number'
     )
     tax_rate = Field(
-        column_name="税率", attribute='tax_rate', default=None
+        column_name="税率", attribute='tax_rate'
     )
     fill_name = Field(
         column_name="填写人", attribute='fill_name', default=None
@@ -90,8 +89,7 @@ class InvoicesResources(resources.ModelResource):
         column_name="是否提交", attribute='send_flag'
     )
     record_number = Field(
-        column_name="业务流编号", attribute='record_number',
-        widget=ForeignKeyWidget(BusinessRecord, 'record_number')
+        column_name="业务流编号", attribute='record_number'
     )
 
     class Meta:
@@ -110,10 +108,17 @@ class InvoicesResources(resources.ModelResource):
         skip_unchanged = True
         import_id_fields = ['id']
 
+    def get_export_headers(self):
+        export_headers = [u'编号', u'发票编号', u'业务员', u'合同号', u'开票类型',
+                          u'开票单位', u'抬头', u'税号', u'对方地址', u'号码',
+                          u'开户行', u'账号', u'开票金额', u'备注', u'发票内容',
+                          u'申请人', u'到账金额', u'到账时间', u'发票号码',
+                          u'开票日期', u'寄出时间', u'快递单号', u'税率', u'填写人',
+                          u'是否提交', u'业务流编号']
+        return export_headers
+
     def dehydrate_contract_number(self, invoices):
-        contract_number = None
-        if invoices.record_number is not None:
-            contract_number = invoices.record_number.contract_number.contract_number
+        contract_number = invoices.record_number.contract_number.contract_number
         return contract_number
 
     def dehydrate_invoice_issuing(self, invoices):
@@ -130,7 +135,8 @@ class PaymentResource(resources.ModelResource):
         column_name="到账编号", attribute='payment_number', default=None
     )
     contract_number = Field(
-        column_name="合同号", default=None
+        column_name="合同号", attribute='contract_number',
+        default=None
     )
     receive_value = Field(
         column_name="到账金额", attribute='receive_value', default=None
@@ -144,7 +150,6 @@ class PaymentResource(resources.ModelResource):
     )
     record_number = Field(
         column_name="业务流编号", attribute='record_number',
-        widget=ForeignKeyWidget(BusinessRecord, 'record_number')
     )
 
     class Meta:

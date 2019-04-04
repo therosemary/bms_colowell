@@ -11,7 +11,7 @@ class BusinessRecord(models.Model):
         verbose_name="业务流编号", max_length=18
     )
     contract_number = models.ForeignKey(
-        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
+        ContractsInfo, verbose_name="合同编号", on_delete=models.SET_NULL,
         null=True, blank=True
     )
 
@@ -19,7 +19,7 @@ class BusinessRecord(models.Model):
         verbose_name = verbose_name_plural = "业务流"
 
     def __str__(self):
-        return '{}'.format(self.record_number)
+        return '业务流编号{}'.format(self.record_number)
 
 
 class Payment(models.Model):
@@ -76,6 +76,10 @@ class Invoices(models.Model):
     )
     invoice_id = models.CharField(
         verbose_name="发票编号", max_length=18, unique=True,
+    )
+    contract_id = models.ForeignKey(
+        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
+        null=True, blank=True
     )
     salesman = models.CharField(
         verbose_name="业务员", max_length=50, null=True, blank=True
