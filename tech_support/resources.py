@@ -199,6 +199,9 @@ class TechsupportResources(resources.ModelResource):
         column_name='调查问卷备注', attribute='questionnaire_note',
         default=None
     )
+    bd_number = Field(
+        column_name="盒子发货编号", attribute="bd_number_id"
+    )
 
     class Meta:
         model = Techsupport
@@ -218,7 +221,7 @@ class TechsupportResources(resources.ModelResource):
             "smoking", 'drinking', "colonoscopy", "cancer",
             "direct_bowel_cancer", "lower_digestive", "other_medical_history",
             "other_chronic_diseases",
-            'questionnaire_note')
+            'questionnaire_note', "bd_number")
         export_order = (
             "parent", "send_date", "made_date", "sale_man",
             'receive_date', 'sampling_date', "report_end_date",
@@ -233,7 +236,7 @@ class TechsupportResources(resources.ModelResource):
             "smoking", 'drinking', "colonoscopy", "cancer",
             "direct_bowel_cancer", "lower_digestive", "other_medical_history",
             "other_chronic_diseases",
-            'questionnaire_note')
+            'questionnaire_note', "bd_number")
 
     # def get_export_headers(self):
     #     return ["收样日期", "采样日期", "报告截止",
