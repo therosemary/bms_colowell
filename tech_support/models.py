@@ -8,21 +8,27 @@ from suggestions.models import Choices
 
 class BoxDeliveries(models.Model):
     """盒子发货管理"""
-    index_number = models.CharField("盒子发货编号", max_length=20)
+    contract_number = models.ForeignKey(
+        ContractsInfo, verbose_name="合同号", on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+    bd_number = models.CharField("盒子发货编号", max_length=20,
+                                 primary_key=True)
     sale_man = models.ForeignKey(
         AUTH_USER_MODEL, verbose_name="业务员", on_delete=models.SET_NULL,
         null=True)
     customer = models.CharField(max_length=20, verbose_name="客户")
-    box_number = models.IntegerField(verbose_name="邮寄盒子数", default=0)
+    # box_number = models.IntegerField(verbose_name="邮寄盒子数", default=0)
+    appl_number = models.IntegerField(verbose_name="已申请盒子数量", default=0)
     parent = models.ForeignKey(
         Partners, verbose_name="合作方", on_delete=models.SET_NULL,
-        null=True, blank=True)
+        null=True)
     send_date = models.DateField(verbose_name="邮寄日期", blank=True, null=True)
     made_date = models.DateField(verbose_name="生产日期", blank=True, null=True)
     address = models.CharField(max_length=200, verbose_name="地址", default="")
     submit = models.BooleanField(verbose_name='提交', default=False)
     send_number = models.CharField(
-        max_length=200, verbose_name="快递单号", blank=True, null=True)
+        max_length=200, verbose_name="快递单号", null=True)
 
     class Meta:
         app_label = "tech_support"
@@ -93,9 +99,9 @@ class Techsupport(models.Model):
 
     # 检测结果
     f12 = models.CharField(
-          verbose_name="血红蛋白", max_length=50, blank=True, null=True)
+        verbose_name="血红蛋白", max_length=50, blank=True, null=True)
     f10 = models.CharField(
-          verbose_name="综合结果", max_length=200, blank=True, null=True)
+        verbose_name="综合结果", max_length=200, blank=True, null=True)
     detection_state = models.CharField(
         verbose_name="检测状态", max_length=200, blank=True, null=True)
     register_date = models.DateField(
@@ -104,26 +110,26 @@ class Techsupport(models.Model):
         verbose_name="肠镜结果", max_length=200, blank=True, null=True)
     # 调查问卷信息
     f01 = models.CharField(
-          verbose_name="抽烟", max_length=500, blank=True, null=True)
+        verbose_name="抽烟", max_length=500, blank=True, null=True)
     f02 = models.CharField(
-          verbose_name="喝酒", max_length=500, blank=True, null=True)
+        verbose_name="喝酒", max_length=500, blank=True, null=True)
     f11 = models.CharField(
-          verbose_name="肠镜", max_length=200, blank=True, null=True)
+        verbose_name="肠镜", max_length=200, blank=True, null=True)
     f03 = models.CharField(
-          verbose_name="癌症、息肉史", max_length=200, blank=True, null=True)
+        verbose_name="癌症、息肉史", max_length=200, blank=True, null=True)
     f04 = models.CharField(
-          verbose_name="直系肠癌史", max_length=200, blank=True, null=True)
+        verbose_name="直系肠癌史", max_length=200, blank=True, null=True)
     f05 = models.CharField(
-          verbose_name="下消化道不适症状", max_length=200, blank=True, null=True)
+        verbose_name="下消化道不适症状", max_length=200, blank=True, null=True)
     f06 = models.CharField(
-          verbose_name="以下其他病史", max_length=200, blank=True, null=True)
+        verbose_name="以下其他病史", max_length=200, blank=True, null=True)
     f07 = models.CharField(
-          verbose_name="其他慢性病", max_length=200, blank=True, null=True)
+        verbose_name="其他慢性病", max_length=200, blank=True, null=True)
     questionnaire_note = models.CharField(
         verbose_name="调查问卷备注", max_length=200, blank=True, null=True)
     istasking = models.BooleanField(
         verbose_name="是否开始任务", default=False)
-    boxdeliveries = models.ForeignKey(
+    bd_number = models.ForeignKey(
         to=BoxDeliveries, verbose_name="盒子发货编号", on_delete=models.SET_NULL,
         related_name="tech", blank=True, null=True
     )
@@ -189,11 +195,6 @@ class CustomerAdministration(models.Model):
         max_length=50, verbose_name="备注", blank=True, null=True)
 
 
-
-
-
-
-
 # class Boxes(models.Model):
 #     """盒子管理"""
 #     BOX_STATUS = (
@@ -255,7 +256,7 @@ class ExtMethod(models.Model):
 
 class ExtSubmit(models.Model):
     """提取下单管理"""
-    boxes = models.ManyToManyField(Techsupport, verbose_name="对应盒子信息",)
+    boxes = models.ManyToManyField(Techsupport, verbose_name="对应盒子信息", )
     exp_method = models.ForeignKey(ExtMethod, verbose_name="提取方法",
                                    on_delete=models.SET_NULL, null=True)
     submit = models.BooleanField(verbose_name='提交', default=False)
@@ -279,7 +280,7 @@ class BoxApplications(models.Model):
         blank=True
     )
     amount = models.IntegerField(
-        verbose_name="申请数量", null=True, blank=True
+        verbose_name="申请数量", null=True
     )
     classification = models.CharField(
         verbose_name="申请类别", max_length=3, choices=CLASSIFICATION,
@@ -315,7 +316,7 @@ class BoxApplications(models.Model):
     )
     proposer = models.ForeignKey(
         AUTH_USER_MODEL, verbose_name="申请人", on_delete=models.SET_NULL,
-        null=True, blank=True
+        null=True
     )
     box_submit_flag = models.BooleanField(
         verbose_name="是否提交", default=False
@@ -331,6 +332,7 @@ class BoxApplications(models.Model):
             return format_html(
                 '<span>{}</span>', self.contract_number
             )
+
     colored_contract_number.short_description = "合同号"
 
     class Meta:
@@ -339,5 +341,3 @@ class BoxApplications(models.Model):
 
     def __str__(self):
         return '盒子申请编号：{}'.format(self.id)
-
-
